@@ -295,3 +295,103 @@ plotGX <- function(output=F){
   title(xlab="Date",outer=TRUE,ylab="",cex.lab=2,line=5)
   if(output==T) dev.copy2pdf(file="Output/Asat_Gs_WUE_CiCa_ROS.pdf")
 }
+#---------------------------------------------------------------------------------------------------------------------
+
+
+
+
+
+
+#------------------------------------------------------------------------------------------------------------------
+#- plot leaf water potentials over time
+#------------------------------------------------------------------------------------------------------------------
+plotLWP <- function(fillcol="lightgrey",size=1.75,output=F,labsize=1.8){
+  
+  ros2 <- return.gx.vwc.lwp()
+  
+  
+  
+  
+  #---------------------------------------------------------------------------------------------------------------------
+  #--- plot pre-dawn and mid-day leaf water potentials over time
+  lwp.m <- summaryBy(LWP+LWP.md+diff~gxDate+Treat+Species,FUN=c(mean,standard.error),data=subset(ros2,gxDate>as.Date("2012-11-1")))
+  lwp.m.l <- split(lwp.m,lwp.m$Species)
+  
+  
+  windows(20,20)
+  par(mfrow=c(2,1),oma=c(4,4,0.5,2),mar=c(2,3,1,1),cex.axis=1.5,cex.lab=1.8)
+  
+  startdate <- as.Date(x="2012-10-1",format="%Y-%m-%d")
+  enddate <- as.Date(x="2013-06-1",format="%Y-%m-%d")
+  dates <- as.Date(c("2012-10-18","2012-11-15","2012-11-25","2012-12-27","2013-1-26","2013-5-17"),format="%Y-%m-%d")
+  #colors <- rev(c("black","darkgrey"))
+  colors <- c("white","black")
+  #pchs <- c(15,16,17,18)
+  pchs <- c(21,22,23,24)
+  
+  
+  #- plot pre-dawn LWP over time for each species
+  plot.new()
+  plot.window(xlim=c(startdate,enddate),ylim=c(-10,0))
+  rect(xleft=dates[1],ybottom=-45,xright=dates[2],ytop=270,col=fillcol) #add rectangles for droughts
+  rect(xleft=dates[3],ybottom=-45,xright=dates[4],ytop=270,col=fillcol) #add rectangles for droughts
+  rect(xleft=dates[5],ybottom=-45,xright=enddate+13,ytop=270,col=fillcol) #add rectangles for droughts
+  
+  #plot pre-dawn
+  for (i in 1:length(lwp.m.l)){
+    dat1 <- lwp.m.l[[i]]
+    
+    adderrorbars(x=dat1$gxDate,y=dat1$LWP.mean,SE=dat1$LWP.standard.error,direction="updown")
+    points(LWP.mean~gxDate,col="black",data=subset(dat1,Treat=="dry"),pch=pchs[i],bg=colors[1],cex=size,type="o")
+    points(LWP.mean~gxDate,col="black",data=subset(dat1,Treat=="wet"),pch=pchs[i],bg=colors[2],cex=size,type="o")
+    
+    
+    #if (i==1) plotBy(LWP.mean~gxDate|Treat,data=dat1,type="b",xlim=c(startdate,enddate),legend=F,ylim=c(-10,0),pch=pchs[i],cex=size,add=T,bg=colors[i],
+    #                 panel.first=adderrorbars(x=dat1$gxDate,y=dat1$LWP.mean,SE=dat1$LWP.standard.error,direction="updown"))
+    #if (i > 1)plotBy(LWP.mean~gxDate|Treat,data=dat1,type="b",xlim=c(startdate,enddate),legend=F,ylim=c(-10,0),pch=pchs[i],cex=size,add=T,bg=colors,
+    #                 panel.first=adderrorbars(x=dat1$gxDate,y=dat1$LWP.mean,SE=dat1$LWP.standard.error,direction="updown"))
+    if (i%%2==1) magaxis(c(2,4),labels=c(1,1),frame.plot=TRUE,las=1,ylab="",tline=0.2,majorn=4,minorn=0)
+    if (i<3)axis.Date(side=1,at=seq(startdate,enddate,by="month"),format="%m/%y",labels=FALSE)
+    if (i>2)axis.Date(side=1,at=seq(startdate,enddate,by="month"),format="%m/%y")
+    if (i==1) title(ylab="Pre-dawn",cex.lab=labsize,line=2.3,xpd=NA)
+  }
+  
+  legend(x=as.Date("2012-10-1"),y=-7.1,legend=c("  Cacu","  Eusi","  Eute","  Pira"),pch=c(pchs),
+         col=c(rep("black",4)),ncol=2,pt.bg="black",cex=1.4,bg="white")
+  legend(x=as.Date("2012-10-8"),y=-7.1,legend=c("        ","        ","          ","           "),pch=c(pchs),
+         col=c(rep("black",4)),ncol=2,pt.bg="white",cex=1.4,bty="n")
+  #legend("bottomleft",c("Cacu-wet","Eusi-wet","Eute-wet","Pira-wet","Cacu-dry","Eusi-dry","Eute-dry","Pira-dry"),pch=c(pchs,pchs),
+  #       col=c("black","black","black","black","darkgrey","darkgrey","darkgrey","darkgrey"),ncol=2,bg="white",cex=1.4)
+  #plot mid-day
+  plot.new()
+  plot.window(xlim=c(startdate,enddate),ylim=c(-10,0))
+  rect(xleft=dates[1],ybottom=-45,xright=dates[2],ytop=270,col=fillcol) #add rectangles for droughts
+  rect(xleft=dates[3],ybottom=-45,xright=dates[4],ytop=270,col=fillcol) #add rectangles for droughts
+  rect(xleft=dates[5],ybottom=-45,xright=enddate+13,ytop=270,col=fillcol) #add rectangles for droughts
+  for (i in 1:length(lwp.m.l)){
+    dat1 <- lwp.m.l[[i]]
+    
+    adderrorbars(x=dat1$gxDate,y=dat1$LWP.md.mean,SE=dat1$LWP.md.standard.error,direction="updown")
+    points(LWP.md.mean~gxDate,col="black",data=subset(dat1,Treat=="dry"),pch=pchs[i],bg=colors[1],cex=size,type="o")
+    points(LWP.md.mean~gxDate,col="black",data=subset(dat1,Treat=="wet"),pch=pchs[i],bg=colors[2],cex=size,type="o")
+    
+    
+    #if (i==1) plotBy(LWP.md.mean~gxDate|Treat,data=dat1,type="b",xlim=c(startdate,enddate),legend=F,ylim=c(-10,0),pch=pchs[i],cex=size,add=T,col=colors,
+    #                 panel.first=adderrorbars(x=dat1$gxDate,y=dat1$LWP.md.mean,SE=dat1$LWP.md.standard.error,direction="updown"))
+    #if (i > 1)plotBy(LWP.md.mean~gxDate|Treat,data=dat1,type="b",xlim=c(startdate,enddate),legend=F,ylim=c(-10,0),pch=pchs[i],cex=size,add=T,col=colors,
+    #                 panel.first=adderrorbars(x=dat1$gxDate,y=dat1$LWP.md.mean,SE=dat1$LWP.md.standard.error,direction="updown"))
+    if (i%%2==1) magaxis(c(2,4),labels=c(1,1),frame.plot=TRUE,las=1,ylab="",tline=0.2,majorn=4,minorn=0,cex.lab=1.5)
+    
+    if (i<3)axis.Date(side=1,at=seq(startdate,enddate,by="month"),format="%m/%y",labels=FALSE)
+    if (i>2)axis.Date(side=1,at=seq(startdate,enddate,by="month"),format="%m/%y")
+    if (i==1) title(ylab="Mid-day",cex.lab=labsize,line=2.3,xpd=NA)
+    
+  }
+  
+  title(xlab="Date",outer=TRUE,ylab=expression(Leaf~water~potential~(MPa)),cex.lab=2,line=1)
+  
+  if(output==T) dev.copy2pdf(file="Output/LWP_over_time.pdf")
+  
+}
+#---------------------------------------------------------------------------------------------------------------------
+
