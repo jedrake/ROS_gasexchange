@@ -11,5 +11,8 @@ library(dplyr)
 library(plantecophys)
 library(stringr)
 library(magicaxis)
+library(colorRamps)
+
+
 source("R/dataFunctions.R")
 setToken(tokenfile="HIEv_token.txt")
