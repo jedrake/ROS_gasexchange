@@ -300,8 +300,7 @@ return.gx.vwc <- function(){
   
   #-------------------------------------------------------------------------------------
   # Find the closest date when VWC was measured, to match these obsevations with the gx measurements.
-  # This doesn't work, as some of the wet treatments weren't measured on all dates. AND sometimes there is one
-  #   observation for the wet treatment
+
   vwcdates.wet <- summaryBy(TDR~Date,FUN=length,data=vwc.wet,keep.names=TRUE)
   vwcdates.wet <- subset(vwcdates.wet,TDR>15) #get rid of the dates with few observaitons
   #get the dates gx and vwc was measured in the dry treatments
@@ -336,22 +335,18 @@ return.gx.vwc <- function(){
   gx2$VWCdate <- as.POSIXct(gx2$VWCdate,format="%Y-%m-%d",tz="GMT")
   
   
-  #merge vwc and gx datasets together. Note that 165 lines of data are missing, a
-  # not all pots were measured on all days. These lines were filled with the
-  # species x treatment average VWC on that date.
+  #merge vwc and gx datasets together, using a date by species by treatment average for the vwc data
   names(gx2)[4] <- "gxDate"
   names(gx2)[57] <- "Date"
-  gx.vwc <- merge(gx2,vwc,by=c("Date","Pot","Treat","Species"),all.x=TRUE)
-  missing <- subset(gx.vwc,is.na(TDR)==TRUE)[,1:57] #165 observations don't have a VWC measurement associated with them
-  vwc.treat.avg <- summaryBy(TDR+Ladd~Date+Species+Treat,id=c("Treatment","sp"),
-                             FUN=mean,keep.names=TRUE,data=vwc)
-  gx.missing <- merge(missing,vwc.treat.avg,by=c("Date","Species","Treat")) #hmm
   
-  #merge again, but don't keep missing values in the gx dataset
-  gx.vwc1 <- merge(gx2,vwc,by=c("Date","Pot","Treat","Species"),all.x=FALSE)
-  gx.vwc <- rbind(gx.vwc1,gx.missing) #merge the 165 missing values back in
- 
-  return(gx.vwc)
+  #average the VWC data
+  vwc.treat.avg <- summaryBy(TDR+Ladd~Date+Species+Treat,
+                             FUN=mean,keep.names=TRUE,data=vwc)
+  
+  #- merge the gas-exchange data (gx2) with a treatment by date by species mean of the TDR measurements
+  gx3 <- merge(gx2,vwc.treat.avg,by=c("Date","Species","Treat"))
+  
+  return(gx3)
 }
 #-----------------------------------------------------------------------------------------
 
@@ -498,7 +493,7 @@ returng1 <- function(){
     Date[i] <- as.Date(dat$gxDate[1])
     Species[i] <- as.character(dat$Species[1])
     Treat[i] <- as.character(dat$Treat[1])
-    TDR[i] <- as.numeric(dat$TDR)
+    TDR[i] <- mean(dat$TDR)
     
     # plot diagnostics
     dat$opti <- with(dat,Photo/(CO2S*sqrt(VpdL)))
