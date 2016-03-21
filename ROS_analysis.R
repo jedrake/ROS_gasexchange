@@ -11,5 +11,8 @@
 source("R/loadLibraries.R")
 
 #- plot soil moisture over time
-plotVWC(ptsize=1.5,output=T,type="4panel") # also can do type="1panel"
+plotVWC(ptsize=1.8,output=T,type="4panel") # also can do type="1panel"
+  
+#- make a big 16-panel plot of photosynthetic variables over time
+plotGX(output=F)
   

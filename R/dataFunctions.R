@@ -460,3 +460,106 @@ return.gx.vwc.lwp <- function(){
   return(ros2)
 }
 #-----------------------------------------------------------------------------------------
+
+
+
+
+
+
+#-----------------------------------------------------------------------------------------
+#- fits Belinda's optimal stomatal model to the data, returns g1 parameters with confidence intervals
+#-----------------------------------------------------------------------------------------
+returng1 <- function(){
+  
+  #get the gas exchange data
+  ros <- return.gx.vwc()
+  #ros <- return.gx.vwc.lwp() # note, this cuts out more than half the data.
+  
+  #--- na-fill some crazy cacu data from the dry-down
+  ros$Cond[which(ros$Species=="cacu" & ros$gxDate==as.Date("2013-3-26") & ros$Treat=="dry" & ros$Cond >0.3)] <- NA
+  ros$Cond[which(ros$Species=="cacu" & ros$gxDate==as.Date("2013-3-21") & ros$Treat=="dry" & ros$Cond >0.3)] <- NA
+  ros$Cond[which(ros$Species=="cacu" & ros$gxDate==as.Date("2013-4-4") & ros$Treat=="dry" & ros$Cond >0.2)] <- NA
+  
+  
+  #split data into a list, for each species and treatment on each date
+  ros.date.list <- split(ros,paste(ros$Species,ros$gxDate,ros$Treat))
+  
+  #fit the optimal stomatal model for each set of data in the list
+  fits.list <- list()
+  Species <- vector(mode="character")
+  Date <- as.Date(NA)
+  Treat <- vector(mode="character")
+  TDR <- c()
+  pdf("Output/ROS_g1plots.pdf")
+  for (i in 1:length(ros.date.list)){
+    dat <- ros.date.list[[i]]
+    fits.list[[i]] <- nls(Cond ~ 1.6*(1+g1/sqrt(VpdL))*(Photo/CO2S),start=list(g1=4),data=dat,algorithm="port",
+                          lower=c(0),upper=(10))
+    Date[i] <- as.Date(dat$gxDate[1])
+    Species[i] <- as.character(dat$Species[1])
+    Treat[i] <- as.character(dat$Treat[1])
+    TDR[i] <- as.numeric(dat$TDR)
+    
+    # plot diagnostics
+    dat$opti <- with(dat,Photo/(CO2S*sqrt(VpdL)))
+    plot(Cond~opti,data=dat,ylim=c(-0.05,0.5),xlim=c(-0.05,0.15))
+    lm1 <- lm(Cond~0+opti,data=dat)
+    abline(h=0);abline(v=0);abline(lm1)
+    title(main=paste(dat$Date[1],dat$Species[1],dat$Treat[1],round(coef(fits.list[[i]]),2)))
+    
+  }
+  dev.off()
+  
+  #extract the model fits
+  g1pars <-as.data.frame(do.call(rbind,(lapply(fits.list,FUN=coefficients))))
+  g1pars$Species <- factor(Species)
+  g1pars$Treat <- factor(Treat)
+  g1pars$Treat <- relevel(g1pars$Treat,ref=2)
+  g1pars$TDR <- TDR/100
+  g1pars$Date <- as.Date(Date)
+  
+  
+  #get confidence interval of g1 parameters
+  g1conf <- as.data.frame(do.call(rbind,lapply(fits.list,FUN=confint)))
+  g1pars$g1_2.5 <- g1conf[,1]
+  g1pars$g1_97.5 <- g1conf[,2]
+  g1pars$names <- with(g1pars,paste(Species,Treat,sep=": "))
+  g1pars$TDRjit <- jitter(g1pars$TDR,factor=0.5)
+  
+  #gap fill the data with uncertain g1 values
+  g1pars$g1[which(g1pars$g1_2.5<=0)] <- 0
+  g1pars$g1_2.5[which(is.na(g1pars$g1_2.5))] <- 0
+  g1pars$g1_97.5[which(is.na(g1pars$g1_97.5))] <- 0
+  
+  return(g1pars)
+}
+#-----------------------------------------------------------------------------------------
+
+
+
+
+
+
+
+#-----------------------------------------------------------------------------------------
+#-- function to return d13C data from the multiple drought experiment at the ROS
+#-----------------------------------------------------------------------------------------
+get_d13C <- function(frac1=27,frac2=4.4,aird13C=-8){
+  #frac1 is the kinetic fractionation of photosynthesis
+  #frac2 is the kinetic fractionation of differential diffusion of 12CO2 and 13Co2
+  #aird13C is the assumed isotopic composition of the source CO2 (atmosphere)
+  
+  #---- read in the data, do a little processing
+  d1 <- read.csv("Data/Isotopes/ROS isotope data.csv")
+  names(d1)[6] <- "Treat"
+  d1$plant <- as.factor(substr(d1$ID,start=1,stop=3))
+  d1$Treat <- relevel(d1$Treat,ref="wet")
+  d1$Date <- as.Date(d1$Date,format="%d/%m/%Y")
+  d1$bigDelta <- (aird13C/1000-d1$deltaC/1000)/(1+d1$deltaC/1000) #calculate discrimination, assume atmosphere is -8 permil
+  d1$CiCa <- with(d1,(bigDelta-frac2/1000)/(frac1/1000-frac2/1000))
+  d1$time <- as.factor(d1$time)
+  d1$Shelter <- as.factor(d1$Shelter)
+  
+  return(d1)
+}
+#-----------------------------------------------------------------------------------------

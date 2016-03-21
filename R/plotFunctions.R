@@ -154,10 +154,144 @@ plotVWC <- function(ptsize=1.5,output=T,type="4panel"){
     
     if(output==T) dev.copy2pdf(file="./Output/VWC_ROS_jed_1panel.pdf")
   }
-  #------------------------------------------------------------------------------------------------------------------
-  #------------------------------------------------------------------------------------------------------------------
   
 }
+#------------------------------------------------------------------------------------------------------------------
 
 
 
+
+
+
+
+
+#------------------------------------------------------------------------------------------------------------------
+#- function to make the plot of gas exchange data over time. This function is called by plotGX().
+#------------------------------------------------------------------------------------------------------------------
+plot.gs.ros <- function(dat,toplot,toplotse,ylims,ylabs,xlab){ #function needs arguments for the dataframe, and
+  #the COLUMN NUMBERS for the variables to plot
+  startdate <- as.Date(x="2012-09-30",format="%Y-%m-%d")
+  enddate <- as.Date(x="2013-05-30",format="%Y-%m-%d")
+  dates <- as.Date(c("2012-10-18","2012-11-15","2012-11-25","2012-12-27","2013-1-26","2013-5-17"),format="%Y-%m-%d")
+  
+  dat2 <- subset(dat,is.na(dat[,toplot])==F)
+  dat.wet <- subset(dat2,Treat=="wet")
+  dat.dry <- subset(dat2,Treat=="dry")
+  
+  
+  
+  plot.new()
+  plot.window(xlim=c(startdate,enddate),ylim=ylims)
+  
+  rect(xleft=dates[1],ybottom=-200,xright=dates[2],ytop=4000,col="lightgrey") #add rectangles for droughts
+  rect(xleft=dates[3],ybottom=-200,xright=dates[4],ytop=4000,col="lightgrey") #add rectangles for droughts
+  rect(xleft=dates[5],ybottom=-200,xright=enddate+13,ytop=4000,col="lightgrey") #add rectangles for droughts
+  
+  if(ylims[1] < 0) abline(h=0,lty=2)
+  
+  #plot error bars
+  plotCI(x=dat.wet$gxDate,y=dat.wet[,toplot],uiw=dat.wet[,toplotse],add=T)
+  plotCI(x=dat.dry$gxDate,y=dat.dry[,toplot],uiw=dat.dry[,toplotse],add=T)
+  
+  #plot big points over the error bars
+  points(dat.wet[,toplot]~dat.wet$gxDate,type="b",pch=21,col="black",bg="black",lty=1,add=T,cex=2)
+  points(dat.dry[,toplot]~dat.dry$gxDate,type="b",pch=21,col="black",bg="white",lty=2,add=T,cex=2)
+  
+  
+  
+  #plotBy(toplot~gxDate|Treat,data=dat,type="b",xlim=c(startdate,enddate),legend=F,
+  #       pch=16,cex=1.2,add=T,col=colors,legendwhere="topleft",axes=FALSE,ylim=ylims)
+  #magaxis(c(2,4),labels=ylabs,box=TRUE,cex.axis=1.5)
+  box()
+  axis(side=2,labels=ylabs[1],cex.axis=1.5,tck=0.025,las=2)
+  axis(side=4,labels=ylabs[2],cex.axis=1.5,tck=0.025,las=2)
+  
+  
+  #points(TDR.mean/100~Date,col=Treat,data=dat2,pch=16,cex=1.3)
+  #rug(gxdates,lwd=3,line=-0.5)
+  #labeling and legends
+  #legend("topright",legend=dat$Species[1],bty="n",cex=1.3)
+  if (xlab==T)axis.Date(side=1,at=seq(startdate,enddate,by=60),tck=0.025,format="%m/%y",labels=T,cex.axis=1.7,las=2)
+  if (xlab==F)axis.Date(side=1,at=seq(startdate,enddate,by=60),tck=0.025,format="%m/%y",labels=F,cex.axis=1.7,las=3)
+  axis.Date(side=3,at=seq(startdate,enddate,by=60),tck=0.025,format="%m/%y",labels=F,cex.axis=1.7)
+}
+#------------------------------------------------------------------------------------------------------------------
+
+
+
+
+
+
+#------------------------------------------------------------------------------------------------------------------
+#- main plotting script for Asat, gs, WUE, and Ci/Ca
+#------------------------------------------------------------------------------------------------------------------
+plotGX <- function(output=F){
+  #- get the gas exchange and handheld TDR data
+  ros <- return.gx.vwc()
+  
+  
+  #- get the lwp data and process a bit
+  lwp <- read.lwp()
+  
+  names(lwp)[3] <- "LWPdate"
+  lwp.pd <- subset(lwp,Type=="PD" & is.na(LWP)==FALSE)
+  lwp.pd$LWP <- -1*lwp.pd$LWP
+  lwp.md <- subset(lwp,Type=="MD" & is.na(LWP)==FALSE)
+  lwp.md$LWP <- -1*lwp.md$LWP
+  
+  names(lwp.md)[2] <- "LWP.md"
+  lwp2 <- merge(lwp.pd,lwp.md,by=c("Pot","LWPdate","Treat","Species"),all=FALSE)
+  lwp2$diff <- with(lwp2,abs(LWP.md)-abs(LWP))
+  
+  lwp.trt<- summaryBy(LWP+LWP.md+diff~LWPdate+Species+Treat,data=lwp2,FUN=c(mean,standard.error), na.rm=TRUE)
+  lwp.trt.list <- split(lwp.trt,lwp.trt$Species)
+  #------------------------------------------------------------------------------------------------------------------
+  
+  
+  
+  #do some data manipulation, set graphing parameters 
+  ros$ITE <- with(ros,Photo/Trmmol)
+  ros$WUE <- with(ros,Photo/Cond)
+  
+  ITE.trt <- summaryBy(Photo+Cond+ITE+WUE+TDR+Ci.Ca~gxDate+Species+Treat,data=ros,FUN=c(mean,standard.error), na.rm=TRUE)
+  ITE.trt.list <- split(ITE.trt,ITE.trt$Species)
+  
+  
+  #------------------------------------------------------------------------------------------------------------------
+  #set up 16-panel plot, to plot Asat, Cond, WUE, and Ci/Ca over time for all 4 species
+  dat.trt <- ITE.trt[,c(1:5,7,9,10,11,13,15)]
+  
+  
+  
+  
+  dat.trt.list <- split(dat.trt,dat.trt$Species)
+  ylabs.list <- list(c(T,F),c(F,F),c(F,F),c(F,T))
+  ylims.list <- list(c(0,27),c(0,0.6),c(-20,250),c(0,1.5))
+  xlabs <- list(F,F,F,T)
+  toplot <- c(4,5,6,7)
+  ses <- c(8:11)
+  
+  labels <- list(expression(A[sat]),expression(g[s]),
+                 expression(WUE),expression(C[i]~"/"~C[a]))
+  
+  #-- get the average WUE for the first two droughts
+  firstdrs <- subset(ITE.trt,gxDate==as.Date("2012-10-31") | gxDate==as.Date("2012-11-6") | gxDate==as.Date("2012-12-19"))
+  summaryBy(WUE.mean~Species+Treat,data=firstdrs)
+  
+  windows(14,12)
+  par(mfrow=c(4,4),oma=c(8,7,2,5),mar=c(0.25,0.25,0.25,0.25))
+  for (i in 1:4){
+    #print(i)
+    #plot photosynthesis
+    for (j in 1:4){
+      #print(j)
+      plot.gs.ros(dat=dat.trt.list[[j]],toplot=toplot[i],toplotse=ses[i],
+                  ylims=ylims.list[[i]],ylabs=ylabs.list[[j]],xlab=xlabs[i])
+      
+    }
+    title(xlab="",outer=TRUE,ylab=labels[[i]],cex.lab=2,line=4,adj=((4-i)/4+0.13))
+    if (i==1) title(main=expression(Cacu~~~~~~~~~~~~~~~~~~~~~~Eusi~~~~~~~~~~~~~~~~~~~~~~Eute~~~~~~~~~~~~~~~~~~~~~Pira),outer=T,cex.main=2)
+  }
+  title(xlab="Date",outer=TRUE,ylab="",cex.lab=2,line=5)
+  if(output==T) dev.copy2pdf(file="Output/Asat_Gs_WUE_CiCa_ROS.pdf")
+}
