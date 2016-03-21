@@ -27,20 +27,9 @@ plotLWP(fillcol="lightgrey",size=1.75,output=T,labsize=1.8)
 
 #- fit g1
 g1pars <- returng1()
-  
-
-#-- plot g1
 dat.l <- split(g1pars,g1pars$Species)
-#   
-#   require(nlme)
-#   fit0 <- nlme(g1~SSasymp(TDR, Asym, R0, lrc), # fit null model with nothing but a random pot effect on the asymtote
-#                fixed=list(Asym ~1, lrc~Species, R0 ~ 1),
-#                random=R0~1|Date,
-#                start=list(fixed=c(Asym=rep(4,1),R0=rep(0.5,1),lrc=rep(2.5,4))),
-#                data=g1pars2)
-#   
 
-
+#- plot normalized g1 and non-stomatal limitation as a function of VWC
 windows(16,16)
 par(mfrow=c(4,2),mar=c(0,0.25,0,0.25),xpd=FALSE,oma=c(4,5,1,3),cex=1.6,cex.axis=0.9,cex.lab=0.9)
 labs <- c("Cacu","Eusi","Eute","Pira")

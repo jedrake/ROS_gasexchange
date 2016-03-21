@@ -169,7 +169,8 @@ adderrorbars <- function(x,y,SE,direction,barlen=0.04,...){
 #-----------------------------------------------------------------------------------------
 returnVcmaxa <- function(){
   #--- get the leaf-level gas exchange data
-  ros2 <- return.gx.vwc.lwp()
+  #ros2 <- return.gx.vwc.lwp()
+  ros2 <- return.gx.vwc()
   
   #- remove gx data in ros2 where Ci < 5 or Ci > 800
   ros3 <- subset(ros2,Ci>5 & Ci<1000)
@@ -195,7 +196,7 @@ returnVcmaxa <- function(){
   Species <- c()
   Vcmax_max <- c()
   for(i in 1:length(ros3.list)){
-    dat <- subset(ros3.list[[i]],Treatment=="water" & TDR > 20 & TDR < 30)
+    dat <- subset(ros3.list[[i]],Treat=="wet" & TDR > 20 & TDR < 30)
     Species[i] <- as.character(dat$Species[1])
     Vcmax_max[i] <- unname(quantile(dat$Vcmax_a,probs=1))
     
@@ -207,10 +208,14 @@ returnVcmaxa <- function(){
   ros4$NSL <- with(ros4,Photo/Photo_a)
   
   #- remove a really troublesome eute point and a cacu point
-  ros4[258,] <- NA
-  ros4[42,] <- NA
+  #ros4[258,] <- NA #- these were the bad points when using return.vwc.lwp()
+  #ros4[42,] <- NA
+  ros4[1003:1004,] <- NA
+  ros4[629,] <- NA
+  ros4[479,] <- NA
   
-  return(ros4)
+  ros5 <- ros4[complete.cases(ros4),]
+  return(ros5)
 }
 #-----------------------------------------------------------------------------------------
 
