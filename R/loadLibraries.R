@@ -16,4 +16,5 @@ library(car)
 library(scales)
 
 source("R/dataFunctions.R")
+source("R/plotFunctions.R")
 setToken(tokenfile="HIEv_token.txt")

@@ -460,7 +460,8 @@ plotBetasG1NSL <- function(output=F){
     }
     #- plot prediciton, confidence interval
     lines(wpred~TDR,data=newdat[[i]])
-    polygon(x = c(newdat[[i]]$TDR, rev(newdat[[i]]$TDR)), y = c(newdat[[i]]$lower, rev(newdat[[i]]$upper)), col = alpha("grey",0.5), border = NA)
+    polygon(x = c(newdat[[i]]$TDR, rev(newdat[[i]]$TDR)), y = c(newdat[[i]]$lower, rev(newdat[[i]]$upper)), 
+            col = alpha("grey",0.5), border = NA,xpd=F)
     
     #------------------------------------------------------------------------
     
@@ -505,7 +506,8 @@ plotBetasG1NSL <- function(output=F){
     }
     #- plot prediciton, confidence interval, and add the bit at 1.0 where NSL no longer limits
     lines(wpred~TDR,data=newdat2[[i]])
-    polygon(x = c(newdat2[[i]]$TDR, rev(newdat2[[i]]$TDR)), y = c(newdat2[[i]]$lower, rev(newdat2[[i]]$upper)), col = alpha("grey",0.5), border = NA)
+    polygon(x = c(newdat2[[i]]$TDR, rev(newdat2[[i]]$TDR)), y = c(newdat2[[i]]$lower, rev(newdat2[[i]]$upper)), 
+            col = alpha("grey",0.5), border = NA, xpd=F)
     lines(x=c(max(newdat2[[i]]$TDR),max(dat.temp2$TDR)),y=c(1,1))
     
     #------------------------------------------------------------------------
