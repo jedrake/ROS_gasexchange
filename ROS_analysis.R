@@ -20,104 +20,55 @@ plotGX(output=T)
   
 
 #- plot the leaf water potential data over time
-plotLWP(fillcol="lightgrey",size=1.75,output=T,labsize=1.8)
+plotLWP(fillcol="lightgrey",size=1.75,output=T,labsize=1.8,output=T)
 
 
-#- plot the dependence of g1 and non-stomatal limitation relative to VWC and PSIpd
+#- plot normalized g1 and non-stomatal limitation as a function of VWC with beta functions
+plotBetasG1NSL(output=T)
 
-#- fit g1
-g1pars <- returng1()
-dat.l <- split(g1pars,g1pars$Species)
 
-#- plot normalized g1 and non-stomatal limitation as a function of VWC
-windows(16,16)
-par(mfrow=c(4,2),mar=c(0,0.25,0,0.25),xpd=FALSE,oma=c(4,5,1,3),cex=1.6,cex.axis=0.9,cex.lab=0.9)
-labs <- c("Cacu","Eusi","Eute","Pira")
-for (i in 1:length(dat.l)){
-  dat.temp <- dat.l[[i]]
-  dat.temp$Species <- factor(dat.temp$Species)
-  
-  #------------------------------------------------------------------------
-  #-- plot g1 vs. TDR
-  
-  startlist <- list(Xlow = 0.0, Xhigh=0.5, q = 0.6)
-  dat.temp$g1norm <- dat.temp$g1/max(dat.temp$g1)
-  
-  fit.sp[[i]] <- nls(g1norm ~ ((TDR-Xlow)/(Xhigh-Xlow))^q,start=startlist,data=dat.temp,algorithm="port",
-                        lower=c(0,0.01,0.01),upper=c(0.007,0.6,3))
-  
-  #Species[i] <- as.character(fit.sp$Species[1])
-  #fit.sp <- nls(g1~SSasymp(TDR,Asym,R0,lrc),data=dat.temp,start=list(Asym=4,R0=0.5,lrc=2.5))
-  
-  plot(g1norm~TDR,data=subset(dat.temp,Treat=="wet"),pch=21,col="black",bg=grey(0.1),axes=F,ylim=c(0,1.05),xlim=c(0,0.4))
-  points(g1norm~TDR,data=subset(dat.temp,Treat=="dry"),pch=21,col="black",bg=grey(0.8))
-  magaxis(side=c(1:4),labels=c(0,1,0,0),las=1)
-  if(i==4)  magaxis(side=c(1:4),labels=c(1,1,0,0),las=1)
-  mtext(labs[i],side=2,xpd=T,cex=1.3,line=1.75)
-  if(i==4)  mtext(expression(VWC~(m^3~m^-3)),side=1,outer=F,cex=1.5,line=2)
-  
-  
-  # plot model and SE from bootstrapping
-  newdat <- expand.grid(Species=levels(dat.temp$Species), TDR=seq(from=0.01,to=max(dat.temp$TDR),length.out=99),lower=NA,upper=NA)
-  newdat$wpred <- predict(fit.sp[[i]],newdat,level=0,se.fit=T)
-  
-  
-  b <- bootCase(fit.sp[[i]],B=300)
-  for(j in 1:nrow(newdat)){
-    #b02 <- SSasymp(newdat$TDR[j],Xlow=b[,"Xlow"],Xhigh=b[,"Xhigh"],q=b[,"q"])
-    b02 <- ((newdat$TDR[j]-b[,"Xlow"])/(b[,"Xhigh"]-b[,"Xlow"]))^b[,"q"]
-    
-    newdat$lower[j] <- unname(quantile(b02,probs=c(0.025,0.975)))[1]
-    newdat$upper[j] <- unname(quantile(b02,probs=c(0.025,0.975)))[2]
-    
-  }
-  lines(wpred~TDR,data=newdat)
-  polygon(x = c(newdat$TDR, rev(newdat$TDR)), y = c(newdat$lower, rev(newdat$upper)), col = alpha("grey",0.5), border = NA)
-  #------------------------------------------------------------------------
-  
-  
-  # 
-  # #------------------------------------------------------------------------
-  # #-- plot g1 vs. LWP
-  # if (i<4)fit.sp2 <- nls(g1~SSlogis(LWP.pd,Asym,xmid,scale),data=dat.temp,start=list(Asym=4,xmid=-2,scale=1))
-  # 
-  # 
-  # plot(g1~LWP.pd,data=subset(dat.temp,Treat=="wet"),pch=21,col="black",bg=grey(0.1),axes=F,ylim=c(0,5.5),xlim=c(-10,0))
-  # points(g1~LWP.pd,data=subset(dat.temp,Treat=="dry"),pch=21,col="black",bg=grey(0.8))
-  # magaxis(side=c(1:4),labels=c(0,0,0,1),las=1)
-  # if(i==4)  magaxis(side=c(1:4),labels=c(1,0,0,1),las=1)
-  # #mtext(labs[i],side=2,xpd=T,cex=1.3,line=1.75)
-  # if(i==4)  mtext(expression(LWP[pd]~(MPa)),side=1,outer=F,cex=1.5,line=2)
-  # 
-  # if (i<4){
-  #   # Fixed effects predictions
-  #   # Make dataframe with all combinations of Species and conductance.
-  #   newdat <- expand.grid(Species=levels(dat.temp$Species), LWP.pd=seq(from=-10,to=0,length.out=99,lower=NA,upper=NA))
-  #   newdat$wpred <- predict(fit.sp2,newdat,level=0,se.fit=T)
-  #   
-  #   
-  #   b <- bootCase(fit.sp2,B=200)
-  #   for(j in 1:nrow(newdat)){
-  #     b02 <- SSlogis(newdat$LWP.pd[j],Asym=b[,"Asym"],xmid=b[,"xmid"],scal=b[,"scale"])
-  #     newdat$lower[j] <- unname(quantile(b02,probs=c(0.025,0.975)))[1]
-  #     newdat$upper[j] <- unname(quantile(b02,probs=c(0.025,0.975)))[2]
-  #     
-  #   }
-  #   lines(wpred~LWP.pd,data=newdat)
-  #   polygon(x = c(newdat$LWP.pd, rev(newdat$LWP.pd)), y = c(newdat$lower, rev(newdat$upper)), col = alpha("grey",0.5), border = NA)
-  # }
-  #------------------------------------------------------------------------
-  
-  #if(i<4)lines(wpred~LWP.pd,data=newdat)
-  
-  # 
-  #   
-  #   plot(g1~LWP.md,data=subset(dat.temp,Treat=="wet"),pch=21,col="black",bg=grey(0.1),axes=F,ylim=c(0,7),xlim=c(-10,0))
-  #   points(g1~LWP.md,data=subset(dat.temp,Treat=="dry"),pch=21,col="black",bg=grey(0.8))
-  #   magaxis(side=c(1:4),labels=c(0,0,0,4),las=1)
-  #   if(i==4)  magaxis(side=c(1:4),labels=c(1,0,0,1),las=1)
-  #   if(i==4)  mtext(expression(psi[l-MD]~(MPa)),side=1,outer=F,cex=1.5,line=2)
-  
-}
-mtext(expression(g[1]),side=2,outer=T,cex=3,las=1,line=2.5)
-legend(x=-30,y=-0.3,xpd=NA,legend=c("Wet","Dry"),pch=21,pt.bg=c("black","grey"))
+
+
+
+#-------------------------------------------------------------------------------------------------------------------------------------
+#-- isotopic analysis of plants at the ROS.
+
+#-- notes: As a reminder, the samples ending -21 were collected on 21/12/13, after the second dry down, 
+#        while those ending 26 were collected at the end of the final dry down (26/3/14). If you recall, 
+#        we tagged the twigs just before the first dry down began, so the first set of “leaves” sampled had formed 
+#        at some point during - or between - the first two dry downs, while those collected later had developed 
+#        under even more varied (and extreme) conditions.
+
+# I found two possible mislabellings: One of the wet cacu in shelter 3 was labeled 318 on the first sampling and 378 on the second.
+# One of the wet Eute in shelter 5 was labeled 505 on the first sampling and 503 on the second. These were confirmed with Sally
+# and changed in the original dataset (the correct labels were 318 and 503)
+
+#---- read in the data, do a little processing
+d1 <- get_d13C()
+
+#--------------------------------------------------------------
+# plots
+d1$bigDelta <- d1$bigDelta*1000
+d1.m <- summaryBy(deltaC+bigDelta~Species+Treat,data=d1,FUN=c(mean,standard.error))
+
+#-- barplots of bigdelta
+windows(18,12);par(mfrow=c(2,1),mar=c(3,5,1,1),oma=c(1,1,3,1))
+
+bp2 <- barplot(height=d1.m$deltaC.mean[1:8],col=c("darkgrey","white"),ylim=c(-35,-25),xpd=F,axes=F)
+adderrorbars(x=bp2,y=d1.m$deltaC.mean[1:8],SE=d1.m$deltaC.standard.error[1:8],direction="updown")
+magaxis(side=c(2,4),labels=c(1,0),frame.plot=T,las=1)
+text(x=c(1.25,3.7,6.1,8.5),y=17.5,xpd=T,labels=c("Cacu","Eusi","Eute","Pira"),cex=1.5)
+title(ylab=expression(delta^13~C),cex.lab=1.5,line=1.8)
+text(x=c(1.25,3.7,6.1,8.5),y=-35.8,xpd=T,labels=c("Cacu","Eusi","Eute","Pira"),cex=1.5)
+legend("bottomright",xpd=NA,legend=c("Wet","Dry"),fill=c("darkgrey","white"),bty="n",ncol=1,cex=1.5)
+
+
+bp1 <- barplot(height=d1.m$bigDelta.mean[1:8],col=c("darkgrey","white"),ylim=c(18,25),xpd=F,axes=F)
+adderrorbars(x=bp1,y=d1.m$bigDelta.mean[1:8],SE=d1.m$bigDelta.standard.error[1:8],direction="updown")
+magaxis(side=c(2,4),labels=c(1,0),frame.plot=T,las=1)
+text(x=c(1.25,3.7,6.1,8.5),y=17.5,xpd=T,labels=c("Cacu","Eusi","Eute","Pira"),cex=1.5)
+title(ylab=expression(Delta~"*"~10^3),cex.lab=1.5,line=1.8)
+
+#dev.copy2pdf(file="Output/ROS_bigdelta_bars.pdf")
+
+      

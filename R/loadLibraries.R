@@ -12,7 +12,8 @@ library(plantecophys)
 library(stringr)
 library(magicaxis)
 library(colorRamps)
-
+library(car)
+library(scales)
 
 source("R/dataFunctions.R")
 setToken(tokenfile="HIEv_token.txt")
