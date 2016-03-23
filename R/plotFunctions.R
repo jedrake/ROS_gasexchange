@@ -397,41 +397,30 @@ plotLWP <- function(fillcol="lightgrey",size=1.75,output=F,labsize=1.8){
 
 
 
-
-
 #---------------------------------------------------------------------------------------------------------------------
 #- plot the dependence of g1 and non-stomatal limitation relative to VWC.
 #   The fitting of NSL might need some work...
 #---------------------------------------------------------------------------------------------------------------------
-plotBetasG1NSL <- function(output=F){
-  #- fit g1
-  g1pars <- returng1()
-  dat.l <- split(g1pars,g1pars$Species)
+plotBetasG1NSL <- function(output=F,g1data,NSLdata,g1list,NSLlist){
+  #- list for g1 data
+  dat.l <- split(g1data,g1data$Species)
   
   #- fit NSL
-  NSL <- returnVcmaxa()
-  NSLpars <- summaryBy(NSL+Photo+Cond+Ci+TDR~Species+Date+Treat,data=NSL,FUN=mean,keep.names=T)
-  dat.l2 <- split(NSLpars,NSLpars$Species)
+  dat.l2 <- split(NSLdata,NSLdata$Species)
   
   #- plot normalized g1 and non-stomatal limitation as a function of VWC
   windows(16,16)
   par(mfrow=c(4,2),mar=c(0,0.25,0,0.25),xpd=FALSE,oma=c(4,5,1,5),cex=1.6,cex.axis=0.9,cex.lab=0.9)
-  b <- b2 <- newdat <- newdat2 <- fit.sp <- fit.sp2 <- list()
   labs <- c("Cacu","Eusi","Eute","Pira")
   for (i in 1:length(dat.l)){
+    newdat <- newdat2 <- data.frame()
     dat.temp <- dat.l[[i]]
+    dat.temp$g1norm <- dat.temp$g1/max(dat.temp$g1)
+    
     dat.temp$Species <- factor(dat.temp$Species)
     #------------------------------------------------------------------------
     #-- plot g1 vs. TDR
     
-    #- fit the model
-    startlist <- list(Xlow = 0.0, Xhigh=0.5, q = 0.6)
-    dat.temp$g1norm <- dat.temp$g1/max(dat.temp$g1)
-    
-    fit.sp[[i]] <- nls(g1norm ~ ((TDR-Xlow)/(Xhigh-Xlow))^q,start=startlist,data=dat.temp,algorithm="port",
-                       lower=c(0,0.01,0.01),upper=c(0.007,0.6,3))
-    
-    #- plot the data
     plot(g1norm~TDR,data=subset(dat.temp,Treat=="wet"),pch=21,col="black",bg=grey(0.1),axes=F,ylim=c(0,1.05),xlim=c(0,0.4))
     points(g1norm~TDR,data=subset(dat.temp,Treat=="dry"),pch=21,col="black",bg=grey(0.8))
     magaxis(side=c(1:4),labels=c(0,1,0,0),las=1)
@@ -442,78 +431,36 @@ plotBetasG1NSL <- function(output=F){
     
     
     # plot model and SE from bootstrapping
-    newdat[[i]] <- expand.grid(Species=levels(dat.temp$Species), TDR=seq(from=coef(fit.sp[[i]])["Xlow"]+0.01,to=max(dat.temp$TDR),length.out=99),lower=NA,upper=NA)
-    newdat[[i]]$wpred <- predict(fit.sp[[i]],newdat[[i]],level=0,se.fit=T)
+    rm(newdat)
+    newdat <- g1list[[2]][[i]]
+    lines(wpred~TDR,data=newdat)
+    polygon(x = c(newdat$TDR, rev(newdat$TDR)), y = c(newdat$lower, rev(newdat$upper)),
+          col = alpha("grey",0.5), border = NA,xpd=F)
     
-    
-    b[[i]] <- bootCase(fit.sp[[i]],B=300)
-    for(j in 1:nrow(newdat[[i]])){
-      #b02 <- SSasymp(newdat$TDR[j],Xlow=b[,"Xlow"],Xhigh=b[,"Xhigh"],q=b[,"q"])
-      b02 <- ((newdat[[i]]$TDR[j]-b[[i]][,"Xlow"])/(b[[i]][,"Xhigh"]-b[[i]][,"Xlow"]))^b[[i]][,"q"]
-      
-      newdat[[i]]$lower[j] <- unname(quantile(b02,probs=c(0.025,0.975)))[1]
-      newdat[[i]]$upper[j] <- unname(quantile(b02,probs=c(0.025,0.975)))[2]
-      
-    }
-    #- plot prediciton, confidence interval
-    lines(wpred~TDR,data=newdat[[i]])
-    polygon(x = c(newdat[[i]]$TDR, rev(newdat[[i]]$TDR)), y = c(newdat[[i]]$lower, rev(newdat[[i]]$upper)), 
-            col = alpha("grey",0.5), border = NA,xpd=F)
-    
-    #------------------------------------------------------------------------
-    
-    
-    
+
     #------------------------------------------------------------------------
     #-- repeat, but for NSL
     
     dat.temp2 <- dat.l2[[i]]
     dat.temp2$Species <- factor(dat.temp2$Species)
-    dat.temp2$TDR <- dat.temp2$TDR/100
-    
-    qstarts <- c(0.2,0.3,0.3,0.4)
-    startlist <- list(Xlow = 0.0, Xhigh=0.5, q = qstarts[i])
-    
-    fit.sp2[[i]] <- nls(NSL ~ ((TDR-Xlow)/(Xhigh-Xlow))^q,start=startlist,data=dat.temp2,algorithm="port",trace=F,
-                        lower=c(0,0.01,0.01),upper=c(0.007,0.6,3))
-    
-    #Species[i] <- as.character(fit.sp$Species[1])
-    #fit.sp <- nls(g1~SSasymp(TDR,Asym,R0,lrc),data=dat.temp,start=list(Asym=4,R0=0.5,lrc=2.5))
     
     plot(NSL~TDR,data=subset(dat.temp2,Treat=="wet"),pch=21,col="black",bg=grey(0.1),axes=F,ylim=c(0,1.5),xlim=c(0,0.4))
     points(NSL~TDR,data=subset(dat.temp2,Treat=="dry"),pch=21,col="black",bg=grey(0.8))
     magaxis(side=c(1:4),labels=c(0,0,0,1),las=1)
-    if(i==4)  magaxis(side=c(1:4),labels=c(1,1,0,0),las=1)
+    if(i==4)  magaxis(side=c(1:4),labels=c(1,0,0,0),las=1)
     if(i==4)  mtext(expression(VWC~(m^3~m^-3)),side=1,outer=F,cex=1.5,line=2)
     
-    
-    # plot model and SE from bootstrapping
-    newdat2[[i]] <- expand.grid(Species=levels(dat.temp$Species), TDR=seq(from=coef(fit.sp2[[i]])["Xlow"],to=coef(fit.sp2[[i]])["Xhigh"],length.out=99),lower=NA,upper=NA)
-    newdat2[[i]]$wpred <- predict(fit.sp2[[i]],newdat2[[i]],level=0,se.fit=T)
-    
-    
-    b2[[i]] <- bootCase(fit.sp2[[i]],B=300)
-    for(j in 1:nrow(newdat2[[i]])){
-      #b02 <- SSasymp(newdat$TDR[j],Xlow=b[,"Xlow"],Xhigh=b[,"Xhigh"],q=b[,"q"])
-      b02 <- ((newdat2[[i]]$TDR[j]-b2[[i]][,"Xlow"])/(b2[[i]][,"Xhigh"]-b2[[i]][,"Xlow"]))^b2[[i]][,"q"]
-      
-      newdat2[[i]]$lower[j] <- unname(quantile(b02,probs=c(0.025,0.975)))[1]
-      newdat2[[i]]$upper[j] <- unname(quantile(b02,probs=c(0.025,0.975)))[2]
-      
-    }
-    #- plot prediciton, confidence interval, and add the bit at 1.0 where NSL no longer limits
-    lines(wpred~TDR,data=newdat2[[i]])
-    polygon(x = c(newdat2[[i]]$TDR, rev(newdat2[[i]]$TDR)), y = c(newdat2[[i]]$lower, rev(newdat2[[i]]$upper)), 
+    newdat2 <- NSLlist[[2]][[i]]
+    lines(wpred~TDR,data=newdat2)
+    polygon(x = c(newdat2$TDR, rev(newdat2$TDR)), y = c(newdat2$lower, rev(newdat2$upper)), 
             col = alpha("grey",0.5), border = NA, xpd=F)
-    lines(x=c(max(newdat2[[i]]$TDR),max(dat.temp2$TDR)),y=c(1,1))
+    lines(x=c(max(newdat2$TDR),max(dat.temp2$TDR)),y=c(1,1))
     
-    #------------------------------------------------------------------------
     
   }
   mtext(expression(normalized~g[1]),side=2,outer=T,cex=2.5,las=0,line=2.5)
   mtext(expression(Nonstomatal~limitation~(A/A[e])),side=4,outer=T,cex=2.5,las=0,line=2.5)
   
-  return(newdat)
   if(output==T) dev.copy2pdf(file="Output/Beta_g1andNSL_VWC.pdf")
   
 }
