@@ -1,6 +1,3 @@
-source("R/loadLibraries.R")
-
-
 
 #------------------------------------------------------------------------------------------------------------------
 #- make the soil moisture plot
@@ -516,6 +513,7 @@ plotBetasG1NSL <- function(output=F){
   mtext(expression(normalized~g[1]),side=2,outer=T,cex=2.5,las=0,line=2.5)
   mtext(expression(Nonstomatal~limitation~(A/A[e])),side=4,outer=T,cex=2.5,las=0,line=2.5)
   
+  return(newdat)
   if(output==T) dev.copy2pdf(file="Output/Beta_g1andNSL_VWC.pdf")
   
 }
