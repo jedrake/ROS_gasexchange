@@ -545,6 +545,16 @@ returng1 <- function(){
 
 #-----------------------------------------------------------------------------------------
 #-- function to return d13C data from the multiple drought experiment at the ROS
+
+#-- notes: As a reminder, the samples ending -21 were collected on 21/12/13, after the second dry down, 
+#        while those ending 26 were collected at the end of the final dry down (26/3/14). If you recall, 
+#        we tagged the twigs just before the first dry down began, so the first set of “leaves” sampled had formed 
+#        at some point during - or between - the first two dry downs, while those collected later had developed 
+#        under even more varied (and extreme) conditions.
+
+# I found two possible mislabellings: One of the wet cacu in shelter 3 was labeled 318 on the first sampling and 378 on the second.
+# One of the wet Eute in shelter 5 was labeled 505 on the first sampling and 503 on the second. These were confirmed with Sally
+# and changed in the original dataset (the correct labels were 318 and 503)
 #-----------------------------------------------------------------------------------------
 get_d13C <- function(frac1=27,frac2=4.4,aird13C=-8){
   #frac1 is the kinetic fractionation of photosynthesis
