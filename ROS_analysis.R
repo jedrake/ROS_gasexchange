@@ -38,9 +38,10 @@ plotLWP(fillcol="lightgrey",size=1.75,output=T,labsize=1.8)
 #- get the data, fit the beta functions. For some reason this cannot be dropped into a function.
 #    Keep it as a script!
 source("R/fitBeta_g1_nsl.R")
+plotBetasG1NSL(output=T,g1data=g1values,NSLdata=NSLpars,g1list=g1_TDR_beta,NSLlist=NSL_TDR_beta)
 
-#- plot data and predicted values.
-plotBetasG1NSL(output=F,g1data=g1values,NSLdata=NSLpars,g1list=g1_TDR_beta,NSLlist=NSL_TDR_beta)
+source("R/fitBeta_g1_nsl_LWP.R")
+plotBetasG1NSL_LWP(output=T,g1data=g1values2,NSLdata=NSLpars2,g1list=g1_TDR_beta2,NSLlist=NSL_TDR_beta2)
 #-------------------------------------------------------------------------------------------------------
 
 

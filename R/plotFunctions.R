@@ -472,6 +472,91 @@ plotBetasG1NSL <- function(output=F,g1data,NSLdata,g1list,NSLlist){
 
 
 
+
+
+
+#---------------------------------------------------------------------------------------------------------------------
+#- plot the dependence of g1 and non-stomatal limitation relative to LWP!
+#---------------------------------------------------------------------------------------------------------------------
+plotBetasG1NSL_LWP <- function(output=F,g1data,NSLdata,g1list,NSLlist){
+  #- list for g1 data
+  dat.l <- split(g1data,g1data$Species)
+  
+  #- fit NSL
+  dat.l2 <- split(NSLdata,NSLdata$Species)
+  
+  #- plot normalized g1 and non-stomatal limitation as a function of LWP
+  windows(16,16)
+  par(mfrow=c(4,2),mar=c(0,0.25,0,0.25),xpd=FALSE,oma=c(4,5,1,5),cex=1.6,cex.axis=0.9,cex.lab=0.9)
+  labs <- c("Cacu","Eusi","Eute","Pira")
+  for (i in 1:length(dat.l)){
+    newdat <- newdat2 <- data.frame()
+    dat.temp <- dat.l[[i]]
+    dat.temp$g1norm <- dat.temp$g1/max(dat.temp$g1)
+    dat.temp$LWPpos <- dat.temp$LWP+11
+    dat.temp$Species <- factor(dat.temp$Species)
+    #------------------------------------------------------------------------
+    #-- plot g1 vs. LWP
+    
+    plot(g1norm~LWP,data=subset(dat.temp,Treat=="wet"),pch=21,col="black",bg=grey(0.1),axes=F,ylim=c(0,1.05),xlim=c(-10,0))
+    points(g1norm~LWP,data=subset(dat.temp,Treat=="dry"),pch=21,col="black",bg=grey(0.8))
+    magaxis(side=c(1:4),labels=c(0,1,0,0),las=1)
+    if(i==4)  magaxis(side=c(1:4),labels=c(1,1,0,0),las=1)
+    mtext(labs[i],side=2,xpd=T,cex=1.3,line=1.75)
+    if(i==4)  mtext(expression(psi[pd]~(mPa)),side=1,outer=F,cex=1.5,line=2)
+    if(i==1) legend("topleft",xpd=NA,legend=c("Wet","Dry"),pch=21,pt.bg=c("black","grey"),ncol=1,cex=0.75)
+    
+    
+    # plot model and SE from bootstrapping
+    rm(newdat)
+    newdat <- g1list[[2]][[i]]
+    newdat$LWP <- newdat$LWPpos-11
+    lines(wpred~LWP,data=newdat)
+    polygon(x = c(newdat$LWP, rev(newdat$LWP)), y = c(newdat$lower, rev(newdat$upper)),
+            col = alpha("grey",0.5), border = NA,xpd=F)
+    
+    
+    #------------------------------------------------------------------------
+    #-- repeat, but for NSL
+    
+    dat.temp2 <- dat.l2[[i]]
+    dat.temp2$Species <- factor(dat.temp2$Species)
+    
+    plot(NSL~LWP,data=subset(dat.temp2,Treat=="wet"),pch=21,col="black",bg=grey(0.1),axes=F,ylim=c(0,1.5),xlim=c(-10,0))
+    points(NSL~LWP,data=subset(dat.temp2,Treat=="dry"),pch=21,col="black",bg=grey(0.8))
+    magaxis(side=c(1:4),labels=c(0,0,0,1),las=1)
+    if(i==4)  magaxis(side=c(1:4),labels=c(1,0,0,0),las=1)
+    if(i==4)  mtext(expression(psi[pd]~(mPa)),side=1,outer=F,cex=1.5,line=2)
+    
+    newdat2 <- NSLlist[[2]][[i]]
+    newdat2$LWP <- newdat2$LWPpos-11
+    
+    lines(wpred~LWP,data=newdat2)
+    polygon(x = c(newdat2$LWP, rev(newdat2$LWP)), y = c(newdat2$lower, rev(newdat2$upper)), 
+            col = alpha("grey",0.5), border = NA, xpd=F)
+    #lines(x=c(max(newdat2$TDR),max(dat.temp2$TDR)),y=c(1,1))
+    
+    
+  }
+  mtext(expression(normalized~g[1]),side=2,outer=T,cex=2.5,las=0,line=2.5)
+  mtext(expression(Nonstomatal~limitation~(A/A[e])),side=4,outer=T,cex=2.5,las=0,line=2.5)
+  
+  if(output==T) dev.copy2pdf(file="Output/Beta_g1andNSL_VWC.pdf")
+  
+}
+#---------------------------------------------------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
 #-------------------------------------------------------------------------------------------------------------------------------------
 #-- plot barplots of d13C and bigdelta 
 #-------------------------------------------------------------------------------------------------------------------------------------
