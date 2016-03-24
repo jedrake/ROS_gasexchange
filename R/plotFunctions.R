@@ -541,7 +541,7 @@ plotBetasG1NSL_LWP <- function(output=F,g1data,NSLdata,g1list,NSLlist){
   mtext(expression(normalized~g[1]),side=2,outer=T,cex=2.5,las=0,line=2.5)
   mtext(expression(Nonstomatal~limitation~(A/A[e])),side=4,outer=T,cex=2.5,las=0,line=2.5)
   
-  if(output==T) dev.copy2pdf(file="Output/Beta_g1andNSL_VWC.pdf")
+  if(output==T) dev.copy2pdf(file="Output/Beta_g1andNSL_LWP.pdf")
   
 }
 #---------------------------------------------------------------------------------------------------------------------

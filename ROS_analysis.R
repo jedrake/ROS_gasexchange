@@ -47,6 +47,13 @@ plotBetasG1NSL_LWP(output=T,g1data=g1values2,NSLdata=NSLpars2,g1list=g1_TDR_beta
 
 
 #-------------------------------------------------------------------------------------------------------
+#- make a table of the beta parameters and standard errors. This table is written out as a csv in "Output"
+writeBetaParams()
+#-------------------------------------------------------------------------------------------------------
+
+
+
+#-------------------------------------------------------------------------------------------------------
 #- plot the C isotope composition of ROS leaves
 plotd13C(export=T)
 #-------------------------------------------------------------------------------------------------------

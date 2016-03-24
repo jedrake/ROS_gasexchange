@@ -19,7 +19,7 @@ NSLpars2 <- subset(NSLpars2,gxDate != as.Date("2012-10-31"))
 
 dat <- g1values2
 type="g1"
-startlist = list(Xlow = 0, Xhigh=7, q = 2)
+startlist = list(Xlow = 1, Xhigh=7, q = 2)
 #- split into list of species
 dat.l <- split(dat,dat$Species)
 
@@ -36,7 +36,7 @@ for (i in 1:length(dat.l)){
   if (type=="g1") dat.temp$Yval <- dat.temp$g1/max(dat.temp$g1)
   if (type=="NSL") dat.temp$Yval <- dat.temp$NSL
   fit.sp[[i]] <- nls(Yval ~ ((LWPpos-Xlow)/(Xhigh-Xlow))^q,start=startlist,data=dat.temp,algorithm="port",
-                     lower=c(0,6,1.5),upper=c(5,15,6))
+                     lower=c(1,6,1.5),upper=c(5,11,6))
   
   
   # get predicted values and 95% confidence intervals by bootstrapping
@@ -93,11 +93,11 @@ for (i in 1:length(dat.l)){
   if (i <= 3) startlist = list(Xlow = 1, Xhigh=7, q = 3)
   
   if(i <= 3)fit.sp[[i]] <- nls(Yval ~ ((LWPpos-Xlow)/(Xhigh-Xlow))^q,start=startlist,data=dat.temp,algorithm="port",trace=F,
-                     lower=c(0,7,1.1),upper=c(2,15,6))
+                     lower=c(1,7,1.1),upper=c(2,11,6))
   if(i==4) startlist = list(Xlow = 8.5, Xhigh=11, q = 2)
   
   if(i ==4)fit.sp[[i]] <- nls(Yval ~ ((LWPpos-Xlow)/(Xhigh-Xlow))^q,start=startlist,data=dat.temp,algorithm="port",trace=F,
-                              lower=c(8.5,10,1.1),upper=c(9.5,15,6))
+                              lower=c(8.5,10,1.1),upper=c(9.5,11,6))
   
   
   # get predicted values and 95% confidence intervals by bootstrapping
