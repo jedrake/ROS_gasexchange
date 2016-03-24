@@ -100,6 +100,7 @@ met$ALEAF <- Photosyn(VPD=met$VPD,PPFD=met$PPFD_Avg,Tleaf=met$AirTC_Avg,Vcmax=me
 
 #- reduce Vcmax and g1 for each species
 met$g1_adj <- NA
+met$Vcmax_adj <- NA
 
 cacus <- which(met$Species=="cacu")
 eusis <- which(met$Species=="eusi")
@@ -111,15 +112,43 @@ met$g1_adj[eusis] <- predict(fit.spg1[[2]],newdat=data.frame(TDR=met$VWC[eusis])
 met$g1_adj[eutes] <- predict(fit.spg1[[3]],newdat=data.frame(TDR=met$VWC[eutes]))*met$g1[eutes]
 met$g1_adj[piras] <- predict(fit.spg1[[4]],newdat=data.frame(TDR=met$VWC[piras]))*met$g1[piras]
 
+met$Vcmax_adj[cacus] <- predict(fit.spNSL[[1]],newdat=data.frame(TDR=met$VWC[cacus]))*met$Vcmax_max[cacus]
+met$Vcmax_adj[eusis] <- predict(fit.spNSL[[2]],newdat=data.frame(TDR=met$VWC[eusis]))*met$Vcmax_max[eusis]
+met$Vcmax_adj[eutes] <- predict(fit.spNSL[[3]],newdat=data.frame(TDR=met$VWC[eutes]))*met$Vcmax_max[eutes]
+met$Vcmax_adj[piras] <- predict(fit.spNSL[[4]],newdat=data.frame(TDR=met$VWC[piras]))*met$Vcmax_max[piras]
+
+
+
+
 #- model photo with a drought effect on g1
 met$ALEAF_g1 <- Photosyn(VPD=met$VPD,PPFD=met$PPFD_Avg,Tleaf=met$AirTC_Avg,Vcmax=met$Vcmax_max,Jmax=0.8*met$Vcmax_max,
                       g1=met$g1_adj)$ALEAF
+#- model photo with a drought effect on Vcmax
+met$ALEAF_NSL <- Photosyn(VPD=met$VPD,PPFD=met$PPFD_Avg,Tleaf=met$AirTC_Avg,Vcmax=met$Vcmax_adj,Jmax=0.8*met$Vcmax_adj,
+                         g1=met$g1)$ALEAF
+#- model photo with a drought effect on both
+met$ALEAF_both <- Photosyn(VPD=met$VPD,PPFD=met$PPFD_Avg,Tleaf=met$AirTC_Avg,Vcmax=met$Vcmax_adj,Jmax=0.8*met$Vcmax_adj,
+                         g1=met$g1_adj)$ALEAF
 
 #- plot daily averages
-windows()
-met.d <- summaryBy(PPFD_Avg+AirTC_Avg+VPD+ALEAF+ALEAF_g1~Date+Species,FUN=mean,data=subset(met,PPFD_Avg>0),keep.names=T)
-plotBy(ALEAF~Date|Species,data=met.d,type="l",col=c("black","red","blue","forestgreen"),legend=F)
-plotBy(ALEAF_g1~Date|Species,data=met.d,type="l",col=c("black","red","blue","forestgreen"),legend=F,lty=2,add=T)
+
+met.d <- summaryBy(PPFD_Avg+AirTC_Avg+VPD+VWC+ALEAF+ALEAF_g1+ALEAF_NSL+ALEAF_both~Date+Species,FUN=mean,data=subset(met,PPFD_Avg>0),keep.names=T)
+
+met.d.l <- split(met.d,met.d$Species)
+windows();par(mfrow=c(5,1),mar=c(0,0,0,0),oma=c(5,5,1,1))
+
+colors=c("black","forestgreen","blue","red")
+plotBy(VWC~Date|Species,data=met.d,type="l",col=colors,legend=F)
+
+for (i in 1:length(met.d.l)){
+  toplot <- met.d.l[[i]]
+  plot(ALEAF~Date,data=toplot,type="l",col=colors[1],legend=F)
+  lines(ALEAF_g1~Date,data=toplot,type="l",col=colors[2],legend=F)
+  lines(ALEAF_NSL~Date,data=toplot,type="l",col=colors[3],legend=F)
+  lines(ALEAF_both~Date,data=toplot,type="l",col=colors[4],legend=F)
+  
+}
+
 
 legend("top",)
       
