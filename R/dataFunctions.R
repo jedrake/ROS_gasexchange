@@ -708,3 +708,154 @@ writeBetaParams <- function(){
 
 
 
+
+
+#------------------------------------------------------------------------------------------------------
+#-- get the growth data from ROS
+#------------------------------------------------------------------------------------------------------
+returnGrowthROS <- function(plotson=F){
+  
+  #- download the data
+  #downloadHIEv(searchHIEv("ROS_MD_PM_GROWTH"),topath="Data")
+  
+  #- read it in, do some processing to harmonize the variables
+  dat <- read.csv("Data/ROS_MD_PM_GROWTH_20111222-20130906_L1_edited.csv")
+  dat$Date <- as.Date(dat$date,format="%Y-%m-%d")
+  dat$date <- NULL
+  dat$Species <- as.factor(ifelse(dat$sp == "casuari","cacu",
+                                  ifelse(dat$sp=="radiata","pira",
+                                         ifelse(dat$sp=="sideroxylon","eusi","eute"))))
+  dat$sp <- NULL
+  dat$Treat <- as.factor(ifelse(dat$trt=="water","wet","dry"))
+  dat$trt <- NULL
+  dat$diam <- rowMeans(dat[,5:6])
+  #dat$ht <- as.numeric(as.character(dat$ht))
+  dat <- dat[complete.cases(dat),]
+  
+  
+  #- download the harvest files to build an allometry
+  #files <- searchHIEv(filename="ROS_MD_PM_HARVEST_")
+  #downloadHIEv(files,topath="Data")
+  
+  #- read in the harvest files. Each file has a different set of data, which is annoying.
+  filestoread <- list.files(path="Data",pattern="ROS_MD_PM_HARVEST_",full.names=T)
+  dat1 <- dat.subset <- list()
+  for(i in 1:3){
+    dat1[[i]] <- read.csv(filestoread[i])
+    dat.subset[[i]] <- dat1[[i]][,c("date","sp","treenumber","rootsDM","stemDM","branchDM","leafDM","ht","diam.1","diam.2","nrleaves",
+                                    "tenleafarea.1","tenleafarea.2")]
+  }
+  dat.allom <- do.call(rbind,dat.subset)
+  
+  #----------------------------------------------------------------------------------------
+  #- the fourth harvest was different in how leaf area was estimated.
+  dat4 <- read.csv(filestoread[4])
+  
+  dat4.measured <- subset(dat4,is.na(leafsubsampleDM)==T)
+  dat4.est <- subset(dat4,is.na(leafsubsampleDM)==F)
+  dat4.est$SLA <- with(dat4.est,(tenleafarea.1+tenleafarea.2)/2/leafsubsampleDM) # in cm/g
+  dat4.est$leafArea <- with(dat4.est,(leafDM+leafsubsampleDM)*SLA/10000)
+  
+  dat4.measure2 <- subset(dat4.measured,select=c("date","sp","treenumber","rootsDM","stemDM","branchDM","leafDM","ht","diam.1","diam.2","nrleaves",
+                                                 "tenleafarea.1","tenleafarea.2"))
+  dat4.est2 <- subset(dat4.est,select=c("date","sp","treenumber","rootsDM","stemDM","branchDM","leafDM","ht","diam.1","diam.2","nrleaves",
+                                        "tenleafarea.1","tenleafarea.2","leafArea"))
+  #---------------------------------------------------------------------------------------- 
+  
+  dat.allom <- rbind(dat.allom,dat4.measure2)
+  #- process allometry dataset
+  dat.allom$leafArea <- rowMeans(dat.allom[,c("tenleafarea.1","tenleafarea.2")]/10000)
+  
+  dat.allom <- rbind(dat.allom,dat4.est2)
+  
+  dat.allom$diam <- rowMeans(dat.allom[,c("diam.1","diam.2")])
+  dat.allom$d2h <- with(dat.allom,(diam/10)^2*ht)
+  dat.allom$totDM <- rowSums(dat.allom[,c("rootsDM","stemDM","branchDM","leafDM")])
+  dat.allom$logd2h <- log(dat.allom$d2h)
+  dat.allom$logtotDM <- log(dat.allom$totDM)
+  dat.allom$logLA <- log(dat.allom$leafArea)
+  
+  linkdf <- data.frame("allom.species" = levels(dat.allom$sp),"Species"= levels(dat$Species))
+  dat.allom <- merge(dat.allom,linkdf,by.x="sp",by.y="allom.species")
+  
+  #------------------------------------------
+  #-- ancova for mass
+  #- plot 
+  if(plotson==T) plotBy(logtotDM~logd2h|Species,data=dat.allom)
+  
+  #- ancova
+  lm.full <- lm(logtotDM~logd2h*Species,data=dat.allom)
+  lm2 <- lm(logtotDM~logd2h+Species,data=dat.allom)
+  #anova(lm.full,lm2)
+  if (plotson==1) anova(lm2) # common slope, different intercept
+  
+  #- predict total mass, add to dataframe with size
+  dat$d2h <- with(dat,(diam/10)^2*ht)
+  dat$logd2h <- log(dat$d2h)
+  dat$totDM <- exp(predict(lm2,newdata=data.frame("logd2h" = dat$logd2h,"Species" = dat$Species)))
+  
+  #------------------------------------------
+  
+  
+  
+  
+  #------------------------------------------
+  #- ancova for leaf area
+  if(plotson==T) windows();plotBy(logLA~logd2h|Species,data=dat.allom)
+  
+  #- ancova
+  lm.full.la <- lm(logLA~logd2h*Species,data=dat.allom)
+  lm2.la <- lm(logLA~logd2h+Species,data=dat.allom)
+  #anova(lm.full.la,lm2.la) # use simpler model
+  if (plotson==1) anova(lm2.la) # common slope, different intercept
+  
+  #- predict total mass, add to dataframe with size
+  dat$d2h <- with(dat,(diam/10)^2*ht)
+  dat$logd2h <- log(dat$d2h)
+  dat$totLA <- exp(predict(lm2.la,newdata=data.frame("logd2h" = dat$logd2h,"Species" = dat$Species)))
+  
+  dat2 <- subset(dat,plottype=="shelter")
+  
+  
+  #------------------------------------------
+  
+  #- get AGR and RGR of each timepoint for each plant
+  growth <- dat2[with(dat2,order(treenumber,Date)),]
+  growth.list <- split(growth,growth$treenumber)
+  for (i in 1:length(growth.list)){
+    growth.list[[i]]$AG <- c(0,diff(growth.list[[i]]$totDM))
+    growth.list[[i]]$AGR <- c(0,diff(growth.list[[i]]$totDM)/as.numeric(diff(growth.list[[i]]$Date)))
+    growth.list[[i]]$RGR <- c(0,diff(log(growth.list[[i]]$totDM))/as.numeric(diff(growth.list[[i]]$Date)))
+  }
+  growth2 <- do.call(rbind,growth.list)
+  growth2$Treat <- relevel(growth2$Treat,ref="wet")
+  return(growth2)
+}
+#------------------------------------------------------------------------------------------------------
+
+
+
+
+
+
+#---------------------------------------------------------------------------------------------------------------
+#--- read in the soil moisture release curve data
+#--- note that the pressure is in bars, and the moisture is in a gravimetric percentage
+getMoistCurve <- function(){
+  curve1.1 <- read.csv("Data/VWC/ROS_soil_moisture_release_curve.csv")
+  curve1 <- subset(curve1.1,Sample.No.=="ROS1")[,c("actual_pressure","moisture")]
+  
+  #- read in the 20bar data that Burhan sent on 15/05/2015.
+  curve2 <- read.csv("Data/VWC/ROS_soil_moisture_release_curve_20bar_190515.csv")[1:4,c("actual_pressure","moisture")]
+  
+  #- put dataframes together
+  curve <- rbind(curve1,curve2)
+  
+  curve$pressure_MPa <- curve$actual_pressure/10
+  bd <- 1.32 #bulk density is 1.32 g cm-3. See bulk density excel file in /Data/VWC/
+  curve$VWC <- curve$moisture*bd/100
+  
+  #plot(pressure_MPa~VWC,data=curve)
+  return(curve)
+}
+#---------------------------------------------------------------------------------------------------------------

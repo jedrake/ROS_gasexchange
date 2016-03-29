@@ -12,28 +12,45 @@ source("R/loadLibraries.R")
 
 
 #-------------------------------------------------------------------------------------------------------
-#- plot soil moisture over time
+#- plot soil moisture over time. Figure 1.
 plotVWC(ptsize=1.8,output=T,type="1panel") # can plot type="1panel" or "4panel"
 #-------------------------------------------------------------------------------------------------------
 
 
 
+#-------------------------------------------------------------------------------------------------------
+#- plot the leaf water potential data over time. Figure 2.
+plotLWP(fillcol="lightgrey",size=1.75,output=T,labsize=1.8)
+#-------------------------------------------------------------------------------------------------------
+
+
+
 #-------------------------------------------------------------------------------------------------------  
-#- make a big 16-panel plot of photosynthetic variables over time
+#- make a big 16-panel plot of photosynthetic variables over time. Figure 3.
 plotGX(output=T)
 #-------------------------------------------------------------------------------------------------------
 
 
 
 #-------------------------------------------------------------------------------------------------------
-#- plot the leaf water potential data over time
-plotLWP(fillcol="lightgrey",size=1.75,output=T,labsize=1.8)
+#- plot the soil moisture release curve (Figure S2).
+plotMoistCurve(output=T)
 #-------------------------------------------------------------------------------------------------------
 
 
 
 #-------------------------------------------------------------------------------------------------------
-#- plot normalized g1 and non-stomatal limitation as a function of VWC with beta functions
+#- plot Photo and Cond vs. leaf water potential, to show iso vs. anisohydry (Figure S3).
+plotHydry(output=T)
+#-------------------------------------------------------------------------------------------------------
+
+
+
+
+
+#-------------------------------------------------------------------------------------------------------
+#- plot normalized g1 and non-stomatal limitation as a function of VWC with beta functions.
+#  Figure 4 and S3.
 
 #- get the data, fit the beta functions. For some reason this cannot be dropped into a function.
 #    Keep it as a script!
@@ -83,72 +100,181 @@ met2 <- merge(met1,vwc,by="Date")
 
 #- now we have 15-minutely met data for each species. 
 
-#- maximum Vcmax data (see returnVcmaxa(), but get the 75 percentile instead)
-maxVcmax <- data.frame(Species=c("cacu","eusi","eute","pira"),Vcmax_max=c(106.3,97.3,104.7,97.9))
-met3 <- merge(met2,maxVcmax,by="Species")
-met4 <- met3
+#- maximum Vcmax data (see returnVcmaxa(), but get the 75th (95th?) percentile instead)
+maxVcmax <- data.frame(Species=c("cacu","eusi","eute","pira"),Vcmax_max=c(82,84,79,81))
+#maxVcmax <- data.frame(Species=c("cacu","eusi","eute","pira"),Vcmax_max=c(146,130,130,127))
 
-#- get the g1 fits, merge in the max for each species
-g1values <- returng1()
-maxG1 <- summaryBy(g1~Species,data=g1values,FUN=max,keep.names=T)
-met <- merge(met4,maxG1,by="Species")
+# met3 <- merge(met2,maxVcmax,by="Species")
+# 
+# met4 <- met3
+# 
+# #- get the g1 fits, merge in the max for each species
+# g1values <- returng1()
+# maxG1 <- summaryBy(g1~Species,data=g1values,FUN=max,keep.names=T)
+# met <- merge(met4,maxG1,by="Species")
+# 
+# 
+# 
+# 
+# #- reduce Vcmax and g1 for each species
+# met$g1_adj <- NA
+# met$Vcmax_adj <- NA
+# 
+# cacus <- which(met$Species=="cacu")
+# eusis <- which(met$Species=="eusi")
+# eutes <- which(met$Species=="eute")
+# piras <- which(met$Species=="pira")
+# 
+# 
+# #- function to return beta values of a thing (g1 or apparent Vcmax). Range from 0 to 1.
+# #  Accepts (1) a nls model based on a beta function, (2) a vector of values to predict from,
+# #   and (3) a type variable refering to the predictor (TDR or LWP)
+# predictBeta <- function(model,data,type="TDR"){
+#   params <- coef(model)
+#   
+#   #- find the data lower than Xlow (to return 0)
+#   lows <- which(data < unname(params[1]))
+# 
+#   #- find the data higher than Xhigh (to return 1.0)
+#   highs <- which(data > unname(params[2]))
+#   
+#   #- predict output value for all x-values
+#   if(type=="TDR") yvals <- predict(model,newdat=data.frame(TDR=data))
+#   if(type=="LWP") yvals <- predict(model,newdat=data.frame(LWP=data))
+#   
+#   #- override the low and high values in the predicted value
+#   yvals[lows] <- 0.1
+#   yvals[highs] <- 1
+#   
+#   return(yvals)
+# }
+# 
+# #- predict g1 and apparent Vcmax based on the fitted beta models
+# met$g1_adj[cacus] <- predictBeta(model=fit.spg1[[1]],data=met$VWC[cacus],type="TDR")*met$g1[cacus]
+# met$g1_adj[eusis] <- predictBeta(model=fit.spg1[[2]],data=met$VWC[eusis],type="TDR")*met$g1[eusis]
+# met$g1_adj[eutes] <- predictBeta(model=fit.spg1[[3]],data=met$VWC[eutes],type="TDR")*met$g1[eutes]
+# met$g1_adj[piras] <- predictBeta(model=fit.spg1[[4]],data=met$VWC[piras],type="TDR")*met$g1[piras]
+# 
+# met$Vcmax_adj[cacus] <- predictBeta(model=fit.spNSL[[1]],data=met$VWC[cacus],type="TDR")*met$Vcmax_max[cacus]
+# met$Vcmax_adj[eusis] <- predictBeta(model=fit.spNSL[[2]],data=met$VWC[eusis],type="TDR")*met$Vcmax_max[eusis]
+# met$Vcmax_adj[eutes] <- predictBeta(model=fit.spNSL[[3]],data=met$VWC[eutes],type="TDR")*met$Vcmax_max[eutes]
+# met$Vcmax_adj[piras] <- predictBeta(model=fit.spNSL[[4]],data=met$VWC[piras],type="TDR")*met$Vcmax_max[piras]
+# 
+# 
+# 
+# #- model photo in the absence of any drought effect
+# met$ALEAF <- Photosyn(VPD=met$VPD,PPFD=1800,Tleaf=met$AirTC_Avg,Vcmax=met$Vcmax_max,Jmax=0.8*met$Vcmax_max,
+#                       g1=met$g1)$ALEAF
+# 
+# #- model photo with a drought effect on g1
+# met$ALEAF_g1 <- Photosyn(VPD=met$VPD,PPFD=1800,Tleaf=met$AirTC_Avg,Vcmax=met$Vcmax_max,Jmax=0.8*met$Vcmax_max,
+#                       g1=met$g1_adj)$ALEAF
+# #- model photo with a drought effect on Vcmax
+# met$ALEAF_NSL <- Photosyn(VPD=met$VPD,PPFD=1800,Tleaf=met$AirTC_Avg,Vcmax=met$Vcmax_adj,Jmax=0.8*met$Vcmax_adj,
+#                          g1=met$g1)$ALEAF
+# #- model photo with a drought effect on both
+# met$ALEAF_both <- Photosyn(VPD=met$VPD,PPFD=1800,Tleaf=met$AirTC_Avg,Vcmax=met$Vcmax_adj,Jmax=0.8*met$Vcmax_adj,
+#                          g1=met$g1_adj)$ALEAF
+# 
+# #- plot daily averages
+# 
+# met.d <- summaryBy(PPFD_Avg+AirTC_Avg+VPD+VWC+ALEAF+ALEAF_g1+ALEAF_NSL+ALEAF_both~Date+Species,FUN=mean,data=met,keep.names=T)
+# met.d2 <- summaryBy(VWC~Date,FUN=mean,data=met,keep.names=T)
+# met.d.l <- split(met.d,met.d$Species)
+# windows();par(mfrow=c(5,1),mar=c(0,0,0,0),oma=c(5,5,1,1))
+# 
+# colors=c("black","forestgreen","blue","red")
+# startdate <- as.Date("2013-01-18")
+# plot(VWC~Date,data=subset(met.d2,Date>startdate),type="l",col="black",legend=F)
+# 
+# for (i in 1:length(met.d.l)){
+#   toplot <- subset(met.d.l[[i]],Date>startdate)
+#   plot(ALEAF~Date,data=toplot,type="l",col=colors[1],legend=F,ylim=c(5,15))
+#   lines(ALEAF_g1~Date,data=toplot,type="l",col=colors[2],legend=F)
+#   lines(ALEAF_NSL~Date,data=toplot,type="l",col=colors[3],legend=F)
+#   lines(ALEAF_both~Date,data=toplot,type="l",col=colors[4],legend=F)
+#   
+# }
+# 
+# 
+# legend("top",)
+# 
+# #- model photo with a drought effect on both
+
+
+
+
+
+
+
+
+#- take an alternative approach, and predict values across a wide range of VWC values, along with Tair of 25, VPD of 1.5
+predData.1 <- expand.grid(VWC=seq(0.001,0.4,length=101),Species=levels(met.d$Species))
+predData.2 <- merge(predData.1,maxVcmax)
+predData <- merge(predData.2,maxG1)
+
+cacus <- which(predData$Species=="cacu")
+eusis <- which(predData$Species=="eusi")
+eutes <- which(predData$Species=="eute")
+piras <- which(predData$Species=="pira")
+
+
+#- predict g1 and apparent Vcmax based on the fitted beta models
+predData$g1_adj[cacus] <- predictBeta(model=fit.spg1[[1]],data=predData$VWC[cacus],type="TDR")*predData$g1[cacus]
+predData$g1_adj[eusis] <- predictBeta(model=fit.spg1[[2]],data=predData$VWC[eusis],type="TDR")*predData$g1[eusis]
+predData$g1_adj[eutes] <- predictBeta(model=fit.spg1[[3]],data=predData$VWC[eutes],type="TDR")*predData$g1[eutes]
+predData$g1_adj[piras] <- predictBeta(model=fit.spg1[[4]],data=predData$VWC[piras],type="TDR")*predData$g1[piras]
+
+predData$Vcmax_adj[cacus] <- predictBeta(model=fit.spNSL[[1]],data=predData$VWC[cacus],type="TDR")*predData$Vcmax_max[cacus]
+predData$Vcmax_adj[eusis] <- predictBeta(model=fit.spNSL[[2]],data=predData$VWC[eusis],type="TDR")*predData$Vcmax_max[eusis]
+predData$Vcmax_adj[eutes] <- predictBeta(model=fit.spNSL[[3]],data=predData$VWC[eutes],type="TDR")*predData$Vcmax_max[eutes]
+predData$Vcmax_adj[piras] <- predictBeta(model=fit.spNSL[[4]],data=predData$VWC[piras],type="TDR")*predData$Vcmax_max[piras]
+
 
 #- model photo in the absence of any drought effect
-met$ALEAF <- Photosyn(VPD=met$VPD,PPFD=met$PPFD_Avg,Tleaf=met$AirTC_Avg,Vcmax=met$Vcmax_max,Jmax=0.8*met$Vcmax_max,
-                      g1=met$g1)$ALEAF
-
-
-#- reduce Vcmax and g1 for each species
-met$g1_adj <- NA
-met$Vcmax_adj <- NA
-
-cacus <- which(met$Species=="cacu")
-eusis <- which(met$Species=="eusi")
-eutes <- which(met$Species=="eute")
-piras <- which(met$Species=="pira")
-
-met$g1_adj[cacus] <- predict(fit.spg1[[1]],newdat=data.frame(TDR=met$VWC[cacus]))*met$g1[cacus]
-met$g1_adj[eusis] <- predict(fit.spg1[[2]],newdat=data.frame(TDR=met$VWC[eusis]))*met$g1[eusis]
-met$g1_adj[eutes] <- predict(fit.spg1[[3]],newdat=data.frame(TDR=met$VWC[eutes]))*met$g1[eutes]
-met$g1_adj[piras] <- predict(fit.spg1[[4]],newdat=data.frame(TDR=met$VWC[piras]))*met$g1[piras]
-
-met$Vcmax_adj[cacus] <- predict(fit.spNSL[[1]],newdat=data.frame(TDR=met$VWC[cacus]))*met$Vcmax_max[cacus]
-met$Vcmax_adj[eusis] <- predict(fit.spNSL[[2]],newdat=data.frame(TDR=met$VWC[eusis]))*met$Vcmax_max[eusis]
-met$Vcmax_adj[eutes] <- predict(fit.spNSL[[3]],newdat=data.frame(TDR=met$VWC[eutes]))*met$Vcmax_max[eutes]
-met$Vcmax_adj[piras] <- predict(fit.spNSL[[4]],newdat=data.frame(TDR=met$VWC[piras]))*met$Vcmax_max[piras]
-
-
-
+predData$ALEAF <- Photosyn(VPD=1.5,PPFD=1800,Tleaf=25,Ca=400,Vcmax=predData$Vcmax_max,Jmax=1.6*predData$Vcmax_max,
+                      g1=predData$g1)$ALEAF
 
 #- model photo with a drought effect on g1
-met$ALEAF_g1 <- Photosyn(VPD=met$VPD,PPFD=met$PPFD_Avg,Tleaf=met$AirTC_Avg,Vcmax=met$Vcmax_max,Jmax=0.8*met$Vcmax_max,
-                      g1=met$g1_adj)$ALEAF
+predData$ALEAF_g1 <- Photosyn(VPD=1.5,PPFD=1800,Tleaf=25,Ca=400,Vcmax=predData$Vcmax_max,Jmax=1.6*predData$Vcmax_max,
+                         g1=predData$g1_adj)$ALEAF
 #- model photo with a drought effect on Vcmax
-met$ALEAF_NSL <- Photosyn(VPD=met$VPD,PPFD=met$PPFD_Avg,Tleaf=met$AirTC_Avg,Vcmax=met$Vcmax_adj,Jmax=0.8*met$Vcmax_adj,
-                         g1=met$g1)$ALEAF
-#- model photo with a drought effect on both
-met$ALEAF_both <- Photosyn(VPD=met$VPD,PPFD=met$PPFD_Avg,Tleaf=met$AirTC_Avg,Vcmax=met$Vcmax_adj,Jmax=0.8*met$Vcmax_adj,
-                         g1=met$g1_adj)$ALEAF
+predData$ALEAF_NSL <- Photosyn(VPD=1.5,PPFD=1800,Tleaf=25,Ca=400,Vcmax=predData$Vcmax_adj,Jmax=1.6*predData$Vcmax_adj,
+                          g1=predData$g1)$ALEAF
+predData$ALEAF_both <- Photosyn(VPD=1.5,PPFD=1800,Tleaf=25,Ca=400,Vcmax=predData$Vcmax_adj,Jmax=1.6*predData$Vcmax_adj,
+                           g1=predData$g1_adj)$ALEAF
 
-#- plot daily averages
+#- get the data to overlay
+Adat <- return.gx.vwc()
+Adat.m <- summaryBy(Photo+TDR~Date+Species+Treat,data=Adat,keep.names=T)
+Adat.m$VWC <- Adat.m$TDR/100
 
-met.d <- summaryBy(PPFD_Avg+AirTC_Avg+VPD+VWC+ALEAF+ALEAF_g1+ALEAF_NSL+ALEAF_both~Date+Species,FUN=mean,data=subset(met,PPFD_Avg>0),keep.names=T)
 
-met.d.l <- split(met.d,met.d$Species)
-windows();par(mfrow=c(5,1),mar=c(0,0,0,0),oma=c(5,5,1,1))
+# windows()
+# #plotBy(ALEAF~VWC|Species,data=predData,type="l",lwd=2,lty=1,ylim=c(-1,15),legend=F)
+# plotBy(ALEAF_NSL~VWC|Species,data=predData,type="l",lwd=2,lty=2,add=F,ylim=c(-1,20),legend=F)
+# plotBy(ALEAF_g1~VWC|Species,data=predData,type="l",lwd=2,lty=3,add=T,legend=F)
+# plotBy(ALEAF_both~VWC|Species,data=predData,type="l",lwd=2,lty=1,add=T,legend=F)
+# 
 
-colors=c("black","forestgreen","blue","red")
-plotBy(VWC~Date|Species,data=met.d,type="l",col=colors,legend=F)
-
-for (i in 1:length(met.d.l)){
-  toplot <- met.d.l[[i]]
-  plot(ALEAF~Date,data=toplot,type="l",col=colors[1],legend=F)
-  lines(ALEAF_g1~Date,data=toplot,type="l",col=colors[2],legend=F)
-  lines(ALEAF_NSL~Date,data=toplot,type="l",col=colors[3],legend=F)
-  lines(ALEAF_both~Date,data=toplot,type="l",col=colors[4],legend=F)
+#- plot data with predictions
+windows();par(mfrow=c(2,2),mar=c(0,0,0,0),oma=c(7,7,2,2))
+predData.l <- split(predData,predData$Species)
+for (i in 1:length(predData.l)){
+  toplot <- predData.l[[i]]
+  plotBy(ALEAF_NSL~VWC,data=toplot,type="l",lwd=2,lty=2,add=F,ylim=c(-1,25),legend=F,axes=F)
+  plotBy(ALEAF_g1~VWC,data=toplot,type="l",lwd=2,lty=3,add=T,legend=F)
+  plotBy(ALEAF_both~VWC,data=toplot,type="l",lwd=2,lty=1,add=T,legend=F)
+  points(Photo~VWC,data=subset(Adat.m,Species==as.character(toplot$Species[1])),cex=1.5,col="black",pch=16)
+  
+  title(main=toplot$Species[1],line=-1.5)
+  
+  if(i==1) magaxis(side=c(1:4),labels=c(0,1,0,0),frame.plot=T,las=1)
+  if(i==2) magaxis(side=c(1:4),labels=c(0,0,0,2),frame.plot=T,las=1)
+  if(i==3) magaxis(side=c(1:4),labels=c(1,1,0,0),frame.plot=T,las=1)
+  if(i==4) magaxis(side=c(1:4),labels=c(1,0,0,1),frame.plot=T,las=1)
   
 }
-
-
-legend("top",)
-      
+title(ylab=expression(A[sat]~(mu*mol~m^-2~s^-1)),outer=T,cex.lab=2)
+title(xlab=expression(Soil~volumetric~water~content~(theta~";"~m^3~m^-3)),outer=T,cex.lab=2)
+dev.copy2pdf(file="Output/Asat_VWC_modelPredictions.pdf")

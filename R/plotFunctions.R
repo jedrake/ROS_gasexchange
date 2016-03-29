@@ -102,7 +102,7 @@ plotVWC <- function(ptsize=1.5,output=T,type="4panel"){
       
     }
     title(xlab="Date",outer=TRUE,ylab=expression(Volumetric~water~content~(m^3~m^-3)),cex.lab=2,line=2.5)
-    if(output==T) dev.copy2pdf(file="./Output/VWC_ROS_jed.pdf")
+    if(output==T) dev.copy2pdf(file="Output/Figure1_VWC.pdf")
   }
   
   
@@ -290,7 +290,7 @@ plotGX <- function(output=F){
     if (i==1) title(main=expression(Cacu~~~~~~~~~~~~~~~~~~~~~~Eusi~~~~~~~~~~~~~~~~~~~~~~Eute~~~~~~~~~~~~~~~~~~~~~Pira),outer=T,cex.main=2)
   }
   title(xlab="Date",outer=TRUE,ylab="",cex.lab=2,line=5)
-  if(output==T) dev.copy2pdf(file="Output/Asat_Gs_WUE_CiCa_ROS.pdf")
+  if(output==T) dev.copy2pdf(file="Output/Figure3_Asat_Gs_WUE_CiCa_ROS.pdf")
 }
 #---------------------------------------------------------------------------------------------------------------------
 
@@ -387,7 +387,7 @@ plotLWP <- function(fillcol="lightgrey",size=1.75,output=F,labsize=1.8){
   
   title(xlab="Date",outer=TRUE,ylab=expression(Leaf~water~potential~(MPa)),cex.lab=2,line=1)
   
-  if(output==T) dev.copy2pdf(file="Output/LWP_over_time.pdf")
+  if(output==T) dev.copy2pdf(file="Output/Figure2_LWP_over_time.pdf")
   
 }
 #---------------------------------------------------------------------------------------------------------------------
@@ -590,3 +590,75 @@ plotd13C <- function(export=F){
   
   if(export==T) dev.copy2pdf(file="Output/ROS_d13C_bars.pdf")
 }
+
+
+
+
+
+
+
+
+#-------------------------------------------------------------------------------------------------------------------------------------
+#- make publication-ready plot of soil moisture release curve
+#-------------------------------------------------------------------------------------------------------------------------------------
+plotMoistCurve <- function(output=F){
+  curve <- getMoistCurve()
+  #optimize the vanGenutzen model based on the measured soil moisture release curves
+  
+  #- this doesn't seem to work very well anymore.
+  windows(12,12);par(cex.lab=1.5,cex.axis=1.5,mar=c(5,5,1,1))
+  plot(pressure_MPa~VWC,data=curve,axes=F,pch=16,cex=1.5,
+       ylab=expression(Soil~matrix~potential~(-MPa)),xlab=expression(Volumetric~water~content~(theta~";"~m^3~m^-3)))
+  magaxis(c(1:4),labels=c(1,1,0,0),las=1)
+  xvals <- seq(0,2,length.out=101)
+  if(output==T) dev.copy2pdf(file="Output/FigureS2_moistureReleaseCurve.pdf")
+}
+#-------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+
+
+#-------------------------------------------------------------------------------------------------------------------------------------
+#- plot Asat and gs relative to pre-dawn leaf water potential for the four species. Isohydry vs. anisohydry
+#-------------------------------------------------------------------------------------------------------------------------------------
+plotHydry <- function(output=F){
+  dat <- return.gx.vwc.lwp()
+  
+  #- remove a troublesome Cacu point
+  dat[which(dat$Photo>30 & dat$Species=="cacu" & dat$LWP< -2),c("Photo")] <- NA
+  #dat.m <- summaryBy(Photo+Cond+LWP+LWP.md ~ Species+Treat+Date,data=dat,FUN=c(mean,standard.error))
+  dat.l <- split(dat,dat$Species)
+  
+  windows(16,16)
+  par(mfrow=c(4,2),mar=c(0,0.25,0,0.25),xpd=FALSE,oma=c(4,5,1,5),cex=1.6,cex.axis=0.9,cex.lab=0.9)
+  
+  count <- 0
+  for (i in 1:length(dat.l)){
+    toplot <- dat.l[[i]]
+    
+    count <- count +1
+    plot(Photo~LWP,data=toplot,ylim=c(-2,35),xlim=c(-10,0),axes=F)
+    magaxis(side=c(1,2,3,4),labels=c(0,1,0,0),las=1,frame.plot=T,tcl=0.2)
+    title(ylab=toplot$Species[1],cex.lab=1,xpd=NA,line=1.5)
+    if (i ==4) magaxis(side=c(1,2,3,4),labels=c(1,0,0,0),las=1,frame.plot=T,tcl=0.2)
+    abline(h=0,lty=2)
+    legend("topleft",letters[count],bty="n",inset=-0.1)
+    
+    count <- count +1
+    plot(Cond~LWP,data=toplot,ylim=c(-0.05,1),xlim=c(-10,0),axes=F)
+    magaxis(side=c(1,2,3,4),labels=c(0,0,0,1),las=1,frame.plot=T,tcl=0.2)
+    if (i ==4) magaxis(side=c(1,2,3,4),labels=c(1,0,0,0),las=1,frame.plot=T,tcl=0.2)
+    abline(h=0,lty=2)
+    legend("topleft",letters[count],bty="n",inset=-0.1)
+    
+    
+  }  
+  title(xlab=expression(psi[l-PD]~(MPa)),outer=TRUE,cex.lab=1.5,line=2.5)
+  title(ylab=expression(A[sat]~(mu*mol~m^-2~s^-1)),outer=TRUE,cex.lab=1.5,line=2.5)
+  title(ylab=expression(g[s]~(mol~m^-2~s^-1)),outer=TRUE,cex.lab=1.5,line=-18,xpd=NA)
+  if (output==T) dev.copy2pdf(file="Output/FigureS3_isohydry.pdf")
+}
+
+#-------------------------------------------------------------------------------------------------------------------------------------
+

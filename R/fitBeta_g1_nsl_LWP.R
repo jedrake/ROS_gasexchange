@@ -58,10 +58,10 @@ for (i in 1:length(dat.l)){
   
 }
 newdatg1 <- newdat
-fit.spg1 <- fit.sp
+fit.spg1.LWP <- fit.sp
 rm(newdat)
 rm(fit.sp)
-g1_TDR_beta2 <- list(fit.spg1,newdatg1)
+g1_TDR_beta2 <- list(fit.spg1.LWP,newdatg1)
 #---------------------------------------------------------------------------------------------------------- 
 #---------------------------------------------------------------------------------------------------------- 
 
@@ -121,9 +121,9 @@ for (i in 1:length(dat.l)){
 
 newdatNSL <- newdat
 rm(newdat)
-fit.spNSL <- fit.sp
+fit.spNSL.LWP <- fit.sp
 rm(fit.sp)
-NSL_TDR_beta2 <- list(fit.spNSL,newdatNSL)
+NSL_TDR_beta2 <- list(fit.spNSL.LWP,newdatNSL)
 #---------------------------------------------------------------------------------------------------------- 
 #---------------------------------------------------------------------------------------------------------- 
 
