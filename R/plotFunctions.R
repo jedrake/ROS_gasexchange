@@ -433,9 +433,10 @@ plotBetasG1NSL <- function(output=F,g1data,NSLdata,g1list,NSLlist){
     # plot model and SE from bootstrapping
     rm(newdat)
     newdat <- g1list[[2]][[i]]
-    lines(wpred~TDR,data=newdat)
+    lines(wpred~TDR,data=newdat,xpd=F)
+    par(xpd=F)
     polygon(x = c(newdat$TDR, rev(newdat$TDR)), y = c(newdat$lower, rev(newdat$upper)),
-          col = alpha("grey",0.5), border = NA,xpd=F)
+          col = alpha("grey",0.5),border=NA)
     
 
     #------------------------------------------------------------------------
@@ -453,7 +454,7 @@ plotBetasG1NSL <- function(output=F,g1data,NSLdata,g1list,NSLlist){
     newdat2 <- NSLlist[[2]][[i]]
     lines(wpred~TDR,data=newdat2)
     polygon(x = c(newdat2$TDR, rev(newdat2$TDR)), y = c(newdat2$lower, rev(newdat2$upper)), 
-            col = alpha("grey",0.5), border = NA, xpd=F)
+            col = alpha("grey",0.5),border=NA)
     lines(x=c(max(newdat2$TDR),max(dat.temp2$TDR)),y=c(1,1))
     
     
@@ -461,7 +462,7 @@ plotBetasG1NSL <- function(output=F,g1data,NSLdata,g1list,NSLlist){
   mtext(expression(normalized~g[1]),side=2,outer=T,cex=2.5,las=0,line=2.5)
   mtext(expression(Nonstomatal~limitation~(A/A[e])),side=4,outer=T,cex=2.5,las=0,line=2.5)
   
-  if(output==T) dev.copy2pdf(file="Output/Beta_g1andNSL_VWC.pdf")
+  if(output==T) dev.copy2pdf(file="Output/Figure4_Beta_g1andNSL_VWC.pdf")
   
 }
 #---------------------------------------------------------------------------------------------------------------------
@@ -541,7 +542,7 @@ plotBetasG1NSL_LWP <- function(output=F,g1data,NSLdata,g1list,NSLlist){
   mtext(expression(normalized~g[1]),side=2,outer=T,cex=2.5,las=0,line=2.5)
   mtext(expression(Nonstomatal~limitation~(A/A[e])),side=4,outer=T,cex=2.5,las=0,line=2.5)
   
-  if(output==T) dev.copy2pdf(file="Output/Beta_g1andNSL_LWP.pdf")
+  if(output==T) dev.copy2pdf(file="Output/FigureS4_Beta_g1andNSL_LWP.pdf")
   
 }
 #---------------------------------------------------------------------------------------------------------------------
@@ -587,6 +588,7 @@ plotd13C <- function(export=F){
   magaxis(side=c(2,4),labels=c(1,0),frame.plot=T,las=1)
   text(x=c(1.25,3.7,6.1,8.5),y=17.5,xpd=T,labels=c("Cacu","Eusi","Eute","Pira"),cex=1.5)
   title(ylab=expression(Delta~"*"~10^3),cex.lab=1.5,line=1.8)
+  legend("topright",xpd=NA,legend=c("Wet","Dry"),fill=c("darkgrey","white"),bty="n",ncol=1,cex=1.5)
   
   if(export==T) dev.copy2pdf(file="Output/ROS_d13C_bars.pdf")
 }
@@ -662,3 +664,165 @@ plotHydry <- function(output=F){
 
 #-------------------------------------------------------------------------------------------------------------------------------------
 
+
+
+
+
+#-------------------------------------------------------------------------------------------------------------------------------------
+#- compare the isotopes and the long-term gas exchange data
+#-------------------------------------------------------------------------------------------------------------------------------------
+plotd13C_gx <- function(output=F){
+  #---- read in the isotope data, do a little processing
+  d1 <- get_d13C()
+  d1$Species <- tolower(d1$Species)
+  
+  d1$bigDelta <- d1$bigDelta*1000
+  d1.m <- summaryBy(deltaC+bigDelta~Species+Treat,data=d1,FUN=c(mean,standard.error))
+  d1.m$Species <- tolower(d1.m$Species)
+  
+  #--- read in the leaf gas exchange data, do a little processing
+  gx <- return.gx.vwc()
+  gx$WUEi <- with(gx,Photo/Cond)
+  
+  #- try to merge individual pots?
+  gx.m2 <- summaryBy(Photo+Cond+WUEi~Species+Treat+Pot,data=subset(gx,gxDate < as.Date("2013-3-01")),FUN=mean,keep.names=T)
+  dat2 <- merge(gx.m2,subset(d1,Date==as.Date("2013-03-26")),by.x=c("Species","Treat","Pot"),by.y=c("Species","Treat","plant"))
+  
+  
+  #- plot isotopes relative to gas exchange,
+  #  overlay fits
+  windows(18,12);par(mfrow=c(1,2),mar=c(5,5,1,1),oma=c(1,1,3,1))
+  
+  lm1 <- list()
+  dat.l <- split(dat2,dat2$Species)
+  plot(bigDelta~WUEi,data=subset(dat2,Treat=="wet" & Species=="cacu"),pch=16,ylim=c(17,27),xlim=c(40,120),
+       axes=F,ylab="",xlab="",col="white")
+  pointstyles <- c(15,16,17,18)
+  pointstyles2 <- c(0,1,2,5)
+  for (i in 1:length(dat.l)){
+    
+    lm1[[i]] <- lm(bigDelta~WUEi,data=dat.l[[i]])
+    predline(lm1[[i]])
+  }
+  for (i in 1:length(dat.l)){
+    
+    points(bigDelta~WUEi,data=subset(dat.l[[i]],Treat=="wet"),col="black",pch=pointstyles[i])
+    points(bigDelta~WUEi,data=subset(dat.l[[i]],Treat=="dry"),col="black",pch=pointstyles2[i])
+    
+  }
+  legend("topright",pch=15:18,legend=levels(dat2$Species),cex=1.2)
+  magaxis(side=1:4,labels=c(1,1,0,0),frame.plot=T,las=1)
+  title(ylab=expression(Delta~"*"~10^3),cex.lab=2)
+  title(xlab=expression(WUE[i]~(A[sat]/g[s]~";"~mu*mol~mmol^-1)),cex.lab=2)
+  legend("topleft","a",bty="n")
+  
+  #- fit one big model instead
+  lm.all <- lm(bigDelta~WUEi+Species,data=dat2)
+  anova(lm.all)
+  summary(lm.all)
+  
+  #-- barplot of bigdelta
+  d1.m <- summaryBy(deltaC+bigDelta~Species+Treat,data=d1,FUN=c(mean,standard.error))
+  
+  bp1 <- barplot(height=d1.m$bigDelta.mean[1:8],col=c("darkgrey","white"),ylim=c(18,25),xpd=F,axes=F)
+  adderrorbars(x=bp1,y=d1.m$bigDelta.mean[1:8],SE=d1.m$bigDelta.standard.error[1:8],direction="updown")
+  magaxis(side=c(2,4),labels=c(1,0),frame.plot=T,las=1)
+  text(x=c(1.25,3.7,6.1,8.5),y=17.5,xpd=T,labels=c("Cacu","Eusi","Eute","Pira"),cex=1.5)
+  title(ylab=expression(Delta~"*"~10^3),cex.lab=1.5,line=1.8)
+  legend("topright",xpd=NA,legend=c("Wet","Dry"),fill=c("darkgrey","white"),bty="n",ncol=1,cex=1.5)
+  legend("topleft","b",bty="n")
+  if(output==T) dev.copy2pdf(file="Output/Figure6_d13C_WUE.pdf")
+}
+#-------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+#-------------------------------------------------------------------------------------------------------
+#- Function to model Asat's response to drought given changes in g1, photosynthetic capacity, or both
+#-------------------------------------------------------------------------------------------------------
+modelAsatVWC <- function(output=F,fit.spg1,fit.spNSL){
+  
+  #- maximum Vcmax data (see returnVcmaxa(), but get the 75th (95th?) percentile instead)
+  maxVcmax <- data.frame(Species=c("cacu","eusi","eute","pira"),Vcmax_max=c(82,84,79,81))
+  
+  # #- get the g1 fits, merge in the max for each species
+  g1values <- returng1()
+  maxG1 <- summaryBy(g1~Species,data=g1values,FUN=max,keep.names=T)
+  
+  #- take an alternative approach, and predict values across a wide range of VWC values, along with Tair of 25, VPD of 1.5
+  predData.1 <- expand.grid(VWC=seq(0.001,0.4,length=101),Species=levels(maxVcmax$Species))
+  predData.2 <- merge(predData.1,maxVcmax,by="Species")
+  predData <- merge(predData.2,maxG1)
+  
+  cacus <- which(predData$Species=="cacu")
+  eusis <- which(predData$Species=="eusi")
+  eutes <- which(predData$Species=="eute")
+  piras <- which(predData$Species=="pira")
+  
+  
+  #- predict g1 and apparent Vcmax based on the fitted beta models
+  predData$g1_adj[cacus] <- predictBeta(model=fit.spg1[[1]],data=predData$VWC[cacus],type="TDR")*predData$g1[cacus]
+  predData$g1_adj[eusis] <- predictBeta(model=fit.spg1[[2]],data=predData$VWC[eusis],type="TDR")*predData$g1[eusis]
+  predData$g1_adj[eutes] <- predictBeta(model=fit.spg1[[3]],data=predData$VWC[eutes],type="TDR")*predData$g1[eutes]
+  predData$g1_adj[piras] <- predictBeta(model=fit.spg1[[4]],data=predData$VWC[piras],type="TDR")*predData$g1[piras]
+  
+  predData$Vcmax_adj[cacus] <- predictBeta(model=fit.spNSL[[1]],data=predData$VWC[cacus],type="TDR")*predData$Vcmax_max[cacus]
+  predData$Vcmax_adj[eusis] <- predictBeta(model=fit.spNSL[[2]],data=predData$VWC[eusis],type="TDR")*predData$Vcmax_max[eusis]
+  predData$Vcmax_adj[eutes] <- predictBeta(model=fit.spNSL[[3]],data=predData$VWC[eutes],type="TDR")*predData$Vcmax_max[eutes]
+  predData$Vcmax_adj[piras] <- predictBeta(model=fit.spNSL[[4]],data=predData$VWC[piras],type="TDR")*predData$Vcmax_max[piras]
+  
+  
+  #- model photo in the absence of any drought effect
+  predData$ALEAF <- Photosyn(VPD=1.5,PPFD=1800,Tleaf=25,Ca=400,Vcmax=predData$Vcmax_max,Jmax=1.6*predData$Vcmax_max,
+                             g1=predData$g1)$ALEAF
+  
+  #- model photo with a drought effect on g1
+  predData$ALEAF_g1 <- Photosyn(VPD=1.5,PPFD=1800,Tleaf=25,Ca=400,Vcmax=predData$Vcmax_max,Jmax=1.6*predData$Vcmax_max,
+                                g1=predData$g1_adj)$ALEAF
+  #- model photo with a drought effect on Vcmax
+  predData$ALEAF_NSL <- Photosyn(VPD=1.5,PPFD=1800,Tleaf=25,Ca=400,Vcmax=predData$Vcmax_adj,Jmax=1.6*predData$Vcmax_adj,
+                                 g1=predData$g1)$ALEAF
+  predData$ALEAF_both <- Photosyn(VPD=1.5,PPFD=1800,Tleaf=25,Ca=400,Vcmax=predData$Vcmax_adj,Jmax=1.6*predData$Vcmax_adj,
+                                  g1=predData$g1_adj)$ALEAF
+  
+  #- get the data to overlay
+  Adat <- return.gx.vwc()
+  Adat.m <- summaryBy(Photo+TDR~Date+Species+Treat,data=Adat,keep.names=T)
+  Adat.m$VWC <- Adat.m$TDR/100
+  
+  
+  # windows()
+  # #plotBy(ALEAF~VWC|Species,data=predData,type="l",lwd=2,lty=1,ylim=c(-1,15),legend=F)
+  # plotBy(ALEAF_NSL~VWC|Species,data=predData,type="l",lwd=2,lty=2,add=F,ylim=c(-1,20),legend=F)
+  # plotBy(ALEAF_g1~VWC|Species,data=predData,type="l",lwd=2,lty=3,add=T,legend=F)
+  # plotBy(ALEAF_both~VWC|Species,data=predData,type="l",lwd=2,lty=1,add=T,legend=F)
+  # 
+  
+  #- plot data with predictions
+  windows();par(mfrow=c(2,2),mar=c(0,0,0,0),oma=c(7,7,2,2))
+  predData.l <- split(predData,predData$Species)
+  for (i in 1:length(predData.l)){
+    toplot <- predData.l[[i]]
+    plotBy(ALEAF_NSL~VWC,data=toplot,type="l",lwd=2,lty=2,add=F,ylim=c(-1,25),legend=F,axes=F,col="black")
+    plotBy(ALEAF_g1~VWC,data=toplot,type="l",lwd=2,lty=3,add=T,legend=F,col="black")
+    plotBy(ALEAF_both~VWC,data=toplot,type="l",lwd=2,lty=1,add=T,legend=F,col="black")
+    points(Photo~VWC,data=subset(Adat.m,Species==as.character(toplot$Species[1])),cex=1.5,col="black",pch=16)
+    
+    title(main=toplot$Species[1],line=-1.5)
+    
+    if(i==1) magaxis(side=c(1:4),labels=c(0,1,0,0),frame.plot=T,las=1)
+    if(i==2) magaxis(side=c(1:4),labels=c(0,0,0,2),frame.plot=T,las=1)
+    if(i==3) magaxis(side=c(1:4),labels=c(1,1,0,0),frame.plot=T,las=1)
+    if(i==4) magaxis(side=c(1:4),labels=c(1,0,0,1),frame.plot=T,las=1)
+    
+  }
+  title(ylab=expression(A[sat]~(mu*mol~m^-2~s^-1)),outer=T,cex.lab=2)
+  title(xlab=expression(Soil~volumetric~water~content~(theta~";"~m^3~m^-3)),outer=T,cex.lab=2)
+  if (output==T) dev.copy2pdf(file="Output/Figure5_Asat_VWC_modelPredictions.pdf")
+}
+#-------------------------------------------------------------------------------------------------------

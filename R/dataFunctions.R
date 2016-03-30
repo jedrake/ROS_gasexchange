@@ -859,3 +859,103 @@ getMoistCurve <- function(){
   return(curve)
 }
 #---------------------------------------------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+#---------------------------------------------------------------------------------------------------------------
+#- functions to add lines to a plot
+#---------------------------------------------------------------------------------------------------------------
+addpoly <- function(x,y1,y2,col=alpha("lightgrey",0.7),...){
+  ii <- order(x)
+  y1 <- y1[ii]
+  y2 <- y2[ii]
+  x <- x[ii]
+  polygon(c(x,rev(x)), c(y1, rev(y2)), col=col, border=NA,...)
+}
+
+predline <- function(fit, from=NULL, to=NULL, col=alpha("lightgrey",0.7), ...){
+  
+  if(is.null(from))from <- min(fit$model[,2], na.rm=TRUE)
+  if(is.null(to))to <- max(fit$model[,2], na.rm=TRUE)
+  
+  newdat <- data.frame(X = seq(from,to, length=101))
+  names(newdat)[1] <- names(coef(fit))[2]
+  
+  pred <- as.data.frame(predict(fit, newdat, se.fit=TRUE, interval="confidence")$fit)
+  
+  addpoly(newdat[[1]], pred$lwr, pred$upr, col=col)
+  
+  ablinepiece(fit, from=from, to=to, ...)
+  
+}
+
+#'@title Add a line to a plot
+#'@description As \code{abline}, but with \code{from} and \code{to} arguments. 
+#'If a fitted linear regression model is used as asn argument, it uses the min and max values of the data used to fit the model.
+#'@param a Intercept (optional)
+#'@param b Slope (optional)
+#'@param reg A fitted linear regression model (output of \code{\link{lm}}).
+#'@param from Draw from this X value
+#'@param to Draw to this x value
+#'@param \dots Further parameters passed to \code{\link{segments}}
+#'@export
+ablinepiece <- function(a=NULL,b=NULL,reg=NULL,from=NULL,to=NULL,...){
+  
+  # Borrowed from abline
+  if (!is.null(reg)) a <- reg
+  
+  if (!is.null(a) && is.list(a)) {
+    temp <- as.vector(coefficients(a))
+    from <- min(a$model[,2], na.rm=TRUE)
+    to <- max(a$model[,2], na.rm=TRUE)
+    
+    if (length(temp) == 1) {
+      a <- 0
+      b <- temp
+    }
+    else {
+      a <- temp[1]
+      b <- temp[2]
+    }
+  }
+  
+  segments(x0=from,x1=to,
+           y0=a+from*b,y1=a+to*b,...)
+  
+}
+#---------------------------------------------------------------------------------------------------------------
+
+
+
+
+#-------------------------------------------------------------------------------------------------------
+#- function to return beta values of a thing (g1 or apparent Vcmax). Range from 0 to 1.
+#  Accepts (1) a nls model based on a beta function, (2) a vector of values to predict from,
+#   and (3) a type variable refering to the predictor (TDR or LWP)
+#-------------------------------------------------------------------------------------------------------
+predictBeta <- function(model,data,type="TDR"){
+  params <- coef(model)
+  
+  #- find the data lower than Xlow (to return 0)
+  lows <- which(data < unname(params[1]))
+  
+  #- find the data higher than Xhigh (to return 1.0)
+  highs <- which(data > unname(params[2]))
+  
+  #- predict output value for all x-values
+  if(type=="TDR") yvals <- predict(model,newdat=data.frame(TDR=data))
+  if(type=="LWP") yvals <- predict(model,newdat=data.frame(LWP=data))
+  
+  #- override the low and high values in the predicted value
+  yvals[lows] <- 0.1
+  yvals[highs] <- 1
+  
+  return(yvals)
+}
+#-------------------------------------------------------------------------------------------------------
+
