@@ -14,6 +14,7 @@ library(magicaxis)
 library(colorRamps)
 library(car)
 library(scales)
+library(DEoptim)
 
 source("R/dataFunctions.R")
 source("R/plotFunctions.R")

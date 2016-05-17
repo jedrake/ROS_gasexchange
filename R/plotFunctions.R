@@ -101,8 +101,10 @@ plotVWC <- function(ptsize=1.5,output=T,type="4panel"){
       
       
     }
-    title(xlab="Date",outer=TRUE,ylab=expression(Volumetric~water~content~(m^3~m^-3)),cex.lab=2,line=2.5)
+    title(xlab="Date",outer=TRUE,ylab=expression(Volumetric~water~content~(theta~m^3~m^-3)),cex.lab=2,line=2)
+    title(xlab="Date",outer=TRUE,ylab=expression(Volumetric~water~content~(theta~m^3~m^-3)),cex.lab=2,line=2)
     if(output==T) dev.copy2pdf(file="Output/Figure1_VWC.pdf")
+    
   }
   
   
@@ -142,15 +144,15 @@ plotVWC <- function(ptsize=1.5,output=T,type="4panel"){
     #rug(gxdates,lwd=3,line=-0.5)
     axis.Date(side=1,at=seq(startdate,enddate,by="month"),format="%m/%y",cex.axis=1.5,tcl=0.5)
     abline(h=0.1,lty=3)
-    title(xlab="Date",outer=TRUE,ylab=expression(Volumetric~water~content~(m^3~m^-3)),cex.lab=2,line=-1)
+    title(xlab="Date",outer=TRUE,ylab=expression(Volumetric~water~content~(theta~";"~m^3~m^-3)),cex.lab=2,line=-1)
     legend(x=as.Date("2013-1-1"),y=0.416,legend=c("  Cacu","  Eusi","  Eute","  Pira"),pch=c(pchs),
            col=c(rep("black",4)),ncol=2,pt.bg="black",cex=1.4,bg="white")
     legend(x=as.Date("2013-1-8"),y=0.416,legend=c("        ","        ","          ","           "),pch=c(pchs),
            col=c(rep("black",4)),ncol=2,pt.bg="white",cex=1.4,bty="n")
     rug(gxdates,lwd=3,line=-0.5)
     
-    if(output==T) dev.copy2pdf(file="./Output/VWC_ROS_jed_1panel.pdf")
   }
+  if(output==T) dev.copy2pdf(file="./Output/VWC_ROS_jed_1panel.pdf")
   
 }
 #------------------------------------------------------------------------------------------------------------------
@@ -269,7 +271,7 @@ plotGX <- function(output=F){
   ses <- c(8:11)
   
   labels <- list(expression(A[sat]),expression(g[s]),
-                 expression(WUE),expression(C[i]~"/"~C[a]))
+                 expression(WUE[i]),expression(C[i]~"/"~C[a]))
   
   #-- get the average WUE for the first two droughts
   firstdrs <- subset(ITE.trt,gxDate==as.Date("2012-10-31") | gxDate==as.Date("2012-11-6") | gxDate==as.Date("2012-12-19"))
@@ -277,14 +279,16 @@ plotGX <- function(output=F){
   
   windows(14,12)
   par(mfrow=c(4,4),oma=c(8,7,2,5),mar=c(0.25,0.25,0.25,0.25))
+  count <- 0
   for (i in 1:4){
     #print(i)
     #plot photosynthesis
     for (j in 1:4){
       #print(j)
+      count <- count +1
       plot.gs.ros(dat=dat.trt.list[[j]],toplot=toplot[i],toplotse=ses[i],
                   ylims=ylims.list[[i]],ylabs=ylabs.list[[j]],xlab=xlabs[i])
-      
+      legend("topright",letters[count],bty="n",cex=1.5,inset=-0.02)
     }
     title(xlab="",outer=TRUE,ylab=labels[[i]],cex.lab=2,line=4,adj=((4-i)/4+0.13))
     if (i==1) title(main=expression(Cacu~~~~~~~~~~~~~~~~~~~~~~Eusi~~~~~~~~~~~~~~~~~~~~~~Eute~~~~~~~~~~~~~~~~~~~~~Pira),outer=T,cex.main=2)
@@ -357,6 +361,7 @@ plotLWP <- function(fillcol="lightgrey",size=1.75,output=F,labsize=1.8){
          col=c(rep("black",4)),ncol=2,pt.bg="black",cex=1.4,bg="white")
   legend(x=as.Date("2012-10-8"),y=-7.1,legend=c("        ","        ","          ","           "),pch=c(pchs),
          col=c(rep("black",4)),ncol=2,pt.bg="white",cex=1.4,bty="n")
+  legend("topleft","a",bty="n",inset=-0.05,cex=1.5)
   #legend("bottomleft",c("Cacu-wet","Eusi-wet","Eute-wet","Pira-wet","Cacu-dry","Eusi-dry","Eute-dry","Pira-dry"),pch=c(pchs,pchs),
   #       col=c("black","black","black","black","darkgrey","darkgrey","darkgrey","darkgrey"),ncol=2,bg="white",cex=1.4)
   #plot mid-day
@@ -384,6 +389,7 @@ plotLWP <- function(fillcol="lightgrey",size=1.75,output=F,labsize=1.8){
     if (i==1) title(ylab="Mid-day",cex.lab=labsize,line=2.3,xpd=NA)
     
   }
+  legend("topleft","b",bty="n",inset=-0.05,cex=1.5)
   
   title(xlab="Date",outer=TRUE,ylab=expression(Leaf~water~potential~(MPa)),cex.lab=2,line=1)
   
@@ -412,6 +418,7 @@ plotBetasG1NSL <- function(output=F,g1data,NSLdata,g1list,NSLlist){
   windows(16,16)
   par(mfrow=c(4,2),mar=c(0,0.25,0,0.25),xpd=FALSE,oma=c(4,5,1,5),cex=1.6,cex.axis=0.9,cex.lab=0.9)
   labs <- c("Cacu","Eusi","Eute","Pira")
+  count <- 0
   for (i in 1:length(dat.l)){
     newdat <- newdat2 <- data.frame()
     dat.temp <- dat.l[[i]]
@@ -420,14 +427,15 @@ plotBetasG1NSL <- function(output=F,g1data,NSLdata,g1list,NSLlist){
     dat.temp$Species <- factor(dat.temp$Species)
     #------------------------------------------------------------------------
     #-- plot g1 vs. TDR
+    count <- count+1
     
     plot(g1norm~TDR,data=subset(dat.temp,Treat=="wet"),pch=21,col="black",bg=grey(0.1),axes=F,ylim=c(0,1.05),xlim=c(0,0.4))
     points(g1norm~TDR,data=subset(dat.temp,Treat=="dry"),pch=21,col="black",bg=grey(0.8))
     magaxis(side=c(1:4),labels=c(0,1,0,0),las=1)
     if(i==4)  magaxis(side=c(1:4),labels=c(1,1,0,0),las=1)
     mtext(labs[i],side=2,xpd=T,cex=1.3,line=1.75)
-    if(i==4)  mtext(expression(VWC~(m^3~m^-3)),side=1,outer=F,cex=1.5,line=2)
     if(i==1) legend("bottomright",xpd=NA,legend=c("Wet","Dry"),pch=21,pt.bg=c("black","grey"),ncol=2,cex=0.75)
+    legend("topleft",letters[count],cex=1,inset=-0.1,bty="n")
     
     
     # plot model and SE from bootstrapping
@@ -444,12 +452,13 @@ plotBetasG1NSL <- function(output=F,g1data,NSLdata,g1list,NSLlist){
     
     dat.temp2 <- dat.l2[[i]]
     dat.temp2$Species <- factor(dat.temp2$Species)
+    count <- count+1
     
-    plot(NSL~TDR,data=subset(dat.temp2,Treat=="wet"),pch=21,col="black",bg=grey(0.1),axes=F,ylim=c(0,1.5),xlim=c(0,0.4))
+    plot(NSL~TDR,data=subset(dat.temp2,Treat=="wet"),pch=21,col="black",bg=grey(0.1),axes=F,ylim=c(0,1.4),xlim=c(0,0.4))
     points(NSL~TDR,data=subset(dat.temp2,Treat=="dry"),pch=21,col="black",bg=grey(0.8))
     magaxis(side=c(1:4),labels=c(0,0,0,1),las=1)
     if(i==4)  magaxis(side=c(1:4),labels=c(1,0,0,0),las=1)
-    if(i==4)  mtext(expression(VWC~(m^3~m^-3)),side=1,outer=F,cex=1.5,line=2)
+    legend("topleft",letters[count],cex=1,inset=-0.1,bty="n")
     
     newdat2 <- NSLlist[[2]][[i]]
     lines(wpred~TDR,data=newdat2)
@@ -461,6 +470,7 @@ plotBetasG1NSL <- function(output=F,g1data,NSLdata,g1list,NSLlist){
   }
   mtext(expression(normalized~g[1]),side=2,outer=T,cex=2.5,las=0,line=2.5)
   mtext(expression(Nonstomatal~limitation~(A/A[e])),side=4,outer=T,cex=2.5,las=0,line=2.5)
+  mtext(expression(theta~(m^3~m^-3)),side=1,outer=T,cex=1.5,line=2)
   
   if(output==T) dev.copy2pdf(file="Output/Figure4_Beta_g1andNSL_VWC.pdf")
   
@@ -605,14 +615,54 @@ plotd13C <- function(export=F){
 #-------------------------------------------------------------------------------------------------------------------------------------
 plotMoistCurve <- function(output=F){
   curve <- getMoistCurve()
-  #optimize the vanGenutzen model based on the measured soil moisture release curves
+  curve$pressure_MPa_neg <- -1*curve$pressure_MPa
+
   
-  #- this doesn't seem to work very well anymore.
+  #----
+  #- predict soil matrix potential via Campbell 1974 and Cosby et al. 1984
+  thetaSat <- 0.09
+  #- values  Duursma 2008, loamy sand 
+  b <- 4.26
+  PsiE <- -0.36
+  Ksat <- 5.8
+  
+  VWC <- seq(0,0.3,length=101)
+  PsiSoil <- PsiE*(VWC/thetaSat)^(-1*b)
+  
+  par <- c(0.1,3,-0.36)
+  Cosby_optim <- function(par,VWC,dat){
+    #- get the parameters
+    thetaSat <- par[1]
+    b <- par[2]
+    PsiE <- par[3]
+
+    #- predict matrix potential
+    pred <- PsiE*(VWC/thetaSat)^(-1*b)
+    
+    #- 
+    cost <- (pred-dat)^2
+    return(sum(cost))
+  }
+   
+  upper <- c(0.2,15,-0.01)
+  lower <- c(0.001,1,-10)
+  output <- DEoptim(Cosby_optim,lower=lower,upper=upper,VWC=curve$VWC,dat=curve$pressure_MPa_neg,
+                    DEoptim.control(NP=400,itermax=100))
+  
+  bestpars <- output$optim$bestmem
+  VWC <- seq(0,0.3,length=101)
+  PsiSoil_best <- bestpars[3]*(VWC/bestpars[1])^(-1*bestpars[2])
+  #- plot
   windows(12,12);par(cex.lab=1.5,cex.axis=1.5,mar=c(5,5,1,1))
-  plot(pressure_MPa~VWC,data=curve,axes=F,pch=16,cex=1.5,
-       ylab=expression(Soil~matrix~potential~(-MPa)),xlab=expression(Volumetric~water~content~(theta~";"~m^3~m^-3)))
+  plot(pressure_MPa_neg~VWC,data=curve,axes=F,pch=16,cex=1.5,ylim=c(-5,0),xlim=c(0,0.2),
+       ylab=expression(Soil~matrix~potential~(MPa)),xlab=expression(Volumetric~water~content~(theta~";"~m^3~m^-3)))
   magaxis(c(1:4),labels=c(1,1,0,0),las=1)
-  xvals <- seq(0,2,length.out=101)
+  lines(PsiSoil_best~VWC,lty=1)
+  lines(PsiSoil~VWC,lty=2)
+  
+  legend("bottomright",lty=c(1,2),col="black",legend=c("Fit by DEoptim","Loamy sand, Duursma (2008)"),
+         cex=1.5)
+  
   if(output==T) dev.copy2pdf(file="Output/FigureS2_moistureReleaseCurve.pdf")
 }
 #-------------------------------------------------------------------------------------------------------------------------------------
@@ -671,7 +721,7 @@ plotHydry <- function(output=F){
 #-------------------------------------------------------------------------------------------------------------------------------------
 #- compare the isotopes and the long-term gas exchange data
 #-------------------------------------------------------------------------------------------------------------------------------------
-plotd13C_gx <- function(output=F){
+plotd13C_gx <- function(output=F,ptsize=1.8){
   #---- read in the isotope data, do a little processing
   d1 <- get_d13C()
   d1$Species <- tolower(d1$Species)
@@ -697,8 +747,9 @@ plotd13C_gx <- function(output=F){
   dat.l <- split(dat2,dat2$Species)
   plot(bigDelta~WUEi,data=subset(dat2,Treat=="wet" & Species=="cacu"),pch=16,ylim=c(17,27),xlim=c(40,120),
        axes=F,ylab="",xlab="",col="white")
-  pointstyles <- c(15,16,17,18)
-  pointstyles2 <- c(0,1,2,5)
+  pointstyles <- 21:24
+  #pointstyles <- c(15,16,17,18)
+  #pointstyles2 <- c(0,1,2,5)
   for (i in 1:length(dat.l)){
     
     lm1[[i]] <- lm(bigDelta~WUEi,data=dat.l[[i]])
@@ -706,15 +757,19 @@ plotd13C_gx <- function(output=F){
   }
   for (i in 1:length(dat.l)){
     
-    points(bigDelta~WUEi,data=subset(dat.l[[i]],Treat=="wet"),col="black",pch=pointstyles[i])
-    points(bigDelta~WUEi,data=subset(dat.l[[i]],Treat=="dry"),col="black",pch=pointstyles2[i])
+    points(bigDelta~WUEi,data=subset(dat.l[[i]],Treat=="wet"),col="black",pch=pointstyles[i],bg="black",cex=ptsize)
+    points(bigDelta~WUEi,data=subset(dat.l[[i]],Treat=="dry"),col="black",pch=pointstyles[i],bg="white",cex=ptsize)
     
   }
-  legend("topright",pch=15:18,legend=levels(dat2$Species),cex=1.2)
+  #legend("topright",pch=15:18,legend=levels(dat2$Species),cex=1.2)
   magaxis(side=1:4,labels=c(1,1,0,0),frame.plot=T,las=1)
   title(ylab=expression(Delta~"*"~10^3),cex.lab=2)
   title(xlab=expression(WUE[i]~(A[sat]/g[s]~";"~mu*mol~mmol^-1)),cex.lab=2)
-  legend("topleft","a",bty="n")
+  legend("topleft","a",bty="n",cex=1.5)
+  legend(x=75,y=27,legend=c("  Cacu","  Eusi","  Eute","  Pira"),pch=c(pointstyles),
+         col=c(rep("black",4)),ncol=2,pt.bg="black",cex=1.4,bg="white")
+  legend(x=78,y=27,legend=c("        ","        ","          ","           "),pch=c(pointstyles),
+         col=c(rep("black",4)),ncol=2,pt.bg="white",cex=1.4,bty="n")
   
   #- fit one big model instead
   lm.all <- lm(bigDelta~WUEi+Species,data=dat2)
@@ -730,7 +785,8 @@ plotd13C_gx <- function(output=F){
   text(x=c(1.25,3.7,6.1,8.5),y=17.5,xpd=T,labels=c("Cacu","Eusi","Eute","Pira"),cex=1.5)
   title(ylab=expression(Delta~"*"~10^3),cex.lab=1.5,line=1.8)
   legend("topright",xpd=NA,legend=c("Wet","Dry"),fill=c("darkgrey","white"),bty="n",ncol=1,cex=1.5)
-  legend("topleft","b",bty="n")
+  legend("topleft","b",bty="n",cex=1.5)
+  title(xlab="Species",cex.lab=2,line=3.5)
   if(output==T) dev.copy2pdf(file="Output/Figure6_d13C_WUE.pdf")
 }
 #-------------------------------------------------------------------------------------------------------------------------------------
@@ -819,10 +875,12 @@ modelAsatVWC <- function(output=F,fit.spg1,fit.spNSL){
     if(i==2) magaxis(side=c(1:4),labels=c(0,0,0,2),frame.plot=T,las=1)
     if(i==3) magaxis(side=c(1:4),labels=c(1,1,0,0),frame.plot=T,las=1)
     if(i==4) magaxis(side=c(1:4),labels=c(1,0,0,1),frame.plot=T,las=1)
+    legend("topleft",letters[i],bty="n",cex=1.5,inset=0)
     
+    if (i==1) legend("bottomright",legend=c("Stomatal","Non-stomatal","Both"),lty=c(3,2,1),cex=1.5,bty="n",lwd=2)
   }
   title(ylab=expression(A[sat]~(mu*mol~m^-2~s^-1)),outer=T,cex.lab=2)
-  title(xlab=expression(Soil~volumetric~water~content~(theta~";"~m^3~m^-3)),outer=T,cex.lab=2)
+  title(xlab=expression(theta~(m^3~m^-3)),outer=T,cex.lab=2)
   if (output==T) dev.copy2pdf(file="Output/Figure5_Asat_VWC_modelPredictions.pdf")
 }
 #-------------------------------------------------------------------------------------------------------
