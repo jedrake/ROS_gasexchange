@@ -75,7 +75,8 @@ fit.sp <- newdat <-  list()
 
 #- loop over each element of the list, fit data
 for (i in 1:length(dat.l)){
-  dat.temp <- dat.l[[i]]
+  dat.temp <- subset(dat.l[[i]],TDR<0.3)
+  if (i==4) dat.temp <- subset(dat.l[[i]],TDR<0.2)
   dat.temp$Species <- factor(dat.temp$Species)
   
   #- fit the model

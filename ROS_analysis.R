@@ -28,13 +28,16 @@ plotLWP(fillcol="lightgrey",size=1.75,output=T,labsize=1.8)
 #-------------------------------------------------------------------------------------------------------  
 #- make a big 16-panel plot of photosynthetic variables over time (Figure 3).
 plotGX(output=T)
+
+#- OR, make an alternative plot of photosynthetic variables relative to soil water content (Figure 3)
+plotGX_theta(output=T)
 #-------------------------------------------------------------------------------------------------------
 
 
 
 #-------------------------------------------------------------------------------------------------------
 #- plot the soil moisture release curve (Figure S2).
-plotMoistCurve(output=T)
+pars <- plotMoistCurve(output=T)
 #-------------------------------------------------------------------------------------------------------
 
 

@@ -164,7 +164,7 @@ adderrorbars <- function(x,y,SE,direction,barlen=0.04,...){
 
 
 #-----------------------------------------------------------------------------------------
-#--- This functions "does the Joey" and calculate the non-stomatal limitation of 
+#--- This functions "does the Joey" and calculates the non-stomatal limitation of 
 #         photosyntheis as in Zhou et al. 2013 Tree Phys.
 #-----------------------------------------------------------------------------------------
 returnVcmaxa <- function(){
@@ -177,14 +177,16 @@ returnVcmaxa <- function(){
   
   #- define function to return Vcmax based on a single point A:Ci curve as in Zhou et al. 2013 Tree Phys.
   returnVcmax <- function(A,Ci,Tleaf){
-    Tk <- Tleaf + 274.15
+    Tk <- Tleaf + 273.15
     R <- 8.314                                                       #universal gas constant in J mol-1 K-1
-    gammastar <- 42.75*exp( (37830*(Tk-298))/(298*R*Tk) )            #calculate gamma star as in bernacchi et al. 2001
-    Ko <- exp(20.3-36.38/(R/1000*Tk))                                     #calculate Ko as in Bernacchi et al. 2001
-    Kc <- exp(38.05-79.43/(R/1000*Tk))                                    #calculate Kc as in Barnacchi et al. 2001
+    gammastar <- 42.75*exp( (37830*(Tk-298.15))/(298.15*R*Tk) )            #calculate gamma star as in bernacchi et al. 2001
+    #Ko <- exp(20.3-36.38/(R/1000*Tk))                                     #calculate Ko as in Bernacchi et al. 2001
+    Ko <- 278.4*exp((36380*(Tk-298.15)/(298.15*R*Tk)))
+    #Kc <- exp(38.05-79.43/(R/1000*Tk))                                    #calculate Kc as in Barnacchi et al. 2001
+    Kc <- 404.9*exp((79403*(Tk-298.15)/(298.15*R*Tk)))
     Km <- Kc*(1+210/Ko)                                              # calculate Km. Assumes [O2] = 210 mmol mol-1
     
-    Vcmax <- A*(Ci+Km)/(Ci-gammastar)                                #calculate apparent Vcmax. This assumes Rd is zero (or negligible)
+    Vcmax <- A*(Ci+Km)/(Ci-gammastar - 0.015)                                #calculate apparent Vcmax. This assumes Rd is zero (or negligible)
     return(Vcmax)
   }
   
@@ -192,20 +194,23 @@ returnVcmaxa <- function(){
   ros3$Vcmax_a <- returnVcmax(A=ros3$Photo,Ci=ros3$Ci,Tleaf=ros3$Tleaf)
   #ros3 <- subset(ros3,Vcmax_a>5 & Vcmax_a<600)
   
-  #- get the "maximum" Vcmax as the 95th percentile of the apparent Vcmax of the well-watered treatments
+  #- get the "maximum" Vcmax as the 75th percentile of the apparent Vcmax of the well-watered treatments
   ros3.list <- split(ros3,ros3$Species)
   Species <- c()
   Vcmax_max <- c()
   for(i in 1:length(ros3.list)){
-    dat <- subset(ros3.list[[i]],Treat=="wet" & TDR > 20 & TDR < 30)
+    #dat <- subset(ros3.list[[i]],Treat=="wet" & TDR > 20 & TDR < 30 & Ci > 200)
+    dat <- ros3.list[[i]]
     Species[i] <- as.character(dat$Species[1])
-    Vcmax_max[i] <- unname(quantile(dat$Vcmax_a,probs=1))
-    
+    Vcmax_max[i] <- unname(quantile(dat$Vcmax_a,probs=0.65))
+    #Vcmax_max[i] <- max(dat$Vcmax_a)
   }
   df2 <- data.frame(Species=Species,Vcmax_max=Vcmax_max)
+  #df2$Vcmax_max <- max(df2$Vcmax_max)
   
   ros4 <- merge(ros3,df2,by=c("Species"))
-  ros4$Photo_a <- Photosyn(VPD=ros4$VpdL,Ca=ros4$CO2S,PPFD=ros4$PARi,Tleaf=ros4$Tleaf,Ci=ros4$Ci,Vcmax=ros4$Vcmax_max,Tcorrect=T)$ALEAF
+  ros4$Photo_a <- Photosyn(VPD=ros4$VpdL,Ca=ros4$CO2S,PPFD=ros4$PARi,Tleaf=ros4$Tleaf,Ci=ros4$Ci,
+                           Vcmax=ros4$Vcmax_max,Jmax=1.6*ros4$Vcmax_max,Tcorrect=T)$ALEAF
   ros4$NSL <- with(ros4,Photo/Photo_a)
   
   #- remove a really troublesome eute point and a cacu point
@@ -217,6 +222,10 @@ returnVcmaxa <- function(){
   
   ros5 <- ros4[complete.cases(ros4),]
   ros5$TDR <- ros5$TDR/100
+  
+  boxplot(NSL~Species,data=ros5)
+  
+  
   return(ros5)
 }
 #-----------------------------------------------------------------------------------------

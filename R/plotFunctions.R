@@ -495,7 +495,7 @@ plotBetasG1NSL_LWP <- function(output=F,g1data,NSLdata,g1list,NSLlist){
   
   #- fit NSL
   dat.l2 <- split(NSLdata,NSLdata$Species)
-  
+  count <- 0
   #- plot normalized g1 and non-stomatal limitation as a function of LWP
   windows(16,16)
   par(mfrow=c(4,2),mar=c(0,0.25,0,0.25),xpd=FALSE,oma=c(4,5,1,5),cex=1.6,cex.axis=0.9,cex.lab=0.9)
@@ -507,15 +507,18 @@ plotBetasG1NSL_LWP <- function(output=F,g1data,NSLdata,g1list,NSLlist){
     dat.temp$LWPpos <- dat.temp$LWP+11
     dat.temp$Species <- factor(dat.temp$Species)
     #------------------------------------------------------------------------
-    #-- plot g1 vs. LWP
+    #-- plot g1 vs. LWP    
+    count <- count+1
+
     
     plot(g1norm~LWP,data=subset(dat.temp,Treat=="wet"),pch=21,col="black",bg=grey(0.1),axes=F,ylim=c(0,1.05),xlim=c(-10,0))
     points(g1norm~LWP,data=subset(dat.temp,Treat=="dry"),pch=21,col="black",bg=grey(0.8))
     magaxis(side=c(1:4),labels=c(0,1,0,0),las=1)
     if(i==4)  magaxis(side=c(1:4),labels=c(1,1,0,0),las=1)
     mtext(labs[i],side=2,xpd=T,cex=1.3,line=1.75)
-    if(i==4)  mtext(expression(psi[pd]~(mPa)),side=1,outer=F,cex=1.5,line=2)
+    if(i==4)  mtext(expression(psi[pd]~(MPa)),side=1,outer=F,cex=1.5,line=2)
     if(i==1) legend("topleft",xpd=NA,legend=c("Wet","Dry"),pch=21,pt.bg=c("black","grey"),ncol=1,cex=0.75)
+    legend("bottomleft",letters[count],cex=1,inset=-0.05,bty="n")
     
     
     # plot model and SE from bootstrapping
@@ -529,15 +532,17 @@ plotBetasG1NSL_LWP <- function(output=F,g1data,NSLdata,g1list,NSLlist){
     
     #------------------------------------------------------------------------
     #-- repeat, but for NSL
+    count <- count+1
     
     dat.temp2 <- dat.l2[[i]]
     dat.temp2$Species <- factor(dat.temp2$Species)
     
-    plot(NSL~LWP,data=subset(dat.temp2,Treat=="wet"),pch=21,col="black",bg=grey(0.1),axes=F,ylim=c(0,1.5),xlim=c(-10,0))
+    plot(NSL~LWP,data=subset(dat.temp2,Treat=="wet"),pch=21,col="black",bg=grey(0.1),axes=F,ylim=c(0,1.09),xlim=c(-10,0))
     points(NSL~LWP,data=subset(dat.temp2,Treat=="dry"),pch=21,col="black",bg=grey(0.8))
     magaxis(side=c(1:4),labels=c(0,0,0,1),las=1)
     if(i==4)  magaxis(side=c(1:4),labels=c(1,0,0,0),las=1)
-    if(i==4)  mtext(expression(psi[pd]~(mPa)),side=1,outer=F,cex=1.5,line=2)
+    if(i==4)  mtext(expression(psi[pd]~(MPa)),side=1,outer=F,cex=1.5,line=2)
+    legend("bottomleft",letters[count],cex=1,inset=-0.05,bty="n")
     
     newdat2 <- NSLlist[[2]][[i]]
     newdat2$LWP <- newdat2$LWPpos-11
@@ -629,7 +634,6 @@ plotMoistCurve <- function(output=F){
   VWC <- seq(0,0.3,length=101)
   PsiSoil <- PsiE*(VWC/thetaSat)^(-1*b)
   
-  par <- c(0.1,3,-0.36)
   Cosby_optim <- function(par,VWC,dat){
     #- get the parameters
     thetaSat <- par[1]
@@ -640,16 +644,18 @@ plotMoistCurve <- function(output=F){
     pred <- PsiE*(VWC/thetaSat)^(-1*b)
     
     #- 
-    cost <- (pred-dat)^2
+    cost <- ((dat-pred)^2)/abs(dat)
     return(sum(cost))
   }
    
   upper <- c(0.2,15,-0.01)
   lower <- c(0.001,1,-10)
-  output <- DEoptim(Cosby_optim,lower=lower,upper=upper,VWC=curve$VWC,dat=curve$pressure_MPa_neg,
-                    DEoptim.control(NP=400,itermax=100))
+  DEoutput <- DEoptim(Cosby_optim,lower=lower,upper=upper,VWC=curve$VWC,dat=curve$pressure_MPa_neg,
+                    DEoptim.control(NP=400,itermax=100,trace=F))
   
-  bestpars <- output$optim$bestmem
+  bestpars <- DEoutput$optim$bestmem
+  names(bestpars) <- c("thetaSat","b","PsiE")
+  
   VWC <- seq(0,0.3,length=101)
   PsiSoil_best <- bestpars[3]*(VWC/bestpars[1])^(-1*bestpars[2])
   #- plot
@@ -664,6 +670,8 @@ plotMoistCurve <- function(output=F){
          cex=1.5)
   
   if(output==T) dev.copy2pdf(file="Output/FigureS2_moistureReleaseCurve.pdf")
+  
+  return(bestpars)
 }
 #-------------------------------------------------------------------------------------------------------------------------------------
 
@@ -884,3 +892,174 @@ modelAsatVWC <- function(output=F,fit.spg1,fit.spNSL){
   if (output==T) dev.copy2pdf(file="Output/Figure5_Asat_VWC_modelPredictions.pdf")
 }
 #-------------------------------------------------------------------------------------------------------
+
+
+
+
+
+#------------------------------------------------------------------------------------------------------------------
+#- A new function that plots A, gs, WUE, Ci/Ca, and LWP-PD an LWP-MD as a function of volumetric water content
+#------------------------------------------------------------------------------------------------------------------
+plotGX_theta <- function(output=F){
+  #- get the gas exchange and handheld TDR data
+  ros <- return.gx.vwc()
+  
+  
+  #- get the lwp data and process a bit
+  #lwp <- read.lwp()
+  lwp <- return.gx.vwc.lwp()
+  
+  # names(lwp)[3] <- "LWPdate"
+  # lwp.pd <- subset(lwp,Type=="PD" & is.na(LWP)==FALSE)
+  # lwp.pd$LWP <- -1*lwp.pd$LWP
+  # lwp.md <- subset(lwp,Type=="MD" & is.na(LWP)==FALSE)
+  # lwp.md$LWP <- -1*lwp.md$LWP
+  # 
+  # names(lwp.md)[2] <- "LWP.md"
+  # lwp2 <- merge(lwp.pd,lwp.md,by=c("Pot","LWPdate","Treat","Species"),all=FALSE)
+  # lwp2$diff <- with(lwp2,abs(LWP.md)-abs(LWP))
+  # 
+  lwp.trt<- summaryBy(LWP+LWP.md+diff+TDR~LWPdate+Species+Treat,data=lwp,FUN=c(mean,standard.error), na.rm=TRUE)
+  lwp.trt$TDR <- lwp.trt$TDR.mean/100
+  lwp.trt.list <- split(lwp.trt,lwp.trt$Species)
+  #------------------------------------------------------------------------------------------------------------------
+  
+  
+  
+  #do some data manipulation, set graphing parameters 
+  ros$ITE <- with(ros,Photo/Trmmol)
+  ros$WUE <- with(ros,Photo/Cond)
+  
+  ITE.trt <- summaryBy(Photo+Cond+ITE+WUE+TDR+Ci.Ca~gxDate+Species+Treat,data=ros,FUN=c(mean,standard.error), na.rm=TRUE)
+  ITE.trt$TDR <- ITE.trt$TDR.mean/100
+  ITE.trt.list <- split(ITE.trt,ITE.trt$Species)
+  
+  
+  
+  windows(25,14)
+  par(mfrow=c(2,3),oma=c(8,7,2,5),mar=c(0.25,6.25,0.25,0.25))
+  symbols <- c(15,16,17,18)
+  colors <- brewer.pal(4,"Set1")
+  #- plot Photo
+  for(i in 1:4){
+    toplot <- ITE.trt.list[[i]]
+    if(i ==1) plot.new();plot.window(xlim=c(0,0.35),ylim=c(0,25));abline(h=0)
+    
+    
+    #- smoothplot
+    smoothplot(TDR, Photo.mean, polycolor=alpha(colors[i],0.3),linecols=colors[i],
+               ylab="",cex=0.5,add=T,
+               data=toplot, kgam=5, axes=F)
+    #- overlay points and error bars
+    plotBy(Photo.mean~TDR|Treat,data=toplot,add=T,pch=symbols[1],col=c(colors[i]),cex=2,legend=F,
+           panel.first=adderrorbars(x=toplot$TDR,y=toplot$Photo.mean,SE=toplot$Photo.standard.error,direction="updown"))
+    
+  }
+  magaxis(side=1:4,labels=c(0,1,0,0),las=2,cex.axis=1.5)
+  title(ylab=expression(A[sat]~(mu*mol~m^-2~s^-1)),xpd=NA,cex.lab=2)
+  legend("bottomright",letters[1],bty="n",cex=2)
+  
+  #- plot WUE
+  for(i in 1:4){
+    toplot <- ITE.trt.list[[i]]
+    if(i ==1) plot.new();plot.window(xlim=c(0,0.35),ylim=c(-30,250));abline(h=0)
+    
+    #- smoothplot
+    smoothplot(TDR, WUE.mean, polycolor=alpha(colors[i],0.3),linecols=colors[i],
+               ylab="",cex=0.5,add=T,
+               data=toplot, kgam=5, axes=F)
+    #- overlay points and error bars
+    
+    plotBy(WUE.mean~TDR|Treat,data=toplot,add=T,pch=symbols[1],col=colors[i],cex=2,legend=F,
+           panel.first=adderrorbars(x=toplot$TDR,y=toplot$WUE.mean,SE=toplot$WUE.standard.error,direction="updown"))
+    
+  }
+  magaxis(side=1:4,labels=c(0,1,0,0),las=2,cex.axis=1.5)
+  title(ylab=expression(WUE[i]~(mu*mol~CO[2]~mol^-1~H[2]*O)),xpd=NA,cex.lab=2)
+  legend("bottomright",letters[3],bty="n",cex=2)
+  legend("topright",legend=c("Cacu","Eusi","Eute","Pira"),fill=colors,ncol=2,cex=2)
+  
+  #- plot pre-dawn LWP
+  for(i in 1:4){
+    toplot <- lwp.trt.list[[i]]
+    if(i ==1) plot.new();plot.window(xlim=c(0,0.35),ylim=c(-10,0));abline(h=0)
+    
+    #- smoothplot
+    smoothplot(TDR, LWP.mean, polycolor=alpha(colors[i],0.3),linecols=colors[i],
+               ylab="",cex=0.5,add=T,
+               data=toplot, kgam=3, axes=F)
+    #- overlay points and error bars
+    
+    plotBy(LWP.mean~TDR|Treat,data=toplot,add=T,pch=symbols[1],col=colors[i],cex=2,legend=F,
+           panel.first=adderrorbars(x=toplot$TDR,y=toplot$LWP.mean,SE=toplot$LWP.standard.error,direction="updown"))
+    
+  }
+  magaxis(side=1:4,labels=c(0,1,0,0),las=2,cex.axis=1.5)
+  title(ylab=expression(psi[pd]~(MPa)),xpd=NA,cex.lab=2)
+  legend("bottomright",letters[5],bty="n",cex=2)
+  
+  #- plot Cond
+  for(i in 1:4){
+    toplot <- ITE.trt.list[[i]]
+    if(i ==1) plot.new();plot.window(xlim=c(0,0.35),ylim=c(0,0.6));abline(h=0)
+    
+    #- smoothplot
+    smoothplot(TDR, Cond.mean, polycolor=alpha(colors[i],0.3),linecols=colors[i],
+               ylab="",cex=0.5,add=T,
+               data=toplot, kgam=4, axes=F)
+    
+    #- overlay points and error bars
+    plotBy(Cond.mean~TDR|Treat,data=toplot,add=T,pch=symbols[1],col=c(colors[i]),cex=2,legend=F,
+           panel.first=adderrorbars(x=toplot$TDR,y=toplot$Cond.mean,SE=toplot$Cond.standard.error,direction="updown"))
+    
+  }
+  magaxis(side=1:4,labels=c(1,1,0,0),las=1,cex.axis=1.5)
+  title(ylab=expression(g[s]~(mol~m^-2~s^-1)),xpd=NA,cex.lab=2)
+  title(xlab=expression(theta~(m^3~m^-3)),xpd=NA,cex.lab=2,line=4)
+  legend("bottomright",letters[2],bty="n",cex=2)
+  
+  #- plot Ci/Ca
+  for(i in 1:4){
+    toplot <- ITE.trt.list[[i]]
+    if(i ==1) plot.new();plot.window(xlim=c(0,0.35),ylim=c(0,1.5));abline(h=0)
+    
+    #- smoothplot
+    smoothplot(TDR, Ci.Ca.mean, polycolor=alpha(colors[i],0.3),linecols=colors[i],
+               ylab="",cex=0.5,add=T,
+               data=toplot, kgam=4, axes=F)
+    
+    #- overlay points and error bars
+    plotBy(Ci.Ca.mean~TDR|Treat,data=toplot,add=T,pch=symbols[1],col=colors[i],cex=2,legend=F,
+           panel.first=adderrorbars(x=toplot$TDR,y=toplot$Ci.Ca.mean,SE=toplot$Ci.Ca.standard.error,direction="updown"))
+    
+  }
+  magaxis(side=1:4,labels=c(1,1,0,0),las=1,cex.axis=1.5)
+  title(ylab=expression(C[i]*"/"*C[a]),xpd=NA,cex.lab=2)
+  title(xlab=expression(theta~(m^3~m^-3)),xpd=NA,cex.lab=2,line=4)
+  legend("bottomright",letters[4],bty="n",cex=2)
+  
+  #- plot mid-day LWP
+  for(i in 1:4){
+    toplot <- lwp.trt.list[[i]]
+    if(i ==1) plot.new();plot.window(xlim=c(0,0.35),ylim=c(-10,0));abline(h=0)
+    
+    #- smoothplot
+    smoothplot(TDR, LWP.md.mean, polycolor=alpha(colors[i],0.3),linecols=colors[i],
+               ylab="",cex=0.5,add=T,
+               data=toplot, kgam=3, axes=F)
+    
+    #- overlay points and error bars
+    
+    plotBy(LWP.md.mean~TDR|Treat,data=toplot,add=T,pch=symbols[1],col=colors[i],cex=2,legend=F,
+           panel.first=adderrorbars(x=toplot$TDR,y=toplot$LWP.md.mean,SE=toplot$LWP.md.standard.error,direction="updown"))
+    
+  }
+  magaxis(side=1:4,labels=c(1,1,0,0),las=1,cex.axis=1.5)
+  title(ylab=expression(psi[md]~(MPa)),xpd=NA,cex.lab=2)
+  title(xlab=expression(theta~(m^3~m^-3)),xpd=NA,cex.lab=2,line=4)
+  legend("bottomright",letters[6],bty="n",cex=2)
+  
+  if(output==T) dev.copy2pdf(file="Output/Figure3_gx_vs_VWC.pdf")
+}
+#---------------------------------------------------------------------------------------------------------------------
+
