@@ -16,6 +16,8 @@ library(car)
 library(scales)
 library(DEoptim)
 library(mgcv)
+library(RColorBrewer)
+library(readxl)
 
 source("R/dataFunctions.R")
 source("R/plotFunctions.R")
@@ -163,7 +165,7 @@ addpoly <- function(x,y1,y2,col=alpha("lightgrey",0.7),...){
   polygon(c(x,rev(x)), c(y1, rev(y2)), col=col, border=NA,...)
 }
 
-predline <- function(fit, from=NULL, to=NULL, col=alpha("lightgrey",0.7), ...){
+predline <- function(fit, from=NULL, to=NULL, col=alpha("lightgrey",0.7),fittype="confidence", ...){
   
   if(is.null(from))from <- min(fit$model[,2], na.rm=TRUE)
   if(is.null(to))to <- max(fit$model[,2], na.rm=TRUE)
@@ -171,7 +173,13 @@ predline <- function(fit, from=NULL, to=NULL, col=alpha("lightgrey",0.7), ...){
   newdat <- data.frame(X = seq(from,to, length=101))
   names(newdat)[1] <- names(coef(fit))[2]
   
-  pred <- as.data.frame(predict(fit, newdat, se.fit=TRUE, interval="confidence")$fit)
+  if(fittype=="confidence"){
+    pred <- as.data.frame(predict(fit, newdat, se.fit=TRUE, interval="confidence")$fit)
+  }
+  
+  if(fittype=="prediction"){
+    pred <- as.data.frame(predict(fit, newdat, se.fit=TRUE, interval="prediction")$fit)
+  }
   
   addpoly(newdat[[1]], pred$lwr, pred$upr, col=col)
   
