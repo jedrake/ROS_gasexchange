@@ -196,7 +196,7 @@ returnVcmaxa <- function(){
   ros3$Vcmax_a <- returnVcmax(A=ros3$Photo,Ci=ros3$Ci,Tleaf=ros3$Tleaf)
   #ros3 <- subset(ros3,Vcmax_a>5 & Vcmax_a<600)
   
-  #- get the "maximum" Vcmax as the 95th percentile of the apparent Vcmax of the well-watered treatments
+  #- get the "maximum" Vcmax as the 50th percentile of the apparent Vcmax of the well-watered treatments
   ros3.list <- split(ros3,ros3$Species)
   Species <- c()
   Vcmax_max <- c()
