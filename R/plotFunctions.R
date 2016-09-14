@@ -429,12 +429,13 @@ plotBetasG1NSL <- function(output=F,g1data,NSLdata,g1list,NSLlist){
     #-- plot g1 vs. TDR
     count <- count+1
     
-    plot(g1norm~TDR,data=subset(dat.temp,Treat=="wet"),pch=21,col="black",bg=grey(0.1),axes=F,ylim=c(0,1.05),xlim=c(0,0.4))
+    plot(g1norm~TDR,data=subset(dat.temp,Treat=="wet"),pch=21,col="black",bg=grey(0.1),axes=F,ylim=c(0,1.18),xlim=c(0,0.4))
     points(g1norm~TDR,data=subset(dat.temp,Treat=="dry"),pch=21,col="black",bg=grey(0.8))
-    magaxis(side=c(1:4),labels=c(0,1,0,0),las=1)
-    if(i==4)  magaxis(side=c(1:4),labels=c(1,1,0,0),las=1)
+    magaxis(side=c(1:4),labels=c(0,1,0,0),las=1,tcl=0.3,ratio=0.25,majorn=3,cex.axis=0.8)
+    if(i==4)  magaxis(side=c(1:4),labels=c(1,1,0,0),las=1,tcl=0.3,ratio=0.25,majorn=3,cex.axis=0.8)
     mtext(labs[i],side=2,xpd=T,cex=1.3,line=1.75)
     if(i==1) legend("bottomright",xpd=NA,legend=c("Wet","Dry"),pch=21,pt.bg=c("black","grey"),ncol=2,cex=0.75)
+    if(i==1) title(main="Stomatal",cex.main=0.75,line=0.5,xpd=NA)
     legend("topleft",letters[count],cex=1,inset=-0.1,bty="n")
     
     
@@ -454,10 +455,12 @@ plotBetasG1NSL <- function(output=F,g1data,NSLdata,g1list,NSLlist){
     dat.temp2$Species <- factor(dat.temp2$Species)
     count <- count+1
     
-    plot(NSL~TDR,data=subset(dat.temp2,Treat=="wet"),pch=21,col="black",bg=grey(0.1),axes=F,ylim=c(0,1.4),xlim=c(0,0.4))
+    plot(NSL~TDR,data=subset(dat.temp2,Treat=="wet"),pch=21,col="black",bg=grey(0.1),axes=F,ylim=c(0,1.18),xlim=c(0,0.4))
     points(NSL~TDR,data=subset(dat.temp2,Treat=="dry"),pch=21,col="black",bg=grey(0.8))
-    magaxis(side=c(1:4),labels=c(0,0,0,1),las=1)
-    if(i==4)  magaxis(side=c(1:4),labels=c(1,0,0,0),las=1)
+    magaxis(side=c(1:4),labels=c(0,0,0,1),las=1,tcl=0.3,ratio=0.25,majorn=3,cex.axis=0.8)
+    if(i==4)  magaxis(side=c(1:4),labels=c(1,0,0,0),las=1,tcl=0.3,ratio=0.25,majorn=3,cex.axis=0.8)
+    if(i==1) title(main="Non-stomatal",cex.main=0.75,line=0.5,xpd=NA)
+    
     legend("topleft",letters[count],cex=1,inset=-0.1,bty="n")
     
     newdat2 <- NSLlist[[2]][[i]]
@@ -468,8 +471,8 @@ plotBetasG1NSL <- function(output=F,g1data,NSLdata,g1list,NSLlist){
     
     
   }
-  mtext(expression(normalized~g[1]),side=2,outer=T,cex=2.5,las=0,line=2.5)
-  mtext(expression(Nonstomatal~limitation~(A/A[e])),side=4,outer=T,cex=2.5,las=0,line=2.5)
+  mtext(expression(Normalized~g[1]),side=2,outer=T,cex=2,las=0,line=3)
+  mtext(expression(A/A[e]),side=4,outer=T,cex=2,las=0,line=2.5)
   mtext(expression(theta~(m^3~m^-3)),side=1,outer=T,cex=1.5,line=2)
   
   if(output==T) dev.copy2pdf(file="Output/Figure4_Beta_g1andNSL_VWC.pdf")
@@ -513,12 +516,13 @@ plotBetasG1NSL_LWP <- function(output=F,g1data,NSLdata,g1list,NSLlist){
     
     plot(g1norm~LWP,data=subset(dat.temp,Treat=="wet"),pch=21,col="black",bg=grey(0.1),axes=F,ylim=c(0,1.05),xlim=c(-10,0))
     points(g1norm~LWP,data=subset(dat.temp,Treat=="dry"),pch=21,col="black",bg=grey(0.8))
-    magaxis(side=c(1:4),labels=c(0,1,0,0),las=1)
-    if(i==4)  magaxis(side=c(1:4),labels=c(1,1,0,0),las=1)
+    magaxis(side=c(1:4),labels=c(0,1,0,0),las=1,tcl=0.3,ratio=0.25,majorn=3,cex.axis=0.8)
+    if(i==4)  magaxis(side=c(1:4),labels=c(1,1,0,0),las=1,tcl=0.3,ratio=0.25,majorn=3,cex.axis=0.8)
     mtext(labs[i],side=2,xpd=T,cex=1.3,line=1.75)
     if(i==4)  mtext(expression(psi[pd]~(MPa)),side=1,outer=F,cex=1.5,line=2)
     if(i==1) legend("topleft",xpd=NA,legend=c("Wet","Dry"),pch=21,pt.bg=c("black","grey"),ncol=1,cex=0.75)
     legend("bottomleft",letters[count],cex=1,inset=-0.05,bty="n")
+    if(i==1) title(main="Stomatal",cex.main=0.75,line=0.5,xpd=NA)
     
     
     # plot model and SE from bootstrapping
@@ -539,10 +543,11 @@ plotBetasG1NSL_LWP <- function(output=F,g1data,NSLdata,g1list,NSLlist){
     
     plot(NSL~LWP,data=subset(dat.temp2,Treat=="wet"),pch=21,col="black",bg=grey(0.1),axes=F,ylim=c(0,1.09),xlim=c(-10,0))
     points(NSL~LWP,data=subset(dat.temp2,Treat=="dry"),pch=21,col="black",bg=grey(0.8))
-    magaxis(side=c(1:4),labels=c(0,0,0,1),las=1)
-    if(i==4)  magaxis(side=c(1:4),labels=c(1,0,0,0),las=1)
+    magaxis(side=c(1:4),labels=c(0,0,0,1),las=1,tcl=0.3,ratio=0.25,majorn=3,cex.axis=0.8)
+    if(i==4)  magaxis(side=c(1:4),labels=c(1,0,0,0),las=1,tcl=0.3,ratio=0.25,majorn=3,cex.axis=0.8)
     if(i==4)  mtext(expression(psi[pd]~(MPa)),side=1,outer=F,cex=1.5,line=2)
     legend("bottomleft",letters[count],cex=1,inset=-0.05,bty="n")
+    if(i==1) title(main="Non-stomatal",cex.main=0.75,line=0.5,xpd=NA)
     
     newdat2 <- NSLlist[[2]][[i]]
     newdat2$LWP <- newdat2$LWPpos-11
@@ -555,7 +560,7 @@ plotBetasG1NSL_LWP <- function(output=F,g1data,NSLdata,g1list,NSLlist){
     
   }
   mtext(expression(normalized~g[1]),side=2,outer=T,cex=2.5,las=0,line=2.5)
-  mtext(expression(Nonstomatal~limitation~(A/A[e])),side=4,outer=T,cex=2.5,las=0,line=2.5)
+  mtext(expression(A/A[e]),side=4,outer=T,cex=2.5,las=0,line=2.5)
   
   if(output==T) dev.copy2pdf(file="Output/FigureS4_Beta_g1andNSL_LWP.pdf")
   
@@ -780,7 +785,7 @@ plotd13C_gx <- function(output=F,ptsize=1.8){
          col=c(rep("black",4)),ncol=2,pt.bg="white",cex=1.4,bty="n")
   
   #- fit one big model instead
-  lm.all <- lm(bigDelta~WUEi+Species,data=dat2)
+  lm.all <- lm(bigDelta~WUEi+Species+WUEi:Species,data=dat2)
   anova(lm.all)
   summary(lm.all)
   
@@ -900,7 +905,7 @@ modelAsatVWC <- function(output=F,fit.spg1,fit.spNSL){
 #------------------------------------------------------------------------------------------------------------------
 #- A new function that plots A, gs, WUE, Ci/Ca, and LWP-PD an LWP-MD as a function of volumetric water content
 #------------------------------------------------------------------------------------------------------------------
-plotGX_theta <- function(output=F){
+plotGX_theta <- function(output=F,colors= brewer.pal(4,"Set1")){
   #- get the gas exchange and handheld TDR data
   ros <- return.gx.vwc()
   
@@ -939,7 +944,7 @@ plotGX_theta <- function(output=F){
   windows(25,14)
   par(mfrow=c(2,3),oma=c(8,7,2,5),mar=c(0.25,6.25,0.25,0.25))
   symbols <- c(15,16,17,18)
-  colors <- brewer.pal(4,"Set1")
+  colors <- colors
   #- plot Photo
   for(i in 1:4){
     toplot <- ITE.trt.list[[i]]
@@ -967,7 +972,7 @@ plotGX_theta <- function(output=F){
     #- smoothplot
     smoothplot(TDR, WUE.mean, polycolor=alpha(colors[i],0.3),linecols=colors[i],
                ylab="",cex=0.5,add=T,
-               data=toplot, kgam=5, axes=F)
+               data=toplot, kgam=7, axes=F)
     #- overlay points and error bars
     
     plotBy(WUE.mean~TDR|Treat,data=toplot,add=T,pch=symbols[1],col=colors[i],cex=2,legend=F,
@@ -987,7 +992,7 @@ plotGX_theta <- function(output=F){
     #- smoothplot
     smoothplot(TDR, LWP.mean, polycolor=alpha(colors[i],0.3),linecols=colors[i],
                ylab="",cex=0.5,add=T,
-               data=toplot, kgam=3, axes=F)
+               data=toplot, kgam=5, axes=F)
     #- overlay points and error bars
     
     plotBy(LWP.mean~TDR|Treat,data=toplot,add=T,pch=symbols[1],col=colors[i],cex=2,legend=F,
@@ -1026,7 +1031,7 @@ plotGX_theta <- function(output=F){
     #- smoothplot
     smoothplot(TDR, Ci.Ca.mean, polycolor=alpha(colors[i],0.3),linecols=colors[i],
                ylab="",cex=0.5,add=T,
-               data=toplot, kgam=4, axes=F)
+               data=toplot, kgam=5, axes=F)
     
     #- overlay points and error bars
     plotBy(Ci.Ca.mean~TDR|Treat,data=toplot,add=T,pch=symbols[1],col=colors[i],cex=2,legend=F,
@@ -1046,7 +1051,7 @@ plotGX_theta <- function(output=F){
     #- smoothplot
     smoothplot(TDR, LWP.md.mean, polycolor=alpha(colors[i],0.3),linecols=colors[i],
                ylab="",cex=0.5,add=T,
-               data=toplot, kgam=3, axes=F)
+               data=toplot, kgam=5, axes=F)
     
     #- overlay points and error bars
     
