@@ -1,3 +1,10 @@
+#---------------------------------------------------------------------------------------------------------- 
+#---------------------------------------------------------------------------------------------------------- 
+# Fits beta models for g1 and non-stomatal limitation, using predawn leaf water potential as the predictor.
+#---------------------------------------------------------------------------------------------------------- 
+#---------------------------------------------------------------------------------------------------------- 
+
+
 #- get the leaf water potential data, average by date to combine with g1 and NSL
 lwp <- return.gx.vwc.lwp()
 lwp.m <- summaryBy(LWP+LWP.md~Species+Treat+gxDate,data=lwp,FUN=mean,keep.names=T,na.rm=T)
