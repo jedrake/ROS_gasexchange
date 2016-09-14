@@ -186,7 +186,9 @@ returnVcmaxa <- function(){
     Kc <- 404.9*exp((79403*(Tk-298.15)/(298.15*R*Tk)))
     Km <- Kc*(1+210/Ko)                                              # calculate Km. Assumes [O2] = 210 mmol mol-1
     
-    Vcmax <- A*(Ci+Km)/(Ci-gammastar - 0.015)                                #calculate apparent Vcmax. This assumes Rd is zero (or negligible)
+    #Vcmax <- A*(Ci+Km)/(Ci-gammastar - 0.015)     #calculate apparent Vcmax. De Kauwe (2016) eq. 3
+    Vcmax <- A/((Ci-gammastar)/(Ci+Km) - 0.015)     #calculate apparent Vcmax. De Kauwe (2016) eq. 3
+    
     return(Vcmax)
   }
   
@@ -194,15 +196,15 @@ returnVcmaxa <- function(){
   ros3$Vcmax_a <- returnVcmax(A=ros3$Photo,Ci=ros3$Ci,Tleaf=ros3$Tleaf)
   #ros3 <- subset(ros3,Vcmax_a>5 & Vcmax_a<600)
   
-  #- get the "maximum" Vcmax as the 75th percentile of the apparent Vcmax of the well-watered treatments
+  #- get the "maximum" Vcmax as the 95th percentile of the apparent Vcmax of the well-watered treatments
   ros3.list <- split(ros3,ros3$Species)
   Species <- c()
   Vcmax_max <- c()
   for(i in 1:length(ros3.list)){
-    #dat <- subset(ros3.list[[i]],Treat=="wet" & TDR > 20 & TDR < 30 & Ci > 200)
+    dat <- subset(ros3.list[[i]],Treat=="wet" & TDR > 15 & TDR < 25 & Ci > 100)
     dat <- ros3.list[[i]]
     Species[i] <- as.character(dat$Species[1])
-    Vcmax_max[i] <- unname(quantile(dat$Vcmax_a,probs=0.65))
+    Vcmax_max[i] <- unname(quantile(dat$Vcmax_a,probs=0.5))
     #Vcmax_max[i] <- max(dat$Vcmax_a)
   }
   df2 <- data.frame(Species=Species,Vcmax_max=Vcmax_max)
@@ -219,6 +221,7 @@ returnVcmaxa <- function(){
   ros4[1003:1004,] <- NA
   ros4[629,] <- NA
   ros4[479,] <- NA
+  ros4[975,] <- NA
   
   ros5 <- ros4[complete.cases(ros4),]
   ros5$TDR <- ros5$TDR/100
