@@ -18,33 +18,36 @@ plotVWC(ptsize=1.8,output=T,type="1panel") # can plot type="1panel" or "4panel"
 
 
 
-#-------------------------------------------------------------------------------------------------------
-#- plot the leaf water potential data over time (Figure 2).
-plotLWP(fillcol="lightgrey",size=1.75,output=T,labsize=1.8)
-#-------------------------------------------------------------------------------------------------------
-
-
-
 #-------------------------------------------------------------------------------------------------------  
-#- make a big 16-panel plot of photosynthetic variables over time (Figure 3).
+#- Plot photosynthetic variables relative to soil water content (Figure 2)
+plotGX_theta(output=T,colors= brewer.pal(5,"Accent")[c(1,2,3,5)])#c("yellow3","blue","forestgreen","red"))
+
+#- make a big 16-panel plot of photosynthetic variables over time (Figure S2).
 plotGX(output=T)
-
-#- OR, make an alternative plot of photosynthetic variables relative to soil water content (Figure 3)
-plotGX_theta(output=T)
 #-------------------------------------------------------------------------------------------------------
 
 
+#-------------------------------------------------------------------------------------------------------
+#- plot the C isotope composition of ROS leaves, relate to gas exchange (Figure 3)
+plotd13C_gx(output=T)
+#-------------------------------------------------------------------------------------------------------
+
 
 #-------------------------------------------------------------------------------------------------------
-#- plot the soil moisture release curve (Figure S2).
+#- plot the soil moisture release curve (Figure S1).
 pars <- plotMoistCurve(output=T)
 #-------------------------------------------------------------------------------------------------------
 
 
+#-------------------------------------------------------------------------------------------------------
+#- plot the leaf water potential data over time (Figure S3).
+plotLWP(fillcol="lightgrey",size=1.75,output=T,labsize=1.8)
+#-------------------------------------------------------------------------------------------------------
+
 
 #-------------------------------------------------------------------------------------------------------
-#- plot Photo and Cond vs. leaf water potential, to show iso vs. anisohydry (Figure S3).
-plotHydry(output=T)
+#- plot Photo and Cond vs. leaf water potential, to show iso vs. anisohydry
+#plotHydry(output=T)
 #-------------------------------------------------------------------------------------------------------
 
 
@@ -71,15 +74,20 @@ writeBetaParams()
 #-------------------------------------------------------------------------------------------------------
 
 
+#-------------------------------------------------------------------------------------------------------
+#- Fit and plot the Tuzet model
+source("R/fitTuzets.R")
+#-------------------------------------------------------------------------------------------------------
+
 
 #-------------------------------------------------------------------------------------------------------
-#- Model Asat's response to drought given changes in g1, photosynthetic capacity, or both (Figure 5).
+#- Model Asat's response to drought given changes in g1, photosynthetic capacity, or both (Figure 7).
+
+source("R/model photo vs observed.R")
+
+#-- this bit is the old code
 # Assumes the "fitBeta" scripts have been run.
-modelAsatVWC(output=T,fit.spg1=fit.spg1,fit.spNSL=fit.spNSL)
+# modelAsatVWC(output=T,fit.spg1=fit.spg1,fit.spNSL=fit.spNSL)
 #-------------------------------------------------------------------------------------------------------
   
   
-#-------------------------------------------------------------------------------------------------------
-#- plot the C isotope composition of ROS leaves, relate to gas exchange (Figure 6)
-plotd13C_gx(output=T)
-#-------------------------------------------------------------------------------------------------------
