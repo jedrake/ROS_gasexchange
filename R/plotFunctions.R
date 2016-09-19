@@ -943,7 +943,7 @@ plotGX_theta <- function(output=F,colors= brewer.pal(4,"Set1")){
   
   windows(25,14)
   par(mfrow=c(2,3),oma=c(8,7,2,5),mar=c(0.25,6.25,0.25,0.25))
-  symbols <- c(15,16,17,18)
+  symbols <- c(16,17,18,15)
   colors <- colors
   #- plot Photo
   for(i in 1:4){
@@ -956,7 +956,7 @@ plotGX_theta <- function(output=F,colors= brewer.pal(4,"Set1")){
                ylab="",cex=0.5,add=T,
                data=toplot, kgam=5, axes=F)
     #- overlay points and error bars
-    plotBy(Photo.mean~TDR|Treat,data=toplot,add=T,pch=symbols[1],col=c(colors[i]),cex=2,legend=F,
+    plotBy(Photo.mean~TDR|Treat,data=toplot,add=T,pch=symbols[i],col=c(colors[i]),cex=2,legend=F,
            panel.first=adderrorbars(x=toplot$TDR,y=toplot$Photo.mean,SE=toplot$Photo.standard.error,direction="updown"))
     
   }
@@ -975,14 +975,14 @@ plotGX_theta <- function(output=F,colors= brewer.pal(4,"Set1")){
                data=toplot, kgam=7, axes=F)
     #- overlay points and error bars
     
-    plotBy(WUE.mean~TDR|Treat,data=toplot,add=T,pch=symbols[1],col=colors[i],cex=2,legend=F,
+    plotBy(WUE.mean~TDR|Treat,data=toplot,add=T,pch=symbols[i],col=colors[i],cex=2,legend=F,
            panel.first=adderrorbars(x=toplot$TDR,y=toplot$WUE.mean,SE=toplot$WUE.standard.error,direction="updown"))
     
   }
   magaxis(side=1:4,labels=c(0,1,0,0),las=2,cex.axis=1.5)
   title(ylab=expression(WUE[i]~(mu*mol~CO[2]~mol^-1~H[2]*O)),xpd=NA,cex.lab=2)
   legend("bottomright",letters[3],bty="n",cex=2)
-  legend("topright",legend=c("Cacu","Eusi","Eute","Pira"),fill=colors,ncol=2,cex=2)
+  legend("topright",legend=c("Cacu","Eusi","Eute","Pira"),pch=symbols,col=colors,ncol=2,cex=2)
   
   #- plot pre-dawn LWP
   for(i in 1:4){
@@ -995,7 +995,7 @@ plotGX_theta <- function(output=F,colors= brewer.pal(4,"Set1")){
                data=toplot, kgam=5, axes=F)
     #- overlay points and error bars
     
-    plotBy(LWP.mean~TDR|Treat,data=toplot,add=T,pch=symbols[1],col=colors[i],cex=2,legend=F,
+    plotBy(LWP.mean~TDR|Treat,data=toplot,add=T,pch=symbols[i],col=colors[i],cex=2,legend=F,
            panel.first=adderrorbars(x=toplot$TDR,y=toplot$LWP.mean,SE=toplot$LWP.standard.error,direction="updown"))
     
   }
@@ -1014,7 +1014,7 @@ plotGX_theta <- function(output=F,colors= brewer.pal(4,"Set1")){
                data=toplot, kgam=4, axes=F)
     
     #- overlay points and error bars
-    plotBy(Cond.mean~TDR|Treat,data=toplot,add=T,pch=symbols[1],col=c(colors[i]),cex=2,legend=F,
+    plotBy(Cond.mean~TDR|Treat,data=toplot,add=T,pch=symbols[i],col=c(colors[i]),cex=2,legend=F,
            panel.first=adderrorbars(x=toplot$TDR,y=toplot$Cond.mean,SE=toplot$Cond.standard.error,direction="updown"))
     
   }
@@ -1034,7 +1034,7 @@ plotGX_theta <- function(output=F,colors= brewer.pal(4,"Set1")){
                data=toplot, kgam=5, axes=F)
     
     #- overlay points and error bars
-    plotBy(Ci.Ca.mean~TDR|Treat,data=toplot,add=T,pch=symbols[1],col=colors[i],cex=2,legend=F,
+    plotBy(Ci.Ca.mean~TDR|Treat,data=toplot,add=T,pch=symbols[i],col=colors[i],cex=2,legend=F,
            panel.first=adderrorbars(x=toplot$TDR,y=toplot$Ci.Ca.mean,SE=toplot$Ci.Ca.standard.error,direction="updown"))
     
   }
@@ -1055,7 +1055,7 @@ plotGX_theta <- function(output=F,colors= brewer.pal(4,"Set1")){
     
     #- overlay points and error bars
     
-    plotBy(LWP.md.mean~TDR|Treat,data=toplot,add=T,pch=symbols[1],col=colors[i],cex=2,legend=F,
+    plotBy(LWP.md.mean~TDR|Treat,data=toplot,add=T,pch=symbols[i],col=colors[i],cex=2,legend=F,
            panel.first=adderrorbars(x=toplot$TDR,y=toplot$LWP.md.mean,SE=toplot$LWP.md.standard.error,direction="updown"))
     
   }

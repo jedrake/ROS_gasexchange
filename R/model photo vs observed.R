@@ -21,10 +21,10 @@ dat.all <- dat.all[complete.cases(dat.all),]
 params <- data.frame(Species=factor(c("cacu","eusi","eute","pira")),
                      #- Beta functions, soil water content
                      Xl_theta_s = c(.01,.01,0,0),Xh_theta_s = c(.33,.43,.6,.37),q_theta_s = c(0.4,.45,.33,.83),
-                     Xl_theta_ns = c(.01,.01,.01,.01),xh_theta_ns = c(.22,.25,.26,.16),q_theta_ns=c(.55,.35,.34,.43),
+                     Xl_theta_ns = c(.01,.01,.01,.01),xh_theta_ns = c(.19,.2,.18,.12),q_theta_ns=c(.55,.38,.34,.48),
                      #- beta functions, leaf water potential
                      Xl_lwp_s = c(-10,-10,-10,-6),Xh_lwp_s = c(0,0,0,0),q_lwp_s = c(2.49,4.56,3.33,6),
-                     Xl_lwp_ns = c(-9.3,-10,-10,-2.5),Xh_lwp_ns = c(0,0,0,-.03),q_lwp_ns=c(3.82,3.21,2.85,1.1),
+                     Xl_lwp_ns = c(-9,-10,-9,-2.5),Xh_lwp_ns = c(-0.16,0,0,-.27),q_lwp_ns=c(3.65,2.38,1.84,1.1),
                      #- Tuzet model
                      psiv = c(-1.46,-.02,-.35,-1.16),Sf = c(1.46,.76,.61,3.41),K = c(5.74,2.96,3.5,4.06))
 
@@ -138,13 +138,13 @@ predline(lm(Photo~P_theta_ns,data=dat.all3),fittype="confidence",col=fitcol,xpd=
 magaxis(side=c(1,2,4),labels=c(0,1,0),frame.plot=T,las=1,tcl=0.3)
 title(ylab=expression(beta[ns]),xpd=NA,cex.lab=textsize)
 legend("bottomright",letters[3],bty="n",cex=1.2)
-legend("topleft",legend=expression(r^2~"="~0.45),bty="n")
+legend("topleft",legend=expression(r^2~"="~0.51),bty="n")
 
 plot(dat.all3$Photo~dat.all3$P_lwp_ns,xlim=xlims,ylim=ylims,axes=F,xlab="",ylab="");abline(0,1)
 predline(lm(Photo~P_lwp_ns,data=dat.all3),fittype="confidence",col=fitcol,xpd=T)
 magaxis(side=c(1,2,4),labels=c(0,0,1),frame.plot=T,las=1,tcl=0.3)
 legend("bottomright",letters[7],bty="n",cex=1.2)
-legend("topleft",legend=expression(r^2~"="~0.46),bty="n")
+legend("topleft",legend=expression(r^2~"="~0.48),bty="n")
 
 #- plot B models with both
 plot(dat.all3$Photo~dat.all3$P_theta_sns,xlim=xlims,ylim=ylims,axes=F,xlab="",ylab="");abline(0,1)
@@ -152,13 +152,13 @@ predline(lm(Photo~P_theta_sns,data=dat.all3),fittype="confidence",col=fitcol,xpd
 magaxis(side=c(1,2,4),labels=c(1,1,0),frame.plot=T,las=1,tcl=0.3)
 title(ylab=expression(beta[s+ns]),xpd=NA,cex.lab=textsize)
 legend("bottomright",letters[4],bty="n",cex=1.2)
-legend("topleft",legend=expression(r^2~"="~0.46),bty="n")
+legend("topleft",legend=expression(r^2~"="~0.51),bty="n")
 
 plot(dat.all3$Photo~dat.all3$P_lwp_sns,xlim=xlims,ylim=ylims,axes=F,xlab="",ylab="");abline(0,1)
 predline(lm(Photo~P_lwp_sns,data=dat.all3),fittype="confidence",col=fitcol,xpd=T)
 magaxis(side=c(1,2,4),labels=c(0,0,1),frame.plot=T,las=1,tcl=0.3)
 legend("bottomright",letters[8],bty="n",cex=1.2)
-legend("topleft",legend=expression(r^2~"="~0.45),bty="n")
+legend("topleft",legend=expression(r^2~"="~0.47),bty="n")
 
 #- plot Tuzet models (stomatal, and both). Note the two empty plots to fill space
 plot(Photo~P_theta_sns,data=dat.all3,type="n",axes=F,xlab="",ylab="")
@@ -176,7 +176,32 @@ predline(lm(Photo~P_tuzet_sns,data=dat.all3),fittype="confidence",col=fitcol,xpd
 magaxis(side=c(1,2,4),labels=c(1,1,1),frame.plot=T,las=1,tcl=0.3)
 title(ylab=expression(Tuzet[s+ns]),xpd=NA,cex.lab=textsize)
 legend("bottomright",letters[10],bty="n",cex=1.2)
-legend("topleft",legend=expression(r^2~"="~0.44),bty="n")
+legend("topleft",legend=expression(r^2~"="~0.45),bty="n")
 
 title(xlab=expression("Predicted"~A[sat]~(mu*mol~m^-2~s^-1)),outer=T,cex.lab=2)
 title(ylab=expression("Observed"~A[sat]~(mu*mol~m^-2~s^-1)),outer=T,cex.lab=2,line=5)
+
+
+#-- calculate concordance correlation coefficients
+null <- summary(agreement(x=dat.all3$Photo,y=dat.all3$P_null,error="constant",TDI_a=20,target="fixed"))
+beta_s_theta <- summary(agreement(x=dat.all3$Photo,y=dat.all3$P_theta_s,error="constant",TDI_a=20,target="fixed"))
+beta_s_lwp <- summary(agreement(x=dat.all3$Photo,y=dat.all3$P_lwp_s,error="constant",TDI_a=20,target="fixed"))
+beta_ns_theta <- summary(agreement(x=dat.all3$Photo,y=dat.all3$P_lwp_ns,error="constant",TDI_a=20,target="fixed"))
+beta_ns_lwp <- summary(agreement(x=dat.all3$Photo,y=dat.all3$P_lwp_ns,error="constant",TDI_a=20,target="fixed"))
+beta_sns_theta <- summary(agreement(x=dat.all3$Photo,y=dat.all3$P_lwp_sns,error="constant",TDI_a=20,target="fixed"))
+beta_sns_lwp <- summary(agreement(x=dat.all3$Photo,y=dat.all3$P_lwp_sns,error="constant",TDI_a=20,target="fixed"))
+tuzet_s <- summary(agreement(x=dat.all3$Photo,y=dat.all3$P_tuzet_s,error="constant",TDI_a=20,target="fixed"))
+tuzet_sns <- summary(agreement(x=dat.all3$Photo,y=dat.all3$P_tuzet_sns,error="constant",TDI_a=20,target="fixed"))
+
+
+#-- calculate the residual standard deviation
+summary(lm(Photo~P_theta_s,data=dat.all3))$sigma
+summary(lm(Photo~P_lwp_s,data=dat.all3))$sigma
+summary(lm(Photo~P_theta_ns,data=dat.all3))$sigma
+summary(lm(Photo~P_lwp_ns,data=dat.all3))$sigma
+summary(lm(Photo~P_theta_sns,data=dat.all3))$sigma
+summary(lm(Photo~P_lwp_sns,data=dat.all3))$sigma
+summary(lm(Photo~P_theta_sns,data=dat.all3))$sigma
+summary(lm(Photo~P_lwp_sns,data=dat.all3))$sigma
+summary(lm(Photo~P_tuzet_s,data=dat.all3))$sigma
+summary(lm(Photo~P_tuzet_sns,data=dat.all3))$sigma
