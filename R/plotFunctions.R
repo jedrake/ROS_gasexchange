@@ -942,7 +942,7 @@ plotGX_theta <- function(output=F,colors= brewer.pal(4,"Set1")){
   
   
   windows(25,14)
-  par(mfrow=c(2,3),oma=c(8,7,2,5),mar=c(0.25,6.25,0.25,0.25))
+  par(mfrow=c(2,3),oma=c(8,7,2,5),mar=c(0.25,6.5,0.25,0.5))
   symbols <- c(16,17,18,15)
   colors <- colors
   #- plot Photo
@@ -961,7 +961,7 @@ plotGX_theta <- function(output=F,colors= brewer.pal(4,"Set1")){
     
   }
   magaxis(side=1:4,labels=c(0,1,0,0),las=2,cex.axis=1.5)
-  title(ylab=expression(A[sat]~(mu*mol~m^-2~s^-1)),xpd=NA,cex.lab=2)
+  title(ylab=expression(A[sat]~(mu*mol~m^-2~s^-1)),xpd=NA,cex.lab=3)
   legend("bottomright",letters[1],bty="n",cex=2)
   
   #- plot WUE
@@ -980,7 +980,7 @@ plotGX_theta <- function(output=F,colors= brewer.pal(4,"Set1")){
     
   }
   magaxis(side=1:4,labels=c(0,1,0,0),las=2,cex.axis=1.5)
-  title(ylab=expression(WUE[i]~(mu*mol~CO[2]~mol^-1~H[2]*O)),xpd=NA,cex.lab=2)
+  title(ylab=expression(WUE[i]~(mu*mol~mol^-1)),xpd=NA,cex.lab=3)
   legend("bottomright",letters[3],bty="n",cex=2)
   legend("topright",legend=c("Cacu","Eusi","Eute","Pira"),pch=symbols,col=colors,ncol=2,cex=2)
   
@@ -1000,7 +1000,7 @@ plotGX_theta <- function(output=F,colors= brewer.pal(4,"Set1")){
     
   }
   magaxis(side=1:4,labels=c(0,1,0,0),las=2,cex.axis=1.5)
-  title(ylab=expression(psi[pd]~(MPa)),xpd=NA,cex.lab=2)
+  title(ylab=expression(psi[pd]~(MPa)),xpd=NA,cex.lab=3)
   legend("bottomright",letters[5],bty="n",cex=2)
   
   #- plot Cond
@@ -1019,8 +1019,8 @@ plotGX_theta <- function(output=F,colors= brewer.pal(4,"Set1")){
     
   }
   magaxis(side=1:4,labels=c(1,1,0,0),las=1,cex.axis=1.5)
-  title(ylab=expression(g[s]~(mol~m^-2~s^-1)),xpd=NA,cex.lab=2)
-  title(xlab=expression(theta~(m^3~m^-3)),xpd=NA,cex.lab=2,line=4)
+  title(ylab=expression(g[s]~(mol~m^-2~s^-1)),xpd=NA,cex.lab=3)
+  title(xlab=expression(theta~(m^3~m^-3)),xpd=NA,cex.lab=3,line=4)
   legend("bottomright",letters[2],bty="n",cex=2)
   
   #- plot Ci/Ca
@@ -1039,8 +1039,8 @@ plotGX_theta <- function(output=F,colors= brewer.pal(4,"Set1")){
     
   }
   magaxis(side=1:4,labels=c(1,1,0,0),las=1,cex.axis=1.5)
-  title(ylab=expression(C[i]*"/"*C[a]),xpd=NA,cex.lab=2)
-  title(xlab=expression(theta~(m^3~m^-3)),xpd=NA,cex.lab=2,line=4)
+  title(ylab=expression(C[i]*"/"*C[a]),xpd=NA,cex.lab=3)
+  title(xlab=expression(theta~(m^3~m^-3)),xpd=NA,cex.lab=3,line=4)
   legend("bottomright",letters[4],bty="n",cex=2)
   
   #- plot mid-day LWP
@@ -1060,8 +1060,8 @@ plotGX_theta <- function(output=F,colors= brewer.pal(4,"Set1")){
     
   }
   magaxis(side=1:4,labels=c(1,1,0,0),las=1,cex.axis=1.5)
-  title(ylab=expression(psi[md]~(MPa)),xpd=NA,cex.lab=2)
-  title(xlab=expression(theta~(m^3~m^-3)),xpd=NA,cex.lab=2,line=4)
+  title(ylab=expression(psi[md]~(MPa)),xpd=NA,cex.lab=3)
+  title(xlab=expression(theta~(m^3~m^-3)),xpd=NA,cex.lab=3,line=4)
   legend("bottomright",letters[6],bty="n",cex=2)
   
   if(output==T) dev.copy2pdf(file="Output/Figure3_gx_vs_VWC.pdf")
