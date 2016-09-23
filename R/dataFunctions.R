@@ -884,19 +884,21 @@ returnGrowthROS <- function(plotson=F){
 #--- read in the soil moisture release curve data
 #--- note that the pressure is in bars, and the moisture is in a gravimetric percentage
 getMoistCurve <- function(){
-  curve1.1 <- read.csv("Data/VWC/ROS_soil_moisture_release_curve.csv")
-  curve1 <- subset(curve1.1,Sample.No.=="ROS1")[,c("actual_pressure","moisture")]
+  # curve1.1 <- read.csv("oldData/VWC/ROS_soil_moisture_release_curve.csv")
+  # curve1 <- subset(curve1.1,Sample.No.=="ROS1")[,c("actual_pressure","moisture")]
+  # 
+  # #- read in the 20bar data that Burhan sent on 15/05/2015.
+  # curve2 <- read.csv("oldData/VWC/ROS_soil_moisture_release_curve_20bar_190515.csv")[1:4,c("actual_pressure","moisture")]
+  # 
+  # #- put dataframes together
+  # curve <- rbind(curve1,curve2)
+  # 
+  # curve$pressure_MPa <- curve$actual_pressure/10
+  # bd <- 1.32 #bulk density is 1.32 g cm-3. See bulk density excel file in /Data/VWC/
+  # curve$VWC <- curve$moisture*bd/100
+  # 
   
-  #- read in the 20bar data that Burhan sent on 15/05/2015.
-  curve2 <- read.csv("Data/VWC/ROS_soil_moisture_release_curve_20bar_190515.csv")[1:4,c("actual_pressure","moisture")]
-  
-  #- put dataframes together
-  curve <- rbind(curve1,curve2)
-  
-  curve$pressure_MPa <- curve$actual_pressure/10
-  bd <- 1.32 #bulk density is 1.32 g cm-3. See bulk density excel file in /Data/VWC/
-  curve$VWC <- curve$moisture*bd/100
-  
+  curve <- read.csv("Data/ROS_MD_PM_SOIL-WATER-CURVE_L1.csv")
   #plot(pressure_MPa~VWC,data=curve)
   return(curve)
 }
