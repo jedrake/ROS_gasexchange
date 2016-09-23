@@ -225,16 +225,16 @@ plotGX <- function(output=F){
   #- get the lwp data and process a bit
   lwp <- read.lwp()
   
-  names(lwp)[3] <- "LWPdate"
-  lwp.pd <- subset(lwp,Type=="PD" & is.na(LWP)==FALSE)
-  lwp.pd$LWP <- -1*lwp.pd$LWP
-  lwp.md <- subset(lwp,Type=="MD" & is.na(LWP)==FALSE)
-  lwp.md$LWP <- -1*lwp.md$LWP
-  
-  names(lwp.md)[2] <- "LWP.md"
-  lwp2 <- merge(lwp.pd,lwp.md,by=c("Pot","LWPdate","Treat","Species"),all=FALSE)
-  lwp2$diff <- with(lwp2,abs(LWP.md)-abs(LWP))
-  
+  # names(lwp)[3] <- "LWPdate"
+  # lwp.pd <- subset(lwp,Type=="PD" & is.na(LWP)==FALSE)
+  # lwp.pd$LWP <- -1*lwp.pd$LWP
+  # lwp.md <- subset(lwp,Type=="MD" & is.na(LWP)==FALSE)
+  # lwp.md$LWP <- -1*lwp.md$LWP
+  # 
+  # names(lwp.md)[2] <- "LWP.md"
+  # lwp2 <- merge(lwp.pd,lwp.md,by=c("Pot","LWPdate","Treat","Species"),all=FALSE)
+  # lwp2$diff <- with(lwp2,abs(LWP.md)-abs(LWP))
+  # 
   lwp.trt<- summaryBy(LWP+LWP.md+diff~LWPdate+Species+Treat,data=lwp2,FUN=c(mean,standard.error), na.rm=TRUE)
   lwp.trt.list <- split(lwp.trt,lwp.trt$Species)
   #------------------------------------------------------------------------------------------------------------------
@@ -918,7 +918,7 @@ plotGX_theta <- function(output=F,colors= brewer.pal(4,"Set1")){
   # lwp2$diff <- with(lwp2,abs(LWP.md)-abs(LWP))
   # 
   lwp.trt<- summaryBy(LWP+LWP.md+diff+TDR~LWPdate+Species+Treat,data=lwp,FUN=c(mean,standard.error), na.rm=TRUE)
-  lwp.trt$TDR <- lwp.trt$TDR.mean/100
+  lwp.trt$TDR <- lwp.trt$TDR.mean
   lwp.trt.list <- split(lwp.trt,lwp.trt$Species)
   #------------------------------------------------------------------------------------------------------------------
   
@@ -929,7 +929,7 @@ plotGX_theta <- function(output=F,colors= brewer.pal(4,"Set1")){
   ros$WUE <- with(ros,Photo/Cond)
   
   ITE.trt <- summaryBy(Photo+Cond+ITE+WUE+TDR+Ci.Ca~gxDate+Species+Treat,data=ros,FUN=c(mean,standard.error), na.rm=TRUE)
-  ITE.trt$TDR <- ITE.trt$TDR.mean/100
+  ITE.trt$TDR <- ITE.trt$TDR.mean
   ITE.trt.list <- split(ITE.trt,ITE.trt$Species)
   
   

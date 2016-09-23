@@ -174,7 +174,7 @@ returnVcmaxa <- function(){
     Km <- Kc*(1+210/Ko)                                              # calculate Km. Assumes [O2] = 210 mmol mol-1
     
     #Vcmax <- A*(Ci+Km)/(Ci-gammastar - 0.015)     #calculate apparent Vcmax. De Kauwe (2016) eq. 3
-    Vcmax <- A/((Ci-gammastar)/(Ci+Km) - 0.015)     #calculate apparent Vcmax. De Kauwe (2016) eq. 3
+    Vcmax <- A/((Ci-gammastar)/(Ci+Km) - 0.015)     #calculate apparent Vcmax. De Kauwe (2016) eq. 3. Updated and fixed!
     
     return(Vcmax)
   }
@@ -230,58 +230,69 @@ returnVcmaxa <- function(){
 #- Read in the leaf water potential data
 #-----------------------------------------------------------------------------------------
 read.lwp <- function(){
-  #LWP data from ROS
-  library(reshape)
-  library(plotBy)
+  # #LWP data from ROS
+  # library(reshape)
+  # library(plotBy)
+  # 
+  # #read in Danielle's LWP data. Note that they are in the "wide" format, and some dates have missing data
+  # lwp <- read.csv("./oldData/LWP/ROS Water potential compiled_JED.csv")
+  # names(lwp)[2] <- "sp"
+  # 
+  # #create species lookup table
+  # sp <- c("ES","ET","P","C")
+  # Species <- c("eusi","eute","pira","cacu")
+  # spconv <- data.frame(sp,Species)
+  # 
+  # #create treatment lookup table
+  # Treatment <- c("D","W")
+  # Treat <- c("dry","wet")
+  # treatconv <- data.frame(Treatment,Treat)
+  # 
+  # #melt into "long" data format
+  # lwp.m <- melt(lwp,c("Shelter","sp","Treatment","Pot"))
+  # names(lwp.m)[6] <- "LWP"
+  # lwp.m$Date <- as.Date(substr(lwp.m$variable,start=3,stop=8),format="%d%m%y")
+  # lwp.m$Type <- factor(substr(lwp.m$variable,start=1,stop=2))
+  # lwp.m <- merge(lwp.m,spconv,by="sp")
+  # lwp.m <- merge(lwp.m,treatconv,by="Treatment")
+  # 
+  # 
+  # #read in the LWP data measured for the DRUID campaign, make formatting the same as the other data
+  # lwp_druid <- read.csv("./oldData/LWP/DruidLWP_26Sept2013.csv")
+  # lwp_druid$Treatment <- toupper(lwp_druid$trt)
+  # names(lwp_druid)[3:7] <- c("Species","trt","Pot","PD","MD")
+  # lwp_druid$Date <- as.Date(lwp_druid$date,format="%d/%m/%Y")
+  # lwp_druid2 <- subset(lwp_druid,select=c("Species","Pot","Treatment","Date","PD","MD"))
+  # lwp_druid3 <- melt(lwp_druid2,c("Species","Pot","Treatment","Date"),variable_name="Type")
+  # names(lwp_druid3)[6] <- "LWP"
+  # lwp_druid3$LWP <- lwp_druid3$LWP*-1
+  # 
+  # #merge the LWP dataframes
+  # commoncols <- intersect(colnames(lwp.m),colnames(lwp_druid3))
+  # lwp2 <- rbind(subset(lwp.m,select=commoncols),subset(lwp_druid3,select=commoncols))
+  # lwp3 <- merge(lwp2,treatconv)[,2:7]
+  # 
+  # 
+  # #read in the extra LWP data that was measured on a different set of pots, on 4.10.12
+  # extras <- read.csv("./oldData/LWP/LWP_10April12_ROS.csv")
+  # extras$Date <- as.Date(extras$Date,format="%m/%d/%Y")
+  # 
+  # #merge the extra dataframes
+  # commoncols <- intersect(colnames(lwp3),colnames(extras))
+  # lwp4 <- rbind(subset(lwp3,select=commoncols),subset(extras,select=commoncols))
+  # 
   
-  #read in Danielle's LWP data. Note that they are in the "wide" format, and some dates have missing data
-  lwp <- read.csv("./Data/LWP/ROS Water potential compiled_JED.csv")
-  names(lwp)[2] <- "sp"
   
-  #create species lookup table
-  sp <- c("ES","ET","P","C")
-  Species <- c("eusi","eute","pira","cacu")
-  spconv <- data.frame(sp,Species)
+  #- get the data the better way, from HIEv
+  lwp.hiev1 <- read.csv("Data/ROS_MD_PM_LWP_20121109-20130702_L1.csv")
+  lwp.hiev2 <- read.csv("Data/ROS_MD_PM_LWP_2012-10-04_L1.csv")
+  lwp.hiev <- rbind(lwp.hiev1,lwp.hiev2)
   
-  #create treatment lookup table
-  Treatment <- c("D","W")
-  Treat <- c("dry","wet")
-  treatconv <- data.frame(Treatment,Treat)
+  names(lwp.hiev)[2] <- "LWPdate"
+  lwp.hiev$LWPdate <- as.Date(lwp.hiev$LWPdate)
   
-  #melt into "long" data format
-  lwp.m <- melt(lwp,c("Shelter","sp","Treatment","Pot"))
-  names(lwp.m)[6] <- "LWP"
-  lwp.m$Date <- as.Date(substr(lwp.m$variable,start=3,stop=8),format="%d%m%y")
-  lwp.m$Type <- factor(substr(lwp.m$variable,start=1,stop=2))
-  lwp.m <- merge(lwp.m,spconv,by="sp")
-  lwp.m <- merge(lwp.m,treatconv,by="Treatment")
-  
-  
-  #read in the LWP data measured for the DRUID campaign, make formatting the same as the other data
-  lwp_druid <- read.csv("./Data/LWP/DruidLWP_26Sept2013.csv")
-  lwp_druid$Treatment <- toupper(lwp_druid$trt)
-  names(lwp_druid)[3:7] <- c("Species","trt","Pot","PD","MD")
-  lwp_druid$Date <- as.Date(lwp_druid$date,format="%d/%m/%Y")
-  lwp_druid2 <- subset(lwp_druid,select=c("Species","Pot","Treatment","Date","PD","MD"))
-  lwp_druid3 <- melt(lwp_druid2,c("Species","Pot","Treatment","Date"),variable_name="Type")
-  names(lwp_druid3)[6] <- "LWP"
-  lwp_druid3$LWP <- lwp_druid3$LWP*-1
-  
-  #merge the LWP dataframes
-  commoncols <- intersect(colnames(lwp.m),colnames(lwp_druid3))
-  lwp2 <- rbind(subset(lwp.m,select=commoncols),subset(lwp_druid3,select=commoncols))
-  lwp3 <- merge(lwp2,treatconv)[,2:7]
-  
-  
-  #read in the extra LWP data that was measured on a different set of pots, on 4.10.12
-  extras <- read.csv("./Data/LWP/LWP_10April12_ROS.csv")
-  extras$Date <- as.Date(extras$Date,format="%m/%d/%Y")
-  
-  #merge the extra dataframes
-  commoncols <- intersect(colnames(lwp3),colnames(extras))
-  lwp4 <- rbind(subset(lwp3,select=commoncols),subset(extras,select=commoncols))
-  
-  return(lwp4)
+  lwp.hiev$diff <- with(lwp.hiev,LWP.md-LWP.pd)
+  return(lwp.hiev)
 }
 #-----------------------------------------------------------------------------------------
 
@@ -349,7 +360,10 @@ return.gx.vwc <- function(){
   vwc.treat.avg <- summaryBy(TDR+Ladd~Date+Species+Treat,
                              FUN=mean,keep.names=TRUE,data=vwc)
   
-  #- merge the gas-exchange data (gx2) with a treatment by date by species mean of the TDR measurements
+  #- merge the gas-exchange data (gx2) with a treatment by date by species mean of the TDR measurements.
+  #  I do it this way because I don't trust the individual TDR measurements. I think there are a substantial
+  #  number of mis-labeled pot identifiers. Chelsea tells me that they likely got the right species and treatment
+  #  but perhaps they did not get the right individual pot number on each date.
   gx3 <- merge(gx2,vwc.treat.avg,by=c("Date","Species","Treat"))
   
   return(gx3)
@@ -436,20 +450,20 @@ return.gx.vwc.lwp <- function(){
   #get the raw data
   ros <- return.gx.vwc()
   lwp <- read.lwp()
-  
-  #--------------- process LWP data a bit
-  names(lwp)[3] <- "LWPdate"
-  lwp.pd <- subset(lwp,Type=="PD" & is.na(LWP)==FALSE)
-  lwp.pd$LWP <- -1*lwp.pd$LWP
-  lwp.md <- subset(lwp,Type=="MD" & is.na(LWP)==FALSE)
-  lwp.md$LWP <- -1*lwp.md$LWP
-  
-  names(lwp.md)[2] <- "LWP.md"
-  lwp2 <- merge(lwp.pd,lwp.md,by=c("Pot","LWPdate","Treat","Species"),all=FALSE)
-  lwp2$diff <- with(lwp2,abs(LWP.md)-abs(LWP))
-  lwp2$Type.x <- lwp2$Type.y <- NULL
-  
-  #----------------
+  # 
+  # #--------------- process LWP data a bit
+  # names(lwp)[3] <- "LWPdate"
+  # lwp.pd <- subset(lwp,Type=="PD" & is.na(LWP)==FALSE)
+  # lwp.pd$LWP <- -1*lwp.pd$LWP
+  # lwp.md <- subset(lwp,Type=="MD" & is.na(LWP)==FALSE)
+  # lwp.md$LWP <- -1*lwp.md$LWP
+  # 
+  # names(lwp.md)[2] <- "LWP.md"
+  # lwp2 <- merge(lwp.pd,lwp.md,by=c("Pot","LWPdate","Treat","Species"),all=FALSE)
+  # lwp2$diff <- with(lwp2,abs(LWP.md)-abs(LWP))
+  # lwp2$Type.x <- lwp2$Type.y <- NULL
+  # 
+  # #----------------
   
   
   
