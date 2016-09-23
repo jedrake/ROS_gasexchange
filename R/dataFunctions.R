@@ -597,11 +597,18 @@ get_d13C <- function(frac1=27,frac2=4.4,aird13C=-8){
   #aird13C is the assumed isotopic composition of the source CO2 (atmosphere)
   
   #---- read in the data, do a little processing
-  d1 <- read.csv("Data/Isotopes/ROS isotope data.csv")
-  names(d1)[6] <- "Treat"
-  d1$plant <- as.factor(substr(d1$ID,start=1,stop=3))
-  d1$Treat <- relevel(d1$Treat,ref="wet")
-  d1$Date <- as.Date(d1$Date,format="%d/%m/%Y")
+  # d1 <- read.csv("oldData/Isotopes/ROS isotope data.csv")
+  # names(d1)[6] <- "Treat"
+  # d1$Pot <- as.factor(substr(d1$ID,start=1,stop=3))
+  # d1$Treat <- relevel(d1$Treat,ref="wet")
+  # d1$Date <- as.Date(d1$Date,format="%d/%m/%Y")
+  # d1$Species <- tolower(d1$Species)
+  # write.csv(d1,"forHIEv/ROS_isotopes.csv",row.names=F)
+  # 
+  
+  d1 <- read.csv("Data/ROS_MD_PM_LEAF-ISOTOPES_20121221-20130326_L1.csv")
+  
+  d1$Date <- as.Date(d1$Date)
   d1$bigDelta <- (aird13C/1000-d1$deltaC/1000)/(1+d1$deltaC/1000) #calculate discrimination, assume atmosphere is -8 permil
   d1$CiCa <- with(d1,(bigDelta-frac2/1000)/(frac1/1000-frac2/1000))
   d1$time <- as.factor(d1$time)

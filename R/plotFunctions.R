@@ -730,7 +730,6 @@ plotHydry <- function(output=F){
 plotd13C_gx <- function(output=F,ptsize=1.8){
   #---- read in the isotope data, do a little processing
   d1 <- get_d13C()
-  d1$Species <- tolower(d1$Species)
   
   d1$bigDelta <- d1$bigDelta*1000
   d1.m <- summaryBy(deltaC+bigDelta~Species+Treat,data=d1,FUN=c(mean,standard.error))
@@ -742,7 +741,7 @@ plotd13C_gx <- function(output=F,ptsize=1.8){
   
   #- try to merge individual pots?
   gx.m2 <- summaryBy(Photo+Cond+WUEi~Species+Treat+Pot,data=subset(gx,gxDate < as.Date("2013-3-01")),FUN=mean,keep.names=T)
-  dat2 <- merge(gx.m2,subset(d1,Date==as.Date("2013-03-26")),by.x=c("Species","Treat","Pot"),by.y=c("Species","Treat","plant"))
+  dat2 <- merge(gx.m2,subset(d1,Date==as.Date("2013-03-26")),by=c("Species","Treat","Pot"))
   
   
   #- plot isotopes relative to gas exchange,
@@ -770,7 +769,7 @@ plotd13C_gx <- function(output=F,ptsize=1.8){
   #legend("topright",pch=15:18,legend=levels(dat2$Species),cex=1.2)
   magaxis(side=1:4,labels=c(1,1,0,0),frame.plot=T,las=1)
   title(ylab=expression(Delta~"*"~10^3),cex.lab=2)
-  title(xlab=expression(WUE[i]~(A[sat]/g[s]~";"~mu*mol~mmol^-1)),cex.lab=2)
+  title(xlab=expression(WUE[i]~(A[sat]/g[s]~";"~mu*mol~mol^-1)),cex.lab=2)
   legend("topleft","a",bty="n",cex=1.5)
   legend(x=75,y=27,legend=c("  Cacu","  Eusi","  Eute","  Pira"),pch=c(pointstyles),
          col=c(rep("black",4)),ncol=2,pt.bg="black",cex=1.4,bg="white")
