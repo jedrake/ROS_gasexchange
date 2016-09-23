@@ -5,7 +5,7 @@
 plotVWC <- function(ptsize=1.5,output=T,type="4panel"){
   
   #- get the VWC data from the loggers and handheld
-  vwc.loggers <- get.TDR.logger(startdate="2011-11-01")
+  vwc.loggers <- get.TDR.logger(startdate="2011-11-01",enddate="2013-12-1")
   vwc.hand <- get.TDR.handheld(filterBlanks=1)
   vwc.hand$Species <- droplevels(vwc.hand$Species)
   
@@ -15,6 +15,7 @@ plotVWC <- function(ptsize=1.5,output=T,type="4panel"){
   length2 <- function(x,...){
     length(na.omit(x))
   }
+  names(vwc.hand)[which(names(vwc.hand)=="VWC")] <- "TDR"
   vwc.hand0 <- summaryBy(TDR~Date+Species+Treat,FUN=c(mean,length2,standard.error),dat=vwc.hand,keep.names=FALSE,na.rm=TRUE)
   vwc.hand1 <- subset(vwc.hand0,TDR.length2>3 | Date>as.Date("2013-05-01") ) #remove dates that have <3 observations (some pots were miscoded)
   names(vwc.hand1)[4] <- "TDR"
@@ -24,18 +25,10 @@ plotVWC <- function(ptsize=1.5,output=T,type="4panel"){
   # average across dates for dry pots only and have a look. Try to identify the dates where plants were re-watered
   vwc.dates.dry <- summaryBy(TDR~Date,data=subset(vwc.hand1,Treat=="dry"))
   
-  # 
-  # #------------------------------------------------------------------------------------------------------------------
-  # #Write out a csv of the TDR data for sharing
-  # vwc.hand.out <- vwc.hand[,c(3,7,8,4,5,6)];names(vwc.hand.out)[5] <- "VWC"
-  # vwc.hand.out$Treat <- as.factor(ifelse(vwc.hand.out$Treat=="dry","Dry","Wet"))
-  # vwc.hand.out$VWC <- vwc.hand.out$VWC/100
-  # write.csv(vwc.hand.out,file="Output/ROS_MD_PM_SOILMOIST-HANDHELD_L1.csv",row.names=F)
-  
+
   names(vwc.loggers)[3] <- "Pot"
   vwc.loggers.out <- vwc.loggers[,c(6,5,4,3,1,2,7)]
   vwc.loggers.out$Treat <- as.factor(ifelse(vwc.loggers.out$Treat=="dry","Dry","Wet"))
-  #write.csv(vwc.loggers.out,file="./Output/ROS_MD_PM_SOILMOIST-LOGGERS_MA.csv",row.names=FALSE)
   # #------------------------------------------------------------------------------------------------------------------
   
   
@@ -89,8 +82,8 @@ plotVWC <- function(ptsize=1.5,output=T,type="4panel"){
       #if (i > 1)plotBy(VWC.mean~Date|Treat,data=dat1,type="b",cex=0.5,ylim=c(0,0.4),legend=FALSE,axes=FALSE,add=T)
       if (i%%2==1) magaxis(c(2,4),labels=c(1,0),frame.plot=TRUE)
       if (i%%2==0) magaxis(c(2,4),labels=c(0,1),frame.plot=TRUE)
-      points(TDR/100~Date,col="black",data=subset(dat2,Treat=="dry"),pch=21,bg="white",cex=ptsize)
-      points(TDR/100~Date,col="black",data=subset(dat2,Treat=="wet"),pch=21,bg="black",cex=ptsize)
+      points(TDR~Date,col="black",data=subset(dat2,Treat=="dry"),pch=21,bg="white",cex=ptsize)
+      points(TDR~Date,col="black",data=subset(dat2,Treat=="wet"),pch=21,bg="black",cex=ptsize)
       
       rug(gxdates,lwd=3,line=-0.5)
       
@@ -103,7 +96,7 @@ plotVWC <- function(ptsize=1.5,output=T,type="4panel"){
     }
     title(xlab="Date",outer=TRUE,ylab=expression(Volumetric~water~content~(theta~m^3~m^-3)),cex.lab=2,line=2)
     title(xlab="Date",outer=TRUE,ylab=expression(Volumetric~water~content~(theta~m^3~m^-3)),cex.lab=2,line=2)
-    if(output==T) dev.copy2pdf(file="Output/Figure1_VWC.pdf")
+    if(output==T) dev.copy2pdf(file="Output/Figure1_VWC_fourPanels.pdf")
     
   }
   
@@ -133,10 +126,10 @@ plotVWC <- function(ptsize=1.5,output=T,type="4panel"){
     for (i in 1:length(vwc.hand.list)){
       dat2 <- vwc.hand.list[[i]]
       
-      adderrorbars(x=dat2$Date,y=dat2$TDR/100,SE=dat2$TDR.se/100,direction="updown")
+      adderrorbars(x=dat2$Date,y=dat2$TDR,SE=dat2$TDR.se,direction="updown")
       
-      points(TDR/100~Date,col="black",data=subset(dat2,Treat=="dry"),pch=pchs[i],bg="white",cex=ptsize)
-      points(TDR/100~Date,col="black",data=subset(dat2,Treat=="wet"),pch=pchs[i],bg="black",cex=ptsize)
+      points(TDR~Date,col="black",data=subset(dat2,Treat=="dry"),pch=pchs[i],bg="white",cex=ptsize)
+      points(TDR~Date,col="black",data=subset(dat2,Treat=="wet"),pch=pchs[i],bg="black",cex=ptsize)
       
       
     }
@@ -152,7 +145,7 @@ plotVWC <- function(ptsize=1.5,output=T,type="4panel"){
     rug(gxdates,lwd=3,line=-0.5)
     
   }
-  if(output==T) dev.copy2pdf(file="./Output/VWC_ROS_jed_1panel.pdf")
+  if(output==T) dev.copy2pdf(file="./Output/Figure1_VWC_onePanel.pdf")
   
 }
 #------------------------------------------------------------------------------------------------------------------

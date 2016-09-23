@@ -9,39 +9,25 @@
 #-----------------------------------------------------------------------------------------
 #read and process handheld TDR data
 get.TDR.handheld <- function(filterBlanks=1){
-  #read in the data, do some manipulation
-  TDRdat <- read.csv("//ad.uws.edu.au/dfshare/HomesHWK$/30035219/My Documents/Work/ROS/Data/VWC/ROS.TDRData.04042013.csv")
-  #downloadHIEv(searchHIEv("ROS_MD_PM_SOILMOIST-HANDHELD_L1.csv"),topath="./Data/VWC/")
-  #TDRdat <- read.csv("./Data/VWC/ROS_MD_PM_SOILMOIST-HANDHELD_L1.csv")
-  TDRdat$Ladd <- as.numeric(TDRdat$Ladd)
-  TDRdat$Date <- as.Date(TDRdat$Date,"%d/%m/%Y",tz="GMT")
   
+  #- read in the data from HIEv
+  TDR1 <- read.csv("Data/ROS_MD_PM_SOILMOIST-HANDHELD_L2.csv")
   
-  #create species lookup table
-  sp <- c("casuarina ","radiata","sideroxylon","tereticornis","Blank")
-  Species <- c("cacu","pira","eusi","eute","blank")
-  spconv <- data.frame(sp,Species)
-  
-  #create treatment lookup table
-  Treatment <- c("drought","water")
-  Treat <- c("dry","wet")
-  treatconv <- data.frame(Treatment,Treat)
-  
-  #ignore very high values
-  #TDRdat <- subset(TDRdat, TDR < 50)
-  
-  TDRdat2 <- merge(TDRdat,spconv)
-  TDRdat3 <- merge(TDRdat2,treatconv)
-  
+  #- Filter out the blanks and non-shelter measurements
   if (filterBlanks==1){
-    TDRdat4 <- subset(TDRdat3, Species !="blank" & Pot < 700)
-    TDRdat4$Species <- droplevels(TDRdat4$Species)} #remove data from blank pots, keep only data from shelters (pots 100-699)
+    TDRdat <- subset(TDR1, Species !="blank" & Pot < 700)
+    TDRdat$Species <- droplevels(TDRdat$Species)} #remove data from blank pots, keep only data from shelters (pots 100-699)
   if (filterBlanks!=1){
-    TDRdat4 <- TDRdat3
+    TDRdat <- TDR1
   }
-  #TDRdat4$Species <- factor(TDRdat4$Species)
   
-  return(TDRdat4)
+  TDRdat$Treat <- tolower(TDRdat$Treat)
+  TDRdat$Date <- as.Date(TDRdat$Date)
+  
+  #- convert from % to m3 m-3
+  TDRdat$TDR <- TDRdat$TDR/100
+  
+  return(TDRdat)
 }
 #-----------------------------------------------------------------------------------------
 
@@ -53,12 +39,13 @@ get.TDR.handheld <- function(filterBlanks=1){
 #-----------------------------------------------------------------------------------------
 #- download the automated TDR measures of soil moisture.
 #-----------------------------------------------------------------------------------------
-get.TDR.logger <- function(plotson=0,startdate="2012-08-01"){
+get.TDR.logger <- function(plotson=0,startdate="2012-08-01",enddate="2013-12-1"){
 
 
   
   #find all of the files with soil moisture at ROS
-  dfr <- downloadTOA5(filename="ROS_[0-9]_ROS[0-9][0-9]Table15min",maxnfiles=120,topath="./Data/VWC/")
+  dfr <- downloadTOA5(filename="ROS_[0-9]_ROS[0-9][0-9]Table15min",maxnfiles=120,topath="Data/VWC/",
+                      startDate=startdate,endDate=enddate)
   #cachefile="TDR_ROS_Logger.RData")
   dfr$Plot <- as.numeric((substr(dfr$Source,start=10,stop=11)))
   attr(dfr$DateTime,"tzone") <- "GMT"
@@ -73,7 +60,7 @@ get.TDR.logger <- function(plotson=0,startdate="2012-08-01"){
   
   
   #read in the identifying data as to which sensor is paired with which pot
-  ids <- read.csv("./Data/VWC/TDR_loggers_IDs.csv")
+  ids <- read.csv("./Data/ROS_MD_PM_SOILMOIST-CODES.csv")
   
   
   #merge data with ids. Note that there are ~2 million rows in this dataframe. Only take dates range that I want
@@ -379,36 +366,58 @@ return.gx.vwc <- function(){
 #-----------------------------------------------------------------------------------------
 read.gx.ROS <- function(){
 
-  #find the right files
-  datadir <- "Data/ROS gas exchange data/Cleaned CSV & Text files/"
-  datapath <- file.path(getwd(),datadir)
-  files <- list.files(datapath,pattern="*.csv")
   
-  #read them into a dataframe "dat"
-  dat <- list()
-  for (i in 1:length(files)){
-    dat[[i]] <- read.csv(file.path(datapath,files[i])) # read in each file and extract the date from the file name
-    dat[[i]]$Date <- str_extract(str_extract(files[i],"[0-9]+[A-z]+[0-9]+.csv"),"[0-9]+[A-z]+[0-9]+") #- had to remove "*" at beginning of first regex, 15/5/15
-  }
-  names(dat[[4]]) <- names(dat[[3]]) #for some reason, "pot." was not named quite the same thing in the fourth file
-  names(dat[[6]]) <- names(dat[[3]])
-  dat <- do.call(rbind,dat)
+  #-- the old way of doing things...
   
-  #do some renaming and creating the right factor levels
-  names(dat)[2:3] <- c("Treat","Pot")
-  dat$Species <- factor(tolower(substr(dat$Species,start=1,stop=4)))
-  dat$Treat <- factor(tolower(dat$Treat))
-  #   dat$Pot <- factor(dat$Pot)
-  dat$Date <- as.Date(dat$Date,format="%d%b%y")
   
-  #average sub-replicate logs
-  dat2 <- summaryBy(.~Species+Treat+Pot+Date,data=dat,FUN=mean,keep.names=TRUE)
-  toremove214 <- which(dat2$Pot == 214 & dat2$Date == "2013-03-21") #these two observations are crazy outliers and will be removed
-  toremove219 <- which(dat2$Pot == 219 & dat2$Date == "2013-03-21")
-  dat2[toremove214,] <- NA
-  dat2[toremove219,] <- NA
+  # #find the right files
+  # datadir <- "oldData/ROS gas exchange data/Cleaned CSV & Text files/"
+  # datapath <- file.path(getwd(),datadir)
+  # files <- list.files(datapath,pattern="*.csv")
+  # 
+  # #read them into a dataframe "dat"
+  # dat <- list()
+  # for (i in 1:length(files)){
+  #   dat[[i]] <- read.csv(file.path(datapath,files[i])) # read in each file and extract the date from the file name
+  #   dat[[i]]$Date <- str_extract(str_extract(files[i],"[0-9]+[A-z]+[0-9]+.csv"),"[0-9]+[A-z]+[0-9]+") #- had to remove "*" at beginning of first regex, 15/5/15
+  # }
+  # names(dat[[4]]) <- names(dat[[3]]) #for some reason, "pot." was not named quite the same thing in the fourth file
+  # names(dat[[6]]) <- names(dat[[3]])
+  # dat <- do.call(rbind,dat)
+  # 
+  # #do some renaming and creating the right factor levels
+  # names(dat)[2:3] <- c("Treat","Pot")
+  # dat$Species <- factor(tolower(substr(dat$Species,start=1,stop=4)))
+  # dat$Treat <- factor(tolower(dat$Treat))
+  # #   dat$Pot <- factor(dat$Pot)
+  # dat$Date <- as.Date(dat$Date,format="%d%b%y")
+  # 
+  # #average sub-replicate logs
+  # dat2 <- summaryBy(.~Species+Treat+Pot+Date,data=dat,FUN=mean,keep.names=TRUE)
+  # toremove214 <- which(dat2$Pot == 214 & dat2$Date == "2013-03-21") #these two observations are crazy outliers and will be removed
+  # toremove219 <- which(dat2$Pot == 219 & dat2$Date == "2013-03-21")
+  # dat2[toremove214,] <- NA
+  # dat2[toremove219,] <- NA
+  # 
+  # dat3 <- subset(dat2,is.na(Date)==FALSE)
+  # 
   
-  dat3 <- subset(dat2,is.na(Date)==FALSE)
+  #--- alternatively, read in the data on HIEv
+  dat.hiev <- read.csv("Data/ROS_MD_GX-Asat_120410-130516_L1.csv")
+  
+  #- remove first column (names)
+  dat.hiev$X <- NULL
+  
+  #- remove a few outliers
+  toremove214 <- which(dat.hiev$Pot == 214 & dat.hiev$Date == "2013-03-21") #these two observations are crazy outliers and will be removed
+  toremove219 <- which(dat.hiev$Pot == 219 & dat.hiev$Date == "2013-03-21")
+  dat.hiev[toremove214,] <- NA
+  dat.hiev[toremove219,] <- NA
+  dat3 <- subset(dat.hiev,is.na(Date)==FALSE)
+  
+  #- reformat variables
+  dat3$Date <- as.Date(dat3$Date)
+   
   return(dat3)
 }
 #-----------------------------------------------------------------------------------------
