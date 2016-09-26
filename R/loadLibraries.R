@@ -1,23 +1,45 @@
 #-----------------------------------------------------------------------------------------
 #- Libraries and scripts required to run stuff in the ROS repo
 #-----------------------------------------------------------------------------------------
-library(doBy)
-library(plotBy)
-library(HIEv)
-library(stringr)
-library(reshape)
-library(plyr)
-library(dplyr)
-library(plantecophys)
-library(stringr)
-library(magicaxis)
-library(colorRamps)
-library(car)
-library(scales)
-library(DEoptim)
-library(mgcv)
-library(RColorBrewer)
-library(readxl)
+
+
+#---------------------------------------------------------------------
+#- function to load a package, and install it if necessary
+Library <- function(pkg, ...){
+  
+  PACK <- .packages(all.available=TRUE)
+  pkgc <- deparse(substitute(pkg))
+  
+  if(pkgc %in% PACK){
+    library(pkgc, character.only=TRUE)
+  } else {
+    install.packages(pkgc, ...)
+    library(pkgc, character.only=TRUE)
+  }
+  
+}
+#---------------------------------------------------------------------
+
+
+
+Library(doBy)
+Library(plotBy)
+Library(HIEv)
+Library(stringr)
+Library(reshape)
+Library(plyr)
+Library(dplyr)
+Library(plantecophys)
+Library(stringr)
+Library(magicaxis)
+Library(colorRamps)
+Library(car)
+Library(scales)
+Library(DEoptim)
+Library(mgcv)
+Library(RColorBrewer)
+Library(readxl)
+Library(Agreement)
 
 source("R/dataFunctions.R")
 source("R/plotFunctions.R")

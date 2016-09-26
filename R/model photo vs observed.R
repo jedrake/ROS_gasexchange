@@ -162,14 +162,16 @@ predline(lm(Photo~P_theta_s,data=dat.all3),fittype="confidence",col=fitcol,xpd=F
 magaxis(side=c(1,2,4),labels=c(0,1,0),frame.plot=T,las=1,tcl=0.3)
 title(ylab=expression(beta[s]),xpd=NA,cex.lab=textsize)
 legend("bottomright",letters[2],bty="n",cex=1.2)
-legend("topleft",legend=expression(r^2~"="~0.39),bty="n")
+r2val <-round(summary(lm(Photo~P_theta_s,data=dat.all3))$r.squared,2)
+legend("topleft",legend= bquote(r^2 == .(r2val)),bty="n")
 
 
 plot(dat.all3$Photo~dat.all3$P_lwp_s,xlim=xlims,ylim=ylims,axes=F,xlab="",ylab="");abline(0,1)
 predline(lm(Photo~P_lwp_s,data=dat.all3),fittype="confidence",col=fitcol,xpd=T)
 magaxis(side=c(1,2,4),labels=c(0,0,1),frame.plot=T,las=1,tcl=0.3)
 legend("bottomright",letters[6],bty="n",cex=1.2)
-legend("topleft",legend=expression(r^2~"="~0.41),bty="n")
+r2val <-round(summary(lm(Photo~P_lwp_s,data=dat.all3))$r.squared,2)
+legend("topleft",legend= bquote(r^2 == .(r2val)),bty="n")
 
 #- plot B models for non-stomatal limitation (theta and then lwp)
 plot(dat.all3$Photo~dat.all3$P_theta_ns,xlim=xlims,ylim=ylims,axes=F,xlab="",ylab="");abline(0,1)
@@ -177,13 +179,15 @@ predline(lm(Photo~P_theta_ns,data=dat.all3),fittype="confidence",col=fitcol,xpd=
 magaxis(side=c(1,2,4),labels=c(0,1,0),frame.plot=T,las=1,tcl=0.3)
 title(ylab=expression(beta[ns]),xpd=NA,cex.lab=textsize)
 legend("bottomright",letters[3],bty="n",cex=1.2)
-legend("topleft",legend=expression(r^2~"="~0.51),bty="n")
+r2val <-round(summary(lm(Photo~P_theta_ns,data=dat.all3))$r.squared,2)
+legend("topleft",legend= bquote(r^2 == .(r2val)),bty="n")
 
 plot(dat.all3$Photo~dat.all3$P_lwp_ns,xlim=xlims,ylim=ylims,axes=F,xlab="",ylab="");abline(0,1)
 predline(lm(Photo~P_lwp_ns,data=dat.all3),fittype="confidence",col=fitcol,xpd=T)
 magaxis(side=c(1,2,4),labels=c(0,0,1),frame.plot=T,las=1,tcl=0.3)
 legend("bottomright",letters[7],bty="n",cex=1.2)
-legend("topleft",legend=expression(r^2~"="~0.48),bty="n")
+r2val <-round(summary(lm(Photo~P_lwp_ns,data=dat.all3))$r.squared,2)
+legend("topleft",legend= bquote(r^2 == .(r2val)),bty="n")
 
 #- plot B models with both
 plot(dat.all3$Photo~dat.all3$P_theta_sns,xlim=xlims,ylim=ylims,axes=F,xlab="",ylab="");abline(0,1)
@@ -191,13 +195,15 @@ predline(lm(Photo~P_theta_sns,data=dat.all3),fittype="confidence",col=fitcol,xpd
 magaxis(side=c(1,2,4),labels=c(1,1,0),frame.plot=T,las=1,tcl=0.3)
 title(ylab=expression(beta[s+ns]),xpd=NA,cex.lab=textsize)
 legend("bottomright",letters[4],bty="n",cex=1.2)
-legend("topleft",legend=expression(r^2~"="~0.51),bty="n")
+r2val <-round(summary(lm(Photo~P_theta_sns,data=dat.all3))$r.squared,2)
+legend("topleft",legend= bquote(r^2 == .(r2val)),bty="n")
 
 plot(dat.all3$Photo~dat.all3$P_lwp_sns,xlim=xlims,ylim=ylims,axes=F,xlab="",ylab="");abline(0,1)
 predline(lm(Photo~P_lwp_sns,data=dat.all3),fittype="confidence",col=fitcol,xpd=T)
 magaxis(side=c(1,2,4),labels=c(0,0,1),frame.plot=T,las=1,tcl=0.3)
 legend("bottomright",letters[8],bty="n",cex=1.2)
-legend("topleft",legend=expression(r^2~"="~0.47),bty="n")
+r2val <-round(summary(lm(Photo~P_lwp_sns,data=dat.all3))$r.squared,2)
+legend("topleft",legend= bquote(r^2 == .(r2val)),bty="n")
 
 #- plot Tuzet models (stomatal, and both). Note the two empty plots to fill space
 plot(Photo~P_theta_sns,data=dat.all3,type="n",axes=F,xlab="",ylab="")
@@ -206,7 +212,8 @@ predline(lm(Photo~P_tuzet_s,data=dat.all3),fittype="confidence",col=fitcol,xpd=T
 magaxis(side=c(1,2,4),labels=c(0,1,1),frame.plot=T,las=1,tcl=0.3)
 title(ylab=expression(Tuzet[s]),xpd=NA,cex.lab=textsize)
 legend("bottomright",letters[9],bty="n",cex=1.2)
-legend("topleft",legend=expression(r^2~"="~0.46),bty="n")
+r2val <-round(summary(lm(Photo~P_tuzet_s,data=dat.all3))$r.squared,2)
+legend("topleft",legend= bquote(r^2 == .(r2val)),bty="n")
 
 
 plot(Photo~P_theta_sns,data=dat.all3,type="n",axes=F,xlab="",ylab="")
@@ -215,7 +222,8 @@ predline(lm(Photo~P_tuzet_sns,data=dat.all3),fittype="confidence",col=fitcol,xpd
 magaxis(side=c(1,2,4),labels=c(1,1,1),frame.plot=T,las=1,tcl=0.3)
 title(ylab=expression(Tuzet[s+ns]),xpd=NA,cex.lab=textsize)
 legend("bottomright",letters[10],bty="n",cex=1.2)
-legend("topleft",legend=expression(r^2~"="~0.45),bty="n")
+r2val <-round(summary(lm(Photo~P_tuzet_sns,data=dat.all3))$r.squared,2)
+legend("topleft",legend= bquote(r^2 == .(r2val)),bty="n")
 
 title(xlab=expression("Predicted"~A[sat]~(mu*mol~m^-2~s^-1)),outer=T,cex.lab=2)
 title(ylab=expression("Observed"~A[sat]~(mu*mol~m^-2~s^-1)),outer=T,cex.lab=2,line=5)
