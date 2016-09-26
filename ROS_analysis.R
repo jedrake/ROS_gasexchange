@@ -17,7 +17,7 @@ source("R/loadLibraries.R")
 
 #------------------------------------------------------------------------------------------------------------------
 #- Download the data (from HIEv). This creates a "Data" and "Output" 
-#  directories in the working directory, if one does not exist.
+#  directories in the working directory, if they do not exist.
 source("R/downloadData.R")
 #------------------------------------------------------------------------------------------------------------------
 
@@ -49,7 +49,7 @@ plotd13C_gx(output=T)
 pars <- plotMoistCurve(output=T)
 #-------------------------------------------------------------------------------------------------------
 
-
+#-- fix up the data and code from here downwards
 #-------------------------------------------------------------------------------------------------------
 #- plot the leaf water potential data over time (Figure S3).
 plotLWP(fillcol="lightgrey",size=1.75,output=T,labsize=1.8)

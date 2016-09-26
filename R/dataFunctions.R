@@ -480,7 +480,7 @@ return.gx.vwc.lwp <- function(){
     return(dateList[closest])
   }
   #grab the dates that leaf water potential was measured
-  LWPdates <- levels(as.factor(lwp.pd$LWPdate))
+  LWPdates <- levels(as.factor(lwp$LWPdate))
   
   #find the closest date of LWP measurements to the gas exchange date.
   ros$LWPdate <- NA
@@ -490,8 +490,8 @@ return.gx.vwc.lwp <- function(){
   ros$LWPdate <- as.Date(ros$LWPdate)
   
   # merge the dataframes
-  ros2 <- merge(ros,lwp2,by=c("LWPdate","Pot","Species","Treat"))
-  ros2$LWP[which(ros2$diff >= 4)] <- NA
+  ros2 <- merge(ros,lwp,by=c("LWPdate","Pot","Species","Treat"))
+  ros2$LWP.pd[which(ros2$diff >= 4)] <- NA
   ros2$LWP.md[which(ros2$diff <= -2)] <- NA
   ros2$diff[which(ros2$diff <= -2)] <- NA
   return(ros2)

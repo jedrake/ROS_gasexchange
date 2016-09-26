@@ -235,7 +235,7 @@ plotGX <- function(output=F){
   # lwp2 <- merge(lwp.pd,lwp.md,by=c("Pot","LWPdate","Treat","Species"),all=FALSE)
   # lwp2$diff <- with(lwp2,abs(LWP.md)-abs(LWP))
   # 
-  lwp.trt<- summaryBy(LWP+LWP.md+diff~LWPdate+Species+Treat,data=lwp2,FUN=c(mean,standard.error), na.rm=TRUE)
+  lwp.trt<- summaryBy(LWP.pd+LWP.md+diff~LWPdate+Species+Treat,data=lwp,FUN=c(mean,standard.error), na.rm=TRUE)
   lwp.trt.list <- split(lwp.trt,lwp.trt$Species)
   #------------------------------------------------------------------------------------------------------------------
   
@@ -916,7 +916,7 @@ plotGX_theta <- function(output=F,colors= brewer.pal(4,"Set1")){
   # lwp2 <- merge(lwp.pd,lwp.md,by=c("Pot","LWPdate","Treat","Species"),all=FALSE)
   # lwp2$diff <- with(lwp2,abs(LWP.md)-abs(LWP))
   # 
-  lwp.trt<- summaryBy(LWP+LWP.md+diff+TDR~LWPdate+Species+Treat,data=lwp,FUN=c(mean,standard.error), na.rm=TRUE)
+  lwp.trt<- summaryBy(LWP.pd+LWP.md+diff+TDR~LWPdate+Species+Treat,data=lwp,FUN=c(mean,standard.error), na.rm=TRUE)
   lwp.trt$TDR <- lwp.trt$TDR.mean
   lwp.trt.list <- split(lwp.trt,lwp.trt$Species)
   #------------------------------------------------------------------------------------------------------------------
@@ -982,13 +982,13 @@ plotGX_theta <- function(output=F,colors= brewer.pal(4,"Set1")){
     if(i ==1) plot.new();plot.window(xlim=c(0,0.35),ylim=c(-10,0));abline(h=0)
     
     #- smoothplot
-    smoothplot(TDR, LWP.mean, polycolor=alpha(colors[i],0.3),linecols=colors[i],
+    smoothplot(TDR, LWP.pd.mean, polycolor=alpha(colors[i],0.3),linecols=colors[i],
                ylab="",cex=0.5,add=T,
                data=toplot, kgam=5, axes=F)
     #- overlay points and error bars
     
-    plotBy(LWP.mean~TDR|Treat,data=toplot,add=T,pch=symbols[i],col=colors[i],cex=2,legend=F,
-           panel.first=adderrorbars(x=toplot$TDR,y=toplot$LWP.mean,SE=toplot$LWP.standard.error,direction="updown"))
+    plotBy(LWP.pd.mean~TDR|Treat,data=toplot,add=T,pch=symbols[i],col=colors[i],cex=2,legend=F,
+           panel.first=adderrorbars(x=toplot$TDR,y=toplot$LWP.pd.mean,SE=toplot$LWP.pd.standard.error,direction="updown"))
     
   }
   magaxis(side=1:4,labels=c(0,1,0,0),las=2,cex.axis=1.5)
