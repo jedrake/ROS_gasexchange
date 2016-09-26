@@ -308,7 +308,7 @@ plotLWP <- function(fillcol="lightgrey",size=1.75,output=F,labsize=1.8){
   
   #---------------------------------------------------------------------------------------------------------------------
   #--- plot pre-dawn and mid-day leaf water potentials over time
-  lwp.m <- summaryBy(LWP+LWP.md+diff~gxDate+Treat+Species,FUN=c(mean,standard.error),data=subset(ros2,gxDate>as.Date("2012-11-1")))
+  lwp.m <- summaryBy(LWP.pd+LWP.md+diff~gxDate+Treat+Species,FUN=c(mean,standard.error),na.rm=T,data=subset(ros2,gxDate>as.Date("2012-11-1")))
   lwp.m.l <- split(lwp.m,lwp.m$Species)
   
   
@@ -335,9 +335,9 @@ plotLWP <- function(fillcol="lightgrey",size=1.75,output=F,labsize=1.8){
   for (i in 1:length(lwp.m.l)){
     dat1 <- lwp.m.l[[i]]
     
-    adderrorbars(x=dat1$gxDate,y=dat1$LWP.mean,SE=dat1$LWP.standard.error,direction="updown")
-    points(LWP.mean~gxDate,col="black",data=subset(dat1,Treat=="dry"),pch=pchs[i],bg=colors[1],cex=size,type="o")
-    points(LWP.mean~gxDate,col="black",data=subset(dat1,Treat=="wet"),pch=pchs[i],bg=colors[2],cex=size,type="o")
+    adderrorbars(x=dat1$gxDate,y=dat1$LWP.pd.mean,SE=dat1$LWP.pd.standard.error,direction="updown")
+    points(LWP.pd.mean~gxDate,col="black",data=subset(dat1,Treat=="dry"),pch=pchs[i],bg=colors[1],cex=size,type="o")
+    points(LWP.pd.mean~gxDate,col="black",data=subset(dat1,Treat=="wet"),pch=pchs[i],bg=colors[2],cex=size,type="o")
     
     
     #if (i==1) plotBy(LWP.mean~gxDate|Treat,data=dat1,type="b",xlim=c(startdate,enddate),legend=F,ylim=c(-10,0),pch=pchs[i],cex=size,add=T,bg=colors[i],
