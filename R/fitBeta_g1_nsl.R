@@ -73,7 +73,7 @@ g1_TDR_beta <- list(fit.spg1,newdatg1)
 
 dat <- NSLpars
 type="NSL"
-startlist= list(Xlow = 0.0, Xhigh=0.1, q = 0.1)
+startlist= list(Xlow = 0.0, Xhigh=0.5, q = 0.3)
 #- split into list of species
 dat.l <- split(dat,dat$Species)
 
@@ -82,15 +82,16 @@ fit.sp <- newdat <-  list()
 
 #- loop over each element of the list, fit data
 for (i in 1:length(dat.l)){
-  dat.temp <- subset(dat.l[[i]],TDR<0.3)
-  if (i==4) dat.temp <- subset(dat.l[[i]],TDR<0.2)
+  #dat.temp <- subset(dat.l[[i]],TDR<0.3)
+  dat.temp <- dat.l[[i]]
+  if (i>1) dat.temp <- subset(dat.l[[i]],TDR<0.25)
   dat.temp$Species <- factor(dat.temp$Species)
   
   #- fit the model
   if (type=="g1") dat.temp$Yval <- dat.temp$g1/max(dat.temp$g1)
   if (type=="NSL") dat.temp$Yval <- dat.temp$NSL
   fit.sp[[i]] <- nls(Yval ~ ((TDR-Xlow)/(Xhigh-Xlow))^q,start=startlist,data=dat.temp,algorithm="port",
-                     lower=c(0,0.01,0.01),upper=c(0.007,0.6,3))
+                     lower=c(0,0.01,0.01),upper=c(0.007,0.9,3))
   
   
   # get predicted values and 95% confidence intervals by bootstrapping

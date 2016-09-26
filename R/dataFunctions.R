@@ -160,7 +160,8 @@ returnVcmaxa <- function(){
   ros2 <- return.gx.vwc()
   
   #- remove gx data in ros2 where Ci < 5 or Ci > 800
-  ros3 <- subset(ros2,Ci>5 & Ci<1000)
+  #ros3 <- subset(ros2,Ci>5 & Ci<1000)
+  ros3 <- ros2
   
   #- define function to return Vcmax based on a single point A:Ci curve as in Zhou et al. 2013 Tree Phys.
   returnVcmax <- function(A,Ci,Tleaf){
@@ -188,7 +189,7 @@ returnVcmaxa <- function(){
   Species <- c()
   Vcmax_max <- c()
   for(i in 1:length(ros3.list)){
-    dat <- subset(ros3.list[[i]],Treat=="wet" & TDR > 15 & TDR < 25 & Ci > 100)
+    dat <- subset(ros3.list[[i]],Treat=="wet" & TDR > 0.15 & TDR < 0.25 & Ci > 100)
     dat <- ros3.list[[i]]
     Species[i] <- as.character(dat$Species[1])
     Vcmax_max[i] <- unname(quantile(dat$Vcmax_a,probs=0.5))
@@ -205,13 +206,16 @@ returnVcmaxa <- function(){
   #- remove a really troublesome eute point and a cacu point
   #ros4[258,] <- NA #- these were the bad points when using return.vwc.lwp()
   #ros4[42,] <- NA
-  ros4[1003:1004,] <- NA
-  ros4[629,] <- NA
-  ros4[479,] <- NA
-  ros4[975,] <- NA
+  #ros4[1003:1004,] <- NA
+  #ros4[629,] <- NA
+  #ros4[479,] <- NA
+  #ros4[975,] <- NA
+  
+  #- NA fill a few very crazy points
+  ros4[which(ros4$NSL < -3),"NSL"] <- NA
+  ros4[which(ros4$NSL > 5),"NSL"] <- NA
   
   ros5 <- ros4[complete.cases(ros4),]
-  ros5$TDR <- ros5$TDR/100
   
   boxplot(NSL~Species,data=ros5)
   
@@ -357,16 +361,26 @@ return.gx.vwc <- function(){
   names(gx2)[57] <- "Date"
   
   #average the VWC data
-  vwc.treat.avg <- summaryBy(TDR+Ladd~Date+Species+Treat,
+  vwc.treat.avg <- summaryBy(TDR~Date+Species+Treat,
                              FUN=mean,keep.names=TRUE,data=vwc)
+  names(vwc.treat.avg)[4] <- "TDR.mean"
   
   #- merge the gas-exchange data (gx2) with a treatment by date by species mean of the TDR measurements.
   #  I do it this way because I don't trust the individual TDR measurements. I think there are a substantial
   #  number of mis-labeled pot identifiers. Chelsea tells me that they likely got the right species and treatment
   #  but perhaps they did not get the right individual pot number on each date.
-  gx3 <- merge(gx2,vwc.treat.avg,by=c("Date","Species","Treat"))
+  #gx3 <- merge(gx2,vwc.treat.avg,by=c("Date","Species","Treat"))
   
-  return(gx3)
+  
+  #- merge the gas exchange data with the individual measurements of soil water content.
+  #- This doesn't work for all data.
+  gx4 <- merge(gx2,vwc,by=c("Date","Species","Treat","Pot"),all.x=T) #- 247 NA's
+  
+  #- fill NA's with the treatment*species*date mean
+  gx5 <- merge(gx4,vwc.treat.avg,by=c("Date","Species","Treat"))
+  gx5$TDR[which(is.na(gx5$TDR))] <- gx5$TDR.mean[which(is.na(gx5$TDR))]
+  
+  return(gx5)
 }
 #-----------------------------------------------------------------------------------------
 
@@ -491,9 +505,9 @@ return.gx.vwc.lwp <- function(){
   
   # merge the dataframes
   ros2 <- merge(ros,lwp,by=c("LWPdate","Pot","Species","Treat"))
-  ros2$LWP.pd[which(ros2$diff >= 4)] <- NA
-  ros2$LWP.md[which(ros2$diff <= -2)] <- NA
-  ros2$diff[which(ros2$diff <= -2)] <- NA
+  #ros2$LWP.pd[which(ros2$diff >= 4)] <- NA
+  #ros2$LWP.md[which(ros2$diff <= -2)] <- NA
+  #ros2$diff[which(ros2$diff <= -2)] <- NA
   return(ros2)
 }
 #-----------------------------------------------------------------------------------------
@@ -552,7 +566,7 @@ returng1 <- function(){
   g1pars$Species <- factor(Species)
   g1pars$Treat <- factor(Treat)
   g1pars$Treat <- relevel(g1pars$Treat,ref=2)
-  g1pars$TDR <- TDR/100
+  g1pars$TDR <- TDR
   g1pars$Date <- as.Date(Date)
   
   

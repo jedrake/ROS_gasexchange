@@ -7,7 +7,7 @@
 
 #- get the leaf water potential data, average by date to combine with g1 and NSL
 lwp <- return.gx.vwc.lwp()
-lwp.m <- summaryBy(LWP+LWP.md~Species+Treat+gxDate,data=lwp,FUN=mean,keep.names=T,na.rm=T)
+lwp.m <- summaryBy(LWP.pd+LWP.md~Species+Treat+gxDate,data=lwp,FUN=mean,keep.names=T,na.rm=T)
 
 #- get the g1 fits
 g1values <- returng1()
@@ -16,9 +16,9 @@ g1values2 <- merge(g1values,lwp.m,by.x=c("Species","Treat","Date"),by.y=c("Speci
 
 #- get the NSL fits
 NSL <- returnVcmaxa()
-NSLpars <- summaryBy(NSL+Photo+Cond+Ci+TDR~Species+gxDate+Treat,data=NSL,FUN=mean,keep.names=T)
+NSLpars <- summaryBy(NSL+Photo+Cond+Ci+TDR~Species+gxDate+Treat,data=NSL,FUN=mean,keep.names=T,na.rm=T)
 NSLpars2 <- merge(NSLpars,lwp.m,by.x=c("Species","Treat","gxDate"),by.y=c("Species","Treat","gxDate"))
-NSLpars2 <- subset(NSLpars2,gxDate != as.Date("2012-10-31"))
+#NSLpars2 <- subset(NSLpars2,gxDate != as.Date("2012-10-31"))
 
 #---------------------------------------------------------------------------------------------------------- 
 #---------------------------------------------------------------------------------------------------------- 
@@ -37,7 +37,7 @@ fit.sp <- newdat <-  list()
 for (i in 1:length(dat.l)){
   dat.temp <- dat.l[[i]]
   dat.temp$Species <- factor(dat.temp$Species)
-  dat.temp$LWPpos <- dat.temp$LWP+11
+  dat.temp$LWPpos <- dat.temp$LWP.pd+11
   
   #- fit the model
   if (type=="g1") dat.temp$Yval <- dat.temp$g1/max(dat.temp$g1)
@@ -92,7 +92,7 @@ fit.sp <- newdat <-  list()
 for (i in 1:length(dat.l)){
   dat.temp <- dat.l[[i]]
   dat.temp$Species <- factor(dat.temp$Species)
-  dat.temp$LWPpos <- dat.temp$LWP+11
+  dat.temp$LWPpos <- dat.temp$LWP.pd+11
   
   #- fit the model
   if (type=="g1") dat.temp$Yval <- dat.temp$g1/max(dat.temp$g1)

@@ -10,31 +10,64 @@
 dat.all2 <- return.gx.vwc.lwp()
 
 #- subset to just the variables I want, to make things a little easier
-dat.all <- dat.all2[,c("Species","Treat","Pot","Date","Photo","Cond","VpdL","Tleaf","CO2S","PARi","LWP","LWP.md","TDR")]
+dat.all <- dat.all2[,c("Species","Treat","Pot","Date","Photo","Cond","VpdL","Tleaf","CO2S","PARi","LWP.pd","LWP.md","TDR")]
 dat.all <- dat.all[complete.cases(dat.all),]
 #------------------------------------------------------------------------------------------------------------------
 
 
 
 #------------------------------------------------------------------------------------------------------------------
-#- parameter estimates for the B and Tuzets models
-params <- data.frame(Species=factor(c("cacu","eusi","eute","pira")),
-                     #- Beta functions, soil water content
-                     Xl_theta_s = c(.01,.01,0,0),Xh_theta_s = c(.33,.43,.6,.37),q_theta_s = c(0.4,.45,.33,.83),
-                     Xl_theta_ns = c(.01,.01,.01,.01),xh_theta_ns = c(.19,.2,.18,.12),q_theta_ns=c(.55,.38,.34,.48),
-                     #- beta functions, leaf water potential
-                     Xl_lwp_s = c(-10,-10,-10,-6),Xh_lwp_s = c(0,0,0,0),q_lwp_s = c(2.49,4.56,3.33,6),
-                     Xl_lwp_ns = c(-9,-10,-9,-2.5),Xh_lwp_ns = c(-0.16,0,0,-.27),q_lwp_ns=c(3.65,2.38,1.84,1.1),
+#- read in the parameter values from table2.csv
+params1 <- read.csv("Output/table2.csv")
+params1$Species <- factor(rep(c("cacu","eusi","eute","pira"),4))
+params1$Yvar <- factor(c(rep("s",8),rep("ns",8)))
+params1$Xvar <- factor(c(rep("theta",4),rep("lwp",4),rep("theta",4),rep("lwp",4)))
+params1$Xo <- as.numeric(substr(params1$Xo,start=1,stop=4))
+params1$Xh <- as.numeric(substr(params1$Xh,start=1,stop=4))
+params1$q <- as.numeric(substr(params1$q,start=1,stop=4))
+
+#- get the low parameter
+params_Xo <- reshape2::dcast(params1,Species~Xvar+Yvar,value.var="Xo")
+names(params_Xo)[2:5] <- paste("Xl",names(params_Xo)[2:5],sep="_")
+
+#- get the high parameter
+params_Xh <- reshape2::dcast(params1,Species~Xvar+Yvar,value.var="Xh")
+names(params_Xh)[2:5] <- paste("Xh",names(params_Xh)[2:5],sep="_")
+
+#- get the q parameter
+params_q <- reshape2::dcast(params1,Species~Xvar+Yvar,value.var="q")
+names(params_q)[2:5] <- paste("q",names(params_q)[2:5],sep="_")
+
+params2 <- merge(params_Xo,params_Xh,by="Species")
+params3 <- merge(params2,params_q,by="Species")
+
+#- manually setup the Tuzet parameters
+params.tz <- data.frame(Species=factor(c("cacu","eusi","eute","pira")),
                      #- Tuzet model
                      psiv = c(-1.46,-.02,-.35,-1.16),Sf = c(1.46,.76,.61,3.41),K = c(5.74,2.96,3.5,4.06))
+
+params <- merge(params3,params.tz,by="Species")
+#------------------------------------------------------------------------------------------------------------------
+
+# 
+# #- parameter estimates for the B and Tuzets models
+# params <- data.frame(Species=factor(c("cacu","eusi","eute","pira")),
+#                      #- Beta functions, soil water content
+#                      Xl_theta_s = c(.01,.01,0,0),Xh_theta_s = c(.33,.42,.6,.37),q_theta_s = c(0.37,.44,.32,.83),
+#                      Xl_theta_ns = c(.01,.01,.01,.01),xh_theta_ns = c(.19,.2,.18,.12),q_theta_ns=c(.55,.38,.34,.48),
+#                      #- beta functions, leaf water potential
+#                      Xl_lwp_s = c(-10,-10,-10,-6),Xh_lwp_s = c(0,0,0,0),q_lwp_s = c(2.49,4.56,3.33,6),
+#                      Xl_lwp_ns = c(-9,-10,-9,-2.5),Xh_lwp_ns = c(-0.16,0,0,-.27),q_lwp_ns=c(3.65,2.38,1.84,1.1),
+#                      #- Tuzet model
+#                      psiv = c(-1.46,-.02,-.35,-1.16),Sf = c(1.46,.76,.61,3.41),K = c(5.74,2.96,3.5,4.06))
 
 dat.all3 <- merge(dat.all,params,by="Species")
 
 #- calculate the beta terms
-dat.all3$Beta_theta_s <- with(dat.all3, ((TDR/100-Xl_theta_s)/(Xh_theta_s-Xl_theta_s))^q_theta_s)
-dat.all3$Beta_theta_ns <- with(dat.all3, ((TDR/100-Xl_theta_ns)/(xh_theta_ns-Xl_theta_ns))^q_theta_ns)
-dat.all3$Beta_lwp_s <- with(dat.all3, ((LWP-Xl_lwp_s)/(Xh_lwp_s-Xl_lwp_s))^q_lwp_s)
-dat.all3$Beta_lwp_ns <- with(dat.all3, ((LWP-Xl_lwp_ns)/(Xh_lwp_ns-Xl_lwp_ns))^q_lwp_ns)
+dat.all3$Beta_theta_s <- with(dat.all3, ((TDR-Xl_theta_s)/(Xh_theta_s-Xl_theta_s))^q_theta_s)
+dat.all3$Beta_theta_ns <- with(dat.all3, ((TDR-Xl_theta_ns)/(Xh_theta_ns-Xl_theta_ns))^q_theta_ns)
+dat.all3$Beta_lwp_s <- with(dat.all3, ((LWP.pd-Xl_lwp_s)/(Xh_lwp_s-Xl_lwp_s))^q_lwp_s)
+dat.all3$Beta_lwp_ns <- with(dat.all3, ((LWP.pd-Xl_lwp_ns)/(Xh_lwp_ns-Xl_lwp_ns))^q_lwp_ns)
 
 #- convert Beta values >1 to 1
 dat.all3$Beta_theta_s[which(dat.all3$Beta_theta_s >1)] <- 1
@@ -45,11 +78,14 @@ dat.all3$Beta_lwp_ns[which(dat.all3$Beta_lwp_ns >1)] <- 1
 
 
 #- convert values lower than Xl with zero
-dat.all3$Beta_theta_s[which(dat.all3$TDR/100 < dat.all3$Xl_theta_s)] <- 0
-dat.all3$Beta_theta_ns[which(dat.all3$TDR/100 < dat.all3$Xl_theta_ns)] <- 0
+dat.all3$Beta_theta_s[which(dat.all3$TDR < dat.all3$Xl_theta_s)] <- 0
+dat.all3$Beta_theta_ns[which(dat.all3$TDR < dat.all3$Xl_theta_ns)] <- 0
 dat.all3$Beta_lwp_s[which(dat.all3$LWP < dat.all3$Xl_lwp_s )] <- 0
 dat.all3$Beta_lwp_ns[which(dat.all3$LWP < dat.all3$Xl_lwp_ns )] <- 0
 
+dat.all3 <- dat.all3[complete.cases(dat.all3),] # remove 10 points with missing data
+#- convert a very few NA's to zero
+#dat.all3$Beta_lwp_ns[which(is.na(dat.all3$Beta_lwp_ns))]  <- 0
 #------------------------------------------------------------------------------------------------------------------
 
 
@@ -62,6 +98,9 @@ dat.all3$Beta_lwp_ns[which(dat.all3$LWP < dat.all3$Xl_lwp_ns )] <- 0
 #-- predict photosynthetic rates under each modeling condition
 #------------------------------------------------------------------------------------------------------------------
 
+#- subset to dry data only?
+dat.all3 <- subset(dat.all3,Treat=="dry")
+
 #- Null (no change in physiology with drought)
 dat.all3$P_null <- Photosyn(VPD=dat.all3$VpdL,Ca=dat.all3$CO2S,PPFD=dat.all3$PARi,Tleaf=dat.all3$Tleaf,
                             g1=5,Vcmax=80,Jmax=1.6*80)$ALEAF
@@ -70,9 +109,9 @@ dat.all3$P_null <- Photosyn(VPD=dat.all3$VpdL,Ca=dat.all3$CO2S,PPFD=dat.all3$PAR
 dat.all3$P_theta_s <- Photosyn(VPD=dat.all3$VpdL,Ca=dat.all3$CO2S,PPFD=dat.all3$PARi,Tleaf=dat.all3$Tleaf,
                               g1=5*dat.all3$Beta_theta_s,Vcmax=80,Jmax=1.6*80)$ALEAF
 dat.all3$P_theta_ns <- Photosyn(VPD=dat.all3$VpdL,Ca=dat.all3$CO2S,PPFD=dat.all3$PARi,Tleaf=dat.all3$Tleaf,
-                              g1=5,Vcmax=80*dat.all3$Beta_theta_ns,Jmax=1.6*80*dat.all3$Beta_theta_ns)$ALEAF
+                              g1=5,Vcmax=(79*dat.all3$Beta_theta_ns+1),Jmax=(1.6*79*dat.all3$Beta_theta_ns+1))$ALEAF
 dat.all3$P_theta_sns <- Photosyn(VPD=dat.all3$VpdL,Ca=dat.all3$CO2S,PPFD=dat.all3$PARi,Tleaf=dat.all3$Tleaf,
-                               g1=5*dat.all3$Beta_theta_s,Vcmax=80*dat.all3$Beta_theta_ns,Jmax=1.6*80*dat.all3$Beta_theta_ns)$ALEAF
+                               g1=5*dat.all3$Beta_theta_s,Vcmax=(79*dat.all3$Beta_theta_ns+1),Jmax=(1.6*79*dat.all3$Beta_theta_ns+1))$ALEAF
 
 #- Beta models based on lwp
 dat.all3$P_lwp_s <- Photosyn(VPD=dat.all3$VpdL,Ca=dat.all3$CO2S,PPFD=dat.all3$PARi,Tleaf=dat.all3$Tleaf,
@@ -85,10 +124,10 @@ dat.all3$P_lwp_sns <- Photosyn(VPD=dat.all3$VpdL,Ca=dat.all3$CO2S,PPFD=dat.all3$
 
 #- Tuzet alone
 dat.all3$P_tuzet_s <- photosyn(SF=dat.all3$Sf, PSIV=dat.all3$psiv, G0=0.005, VCMAX=80,G1=5,K=dat.all3$K,
-                CS=dat.all3$CO2S,WEIGHTEDSWP=dat.all3$LWP, VPD=dat.all3$VpdL,PAR=dat.all3$PARi,TLEAF=dat.all3$Tleaf)$ALEAF
+                CS=dat.all3$CO2S,WEIGHTEDSWP=dat.all3$LWP.pd, VPD=dat.all3$VpdL,PAR=dat.all3$PARi,TLEAF=dat.all3$Tleaf)$ALEAF
 dat.all3$P_tuzet_sns <- photosyn(SF=dat.all3$Sf, PSIV=dat.all3$psiv, G0=0.005,G1=5,K=dat.all3$K,
                                  VCMAX=(79*dat.all3$Beta_lwp_ns+1),JMAX=(1.6*79*dat.all3$Beta_lwp_ns+1),
-                               CS=dat.all3$CO2S,WEIGHTEDSWP=dat.all3$LWP, VPD=dat.all3$VpdL,PAR=dat.all3$PARi,TLEAF=dat.all3$Tleaf)$ALEAF
+                               CS=dat.all3$CO2S,WEIGHTEDSWP=dat.all3$LWP.pd, VPD=dat.all3$VpdL,PAR=dat.all3$PARi,TLEAF=dat.all3$Tleaf)$ALEAF
 
 
 
@@ -97,24 +136,24 @@ dat.all3$P_tuzet_sns <- photosyn(SF=dat.all3$Sf, PSIV=dat.all3$psiv, G0=0.005,G1
 #--------------------------------
 #- plot observed vs. predicted
 windows(25,35)
-par(mfrow=c(6,2),oma=c(6,9,4,3),mar=c(0,0,0,0),xpd=F)
+par(mfrow=c(5,2),oma=c(6,9,4,3),mar=c(0,0,0,0),xpd=F)
 colors <- brewer.pal(4,"Set1")
 fitcol=alpha("darkgrey",0.8)
 textsize <- 1.7
 xlims <- c(-2,23)
 ylims <- c(-2,35)
 
-#- plot null model (twice)
-plot(dat.all3$Photo~dat.all3$P_null,xlim=xlims,ylim=ylims,axes=F,xlab="",ylab="");abline(0,1)
-magaxis(side=c(1,2,4),labels=c(0,1,0),frame.plot=T,las=1,tcl=0.3)
-title(ylab="Null",xpd=NA,cex.lab=textsize)
-title(xlab=expression(theta~"as"~"predictor"),cex.lab=textsize,xpd=NA,line=-10)
-legend("bottomright",letters[1],bty="n",cex=1.2)
-
-plot(dat.all3$Photo~dat.all3$P_null,xlim=xlims,ylim=ylims,axes=F,xlab="",ylab="");abline(0,1)
-magaxis(side=c(1,2,4),labels=c(0,0,1),frame.plot=T,las=1,tcl=0.3)
-title(xlab=expression(psi[l]~"as"~"predictor"),cex.lab=textsize,xpd=NA,line=-10)
-legend("bottomright",letters[5],bty="n",cex=1.2)
+# #- plot null model (twice)
+# plot(dat.all3$Photo~dat.all3$P_null,xlim=xlims,ylim=ylims,axes=F,xlab="",ylab="");abline(0,1)
+# magaxis(side=c(1,2,4),labels=c(0,1,0),frame.plot=T,las=1,tcl=0.3)
+# title(ylab="Null",xpd=NA,cex.lab=textsize)
+# title(xlab=expression(theta~"as"~"predictor"),cex.lab=textsize,xpd=NA,line=-10)
+# legend("bottomright",letters[1],bty="n",cex=1.2)
+# 
+# plot(dat.all3$Photo~dat.all3$P_null,xlim=xlims,ylim=ylims,axes=F,xlab="",ylab="");abline(0,1)
+# magaxis(side=c(1,2,4),labels=c(0,0,1),frame.plot=T,las=1,tcl=0.3)
+# title(xlab=expression(psi[l]~"as"~"predictor"),cex.lab=textsize,xpd=NA,line=-10)
+# legend("bottomright",letters[5],bty="n",cex=1.2)
 
 #- plot B models for stomatal limitation (theta and lwp)
 par(xpd=F)

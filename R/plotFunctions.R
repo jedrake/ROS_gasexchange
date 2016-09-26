@@ -500,15 +500,15 @@ plotBetasG1NSL_LWP <- function(output=F,g1data,NSLdata,g1list,NSLlist){
     newdat <- newdat2 <- data.frame()
     dat.temp <- dat.l[[i]]
     dat.temp$g1norm <- dat.temp$g1/max(dat.temp$g1)
-    dat.temp$LWPpos <- dat.temp$LWP+11
+    dat.temp$LWPpos <- dat.temp$LWP.pd+11
     dat.temp$Species <- factor(dat.temp$Species)
     #------------------------------------------------------------------------
     #-- plot g1 vs. LWP    
     count <- count+1
 
     
-    plot(g1norm~LWP,data=subset(dat.temp,Treat=="wet"),pch=21,col="black",bg=grey(0.1),axes=F,ylim=c(0,1.05),xlim=c(-10,0))
-    points(g1norm~LWP,data=subset(dat.temp,Treat=="dry"),pch=21,col="black",bg=grey(0.8))
+    plot(g1norm~LWP.pd,data=subset(dat.temp,Treat=="wet"),pch=21,col="black",bg=grey(0.1),axes=F,ylim=c(0,1.05),xlim=c(-10,0))
+    points(g1norm~LWP.pd,data=subset(dat.temp,Treat=="dry"),pch=21,col="black",bg=grey(0.8))
     magaxis(side=c(1:4),labels=c(0,1,0,0),las=1,tcl=0.3,ratio=0.25,majorn=3,cex.axis=0.8)
     if(i==4)  magaxis(side=c(1:4),labels=c(1,1,0,0),las=1,tcl=0.3,ratio=0.25,majorn=3,cex.axis=0.8)
     mtext(labs[i],side=2,xpd=T,cex=1.3,line=1.75)
@@ -534,8 +534,8 @@ plotBetasG1NSL_LWP <- function(output=F,g1data,NSLdata,g1list,NSLlist){
     dat.temp2 <- dat.l2[[i]]
     dat.temp2$Species <- factor(dat.temp2$Species)
     
-    plot(NSL~LWP,data=subset(dat.temp2,Treat=="wet"),pch=21,col="black",bg=grey(0.1),axes=F,ylim=c(0,1.09),xlim=c(-10,0))
-    points(NSL~LWP,data=subset(dat.temp2,Treat=="dry"),pch=21,col="black",bg=grey(0.8))
+    plot(NSL~LWP.pd,data=subset(dat.temp2,Treat=="wet"),pch=21,col="black",bg=grey(0.1),axes=F,ylim=c(0,1.09),xlim=c(-10,0))
+    points(NSL~LWP.pd,data=subset(dat.temp2,Treat=="dry"),pch=21,col="black",bg=grey(0.8))
     magaxis(side=c(1:4),labels=c(0,0,0,1),las=1,tcl=0.3,ratio=0.25,majorn=3,cex.axis=0.8)
     if(i==4)  magaxis(side=c(1:4),labels=c(1,0,0,0),las=1,tcl=0.3,ratio=0.25,majorn=3,cex.axis=0.8)
     if(i==4)  mtext(expression(psi[pd]~(MPa)),side=1,outer=F,cex=1.5,line=2)
