@@ -17,8 +17,8 @@ dat.all <- dat.all[complete.cases(dat.all),]
 
 
 #------------------------------------------------------------------------------------------------------------------
-#- read in the parameter values from table2.csv
-params1 <- read.csv("Output/table2.csv")
+#- read in the parameter values from table1.csv
+params1 <- read.csv("Output/table1.csv")
 params1$Species <- factor(rep(c("cacu","eusi","eute","pira"),4))
 params1$Yvar <- factor(c(rep("s",8),rep("ns",8)))
 params1$Xvar <- factor(c(rep("theta",4),rep("lwp",4),rep("theta",4),rep("lwp",4)))
@@ -273,8 +273,8 @@ par(mfrow=c(5,2),oma=c(6,9,4,3),mar=c(0,0,0,0),xpd=F)
 colors <- brewer.pal(4,"Set1")
 fitcol=alpha("darkgrey",0.8)
 textsize <- 1.7
-xlims <- c(-0.01,1.5)
-ylims <- c(-2,35)
+xlims <- c(-0.03,0.6)
+ylims <- c(-0.03,0.6)
 
 # #- plot null model (twice)
 # plot(dat.all3$Photo~dat.all3$Gs_null,xlim=xlims,ylim=ylims,axes=F,xlab="",ylab="");abline(0,1)
@@ -358,5 +358,5 @@ legend("bottomright",letters[10],bty="n",cex=1.2)
 r2val <-round(summary(lm(Cond~Gs_tuzet_sns,data=dat.all3))$r.squared,2)
 legend("topleft",legend= bquote(r^2 == .(r2val)),bty="n")
 
-title(xlab=expression("Predicted"~A[sat]~(mu*mol~m^-2~s^-1)),outer=T,cex.lab=2)
-title(ylab=expression("Observed"~A[sat]~(mu*mol~m^-2~s^-1)),outer=T,cex.lab=2,line=5)
+title(xlab=expression("Predicted"~g[s]~(mol~m^-2~s^-1)),outer=T,cex.lab=2)
+title(ylab=expression("Observed"~g[s]~(mol~m^-2~s^-1)),outer=T,cex.lab=2,line=5)

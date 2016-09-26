@@ -755,7 +755,7 @@ writeBetaParams <- function(){
   NSLtable$Yvar <- "A/Ae"
   
   table <- rbind(g1table,NSLtable)[,c(4:5,1:3)]
-  write.csv(table,"Output/table2.csv",row.names=T)
+  write.csv(table,"Output/table1.csv",row.names=T)
 }
 #-------------------------------------------------------------------------------------------------------
 
