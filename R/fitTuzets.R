@@ -24,12 +24,12 @@ dat.all <- subset(dat.all2[,c("Species","Treat","Pot","Date","Photo","Cond","Trm
 #- wrapper function to return the model-data mismatch for the Tuzets model
 #  If fit == 1, the function will return the residual. If fit == 0, the function will return
 #   a dataframe of predicted values based on the input parameters and environmental data.
-tuzets.cost <- function(pars,dat,fit=1,g1=5,Vcmax=80,adjVcmax=0){
+tuzets.cost <- function(pars,dat,fit=1,g1=5,Vcmax=80,adjVcmax=0,adjK=0,b=2,c=3){
   
   #- pull out the parameters from the pars vector
   psiv <- pars[1]
   SF <- pars[2]
-  K <- pars[3]
+  Kmax <- pars[3]
   
   
   #- adjust Vcmax according to a beta function. 
@@ -49,8 +49,18 @@ tuzets.cost <- function(pars,dat,fit=1,g1=5,Vcmax=80,adjVcmax=0){
     Vcmax_a <- Vcmax
   }
   
+  #- Adjust K as in Sperry et al. 2016 New Phyt
+  if (adjK==1){
+    Kactual <- Kmax*exp(-((-1*dat$LWP.pd/b)^c))
+  }
+  
+  #- or bypass K adjustment
+  if (adjK==0){
+    Kactual <- Kmax
+  }
+  
   #- model
-  out <- photosyn(SF=SF, PSIV=psiv, G0=0.005, VCMAX=Vcmax_a,G1=g1,K=K,
+  out <- photosyn(SF=SF, PSIV=psiv, G0=0.005, VCMAX=Vcmax_a,G1=g1,K=Kactual,
                  CS=dat$CO2S,WEIGHTEDSWP=dat$LWP.pd, VPD=dat$VpdL,PAR=dat$PARi,TLEAF=dat$Tleaf)
   
   
@@ -59,7 +69,7 @@ tuzets.cost <- function(pars,dat,fit=1,g1=5,Vcmax=80,adjVcmax=0){
   max.Gs <- max(c(out$GS,dat$Cond))
   max.A <- max(c(out$ALEAF,dat$Photo))
   max.E <- max(c(out$ELEAF,dat$Trmmol))
-  max.psi <- max(c(out$PSIL,dat$LWP.md))
+  max.psi <- min(c(out$PSIL,dat$LWP.md))
   
   resid.gs <- sqrt(((out$GS - dat$Cond)/max.Gs)^2)
   resid.A <- sqrt(((out$ALEAF - dat$Photo)/max.A)^2)
@@ -107,7 +117,7 @@ for (i in 1:length(dat.list)){
   tofit <- dat.list[[i]]
   
   #- fit the model, extract the best parameters, and rerun the model to get the predicted values  
-  DEfit[[i]] <- DEoptim(fn=tuzets.cost,lower=lower,upper=upper,dat=tofit,g1=5,Vcmax=80,adjVcmax=0,
+  DEfit[[i]] <- DEoptim(fn=tuzets.cost,lower=lower,upper=upper,dat=tofit,g1=5,Vcmax=80,adjVcmax=0,adjK=0,
                    fit=1,DEoptim.control(NP = NPmax,itermax=maxiter)) #perhaps adjust reltol, NP=20, itermax = 100
   DEfit.best[[i]] <- unname(DEfit[[i]]$optim$bestmem)
   DEpred[[i]] <- tuzets.cost(pars=DEfit.best[[i]],dat=tofit,fit=0,g1=5,Vcmax=80,adjVcmax=0)
@@ -125,19 +135,19 @@ for (i in 1:length(dat.list)){
 #------------------------------------------------------------------------------------------------------------------
 #- this time, model with a change in Vcmax with decreasing TDR
 
-DEfit.nsl <- DEfit.best.nsl <- DEpred.nsl <- list()
-for (i in 1:length(dat.list)){
-  tofit <- dat.list[[i]]
-  
-  #- fit the model, extract the best parameters, and rerun the model to get the predicted values  
-  DEfit.nsl[[i]] <- DEoptim(fn=tuzets.cost,lower=lower,upper=upper,dat=tofit,g1=5,Vcmax=80,adjVcmax=1,
-                        fit=1,DEoptim.control(NP = NPmax,itermax=maxiter)) #perhaps adjust reltol, NP=20, itermax = 100
-  DEfit.best.nsl[[i]] <- unname(DEfit.nsl[[i]]$optim$bestmem)
-  DEpred.nsl[[i]] <- tuzets.cost(pars=DEfit.best.nsl[[i]],dat=tofit,fit=0,g1=5,Vcmax=80,adjVcmax=1)
-  DEpred.nsl[[i]]$Species <- tofit$Species[1]
-  DEpred.nsl[[i]]$Date <- tofit$Date
-  
-}
+# DEfit.nsl <- DEfit.best.nsl <- DEpred.nsl <- list()
+# for (i in 1:length(dat.list)){
+#   tofit <- dat.list[[i]]
+#   
+#   #- fit the model, extract the best parameters, and rerun the model to get the predicted values  
+#   DEfit.nsl[[i]] <- DEoptim(fn=tuzets.cost,lower=lower,upper=upper,dat=tofit,g1=5,Vcmax=80,adjVcmax=1,
+#                         fit=1,DEoptim.control(NP = NPmax,itermax=maxiter)) #perhaps adjust reltol, NP=20, itermax = 100
+#   DEfit.best.nsl[[i]] <- unname(DEfit.nsl[[i]]$optim$bestmem)
+#   DEpred.nsl[[i]] <- tuzets.cost(pars=DEfit.best.nsl[[i]],dat=tofit,fit=0,g1=5,Vcmax=80,adjVcmax=1)
+#   DEpred.nsl[[i]]$Species <- tofit$Species[1]
+#   DEpred.nsl[[i]]$Date <- tofit$Date
+#   
+# }
 
 
 
@@ -166,9 +176,9 @@ for(i in 1:length(DEfit.best)){
   #- pull out the parameters from the pars vector
   psiv <- DEfit.best[[i]][1]
   SF <- DEfit.best[[i]][2]
-  K <- DEfit.best[[i]][3]
+  Kmax <- DEfit.best[[i]][3]
   
-  pred.psileaf[[i]] <- photosyn(SF=SF, PSIV=psiv, G0=0.0005, VCMAX=80,G1=8,K=K,
+  pred.psileaf[[i]] <- photosyn(SF=SF, PSIV=psiv, G0=0.0005, VCMAX=80,G1=5,K=Kmax,
                   CS=400,WEIGHTEDSWP=psileaf, VPD=1.2,PAR=1800,TLEAF=25)
   pred.psileaf[[i]]$Species <- levels(dat.all$Species)[i]
 }
