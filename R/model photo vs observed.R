@@ -41,26 +41,17 @@ names(params_q)[2:5] <- paste("q",names(params_q)[2:5],sep="_")
 params2 <- merge(params_Xo,params_Xh,by="Species")
 params3 <- merge(params2,params_q,by="Species")
 
-#- manually setup the Tuzet parameters
-params.tz <- data.frame(Species=factor(c("cacu","eusi","eute","pira")),
-                     #- Tuzet model
-                     psiv = c(-1.46,-.02,-.35,-1.16),Sf = c(1.46,.76,.61,3.41),K = c(5.74,2.96,3.5,4.06))
 
+# read in the tuzet parameters
+params.tz <- read.csv("Output/table2.csv")
+
+#- merge parameters together
 params <- merge(params3,params.tz,by="Species")
 #------------------------------------------------------------------------------------------------------------------
 
-# 
-# #- parameter estimates for the B and Tuzets models
-# params <- data.frame(Species=factor(c("cacu","eusi","eute","pira")),
-#                      #- Beta functions, soil water content
-#                      Xl_theta_s = c(.01,.01,0,0),Xh_theta_s = c(.33,.42,.6,.37),q_theta_s = c(0.37,.44,.32,.83),
-#                      Xl_theta_ns = c(.01,.01,.01,.01),xh_theta_ns = c(.19,.2,.18,.12),q_theta_ns=c(.55,.38,.34,.48),
-#                      #- beta functions, leaf water potential
-#                      Xl_lwp_s = c(-10,-10,-10,-6),Xh_lwp_s = c(0,0,0,0),q_lwp_s = c(2.49,4.56,3.33,6),
-#                      Xl_lwp_ns = c(-9,-10,-9,-2.5),Xh_lwp_ns = c(-0.16,0,0,-.27),q_lwp_ns=c(3.65,2.38,1.84,1.1),
-#                      #- Tuzet model
-#                      psiv = c(-1.46,-.02,-.35,-1.16),Sf = c(1.46,.76,.61,3.41),K = c(5.74,2.96,3.5,4.06))
 
+
+#- merge parameters with data, predict rates
 dat.all3 <- merge(dat.all,params,by="Species")
 
 #- calculate the beta terms
