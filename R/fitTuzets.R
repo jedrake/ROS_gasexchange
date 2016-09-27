@@ -5,21 +5,6 @@
 #------------------------------------------------------------------------------------------------------------------
 source("R/loadLibraries.R")
 
-#- get the soil water curve
-soilPars <- plotMoistCurve(output=T)
-
-#------------------------------------------------------------------------------------------------------------------
-#- function to predict soil water potentail from VWC measurements
-predPsiSoil <- function(VWC,pars){
-  thetaSat <- pars[1]
-  b <- pars[2]
-  PsiE <- pars[3]
-  
-  PsiSoil <- PsiE*(VWC/thetaSat)^(-1*b)
-  return(PsiSoil)
-}
-#------------------------------------------------------------------------------------------------------------------
-
 
 
 
@@ -28,10 +13,9 @@ predPsiSoil <- function(VWC,pars){
 dat.all2 <- return.gx.vwc.lwp()
 
 #- subset to just the variables I want, to make things a little easier
-dat.all <- dat.all2[,c("Species","Treat","Pot","Date","Photo","Cond","VpdL","Tleaf","CO2S","PARi","LWP","LWP.md","TDR")]
+dat.all <- subset(dat.all2[,c("Species","Treat","Pot","Date","Photo","Cond","Trmmol","VpdL","Tleaf","CO2S","PARi","LWP.pd","LWP.md","TDR")],
+                  Date > as.POSIXct("2012-11-04")) # the first two dates don't have reliable water potential data (dates merge incorrectly?)
 
-#- predict soil water potential
-dat.all$SWP <- predPsiSoil(VWC=(dat.all$TDR/100),pars=soilPars)
 #------------------------------------------------------------------------------------------------------------------
 
 
@@ -56,7 +40,7 @@ tuzets.cost <- function(pars,dat,fit=1,g1=5,Vcmax=80,adjVcmax=0){
                      q = c(.55,.38,.34,.48))
     whichline <- which(df$species==dat$Species[1])
     
-    Vcmax_a <- Vcmax*((dat$TDR/100 - df[whichline,"Xl"])/(df[whichline,"Xh"]-df[whichline,"Xl"]))^df[whichline,"q"]
+    Vcmax_a <- Vcmax*((dat$TDR - df[whichline,"Xl"])/(df[whichline,"Xh"]-df[whichline,"Xl"]))^df[whichline,"q"]
     Vcmax_a[which(Vcmax_a>Vcmax)] <- Vcmax
   }
   
@@ -67,24 +51,23 @@ tuzets.cost <- function(pars,dat,fit=1,g1=5,Vcmax=80,adjVcmax=0){
   
   #- model
   out <- photosyn(SF=SF, PSIV=psiv, G0=0.005, VCMAX=Vcmax_a,G1=g1,K=K,
-                 CS=dat$CO2S,WEIGHTEDSWP=dat$LWP, VPD=dat$VpdL,PAR=dat$PARi,TLEAF=dat$Tleaf)
+                 CS=dat$CO2S,WEIGHTEDSWP=dat$LWP.pd, VPD=dat$VpdL,PAR=dat$PARi,TLEAF=dat$Tleaf)
   
   
   
-  #out2 <- Photosyn(g0=0.005, Vcmax=Vcmax,g1=g1,
-  #                          Ca=dat$CO2S, VPD=dat$VpdL,PPFD=dat$PARi,Tleaf=dat$Tleaf)
+  #- calculate the data-model mismatch. Attempt to weight each equally by dividing by the maximum value
+  max.Gs <- max(c(out$GS,dat$Cond))
+  max.A <- max(c(out$ALEAF,dat$Photo))
+  max.E <- max(c(out$ELEAF,dat$Trmmol))
+  max.psi <- max(c(out$PSIL,dat$LWP.md))
   
-  #- calculate the data-model mismatch
-  #resid.gs <- sqrt((out$GS - dat$Cond)^2)/(abs(out$GS))
-  #resid.A <- sqrt((out$ALEAF - dat$Photo)^2)/(abs(out$ALEAF))
-  #resid.psi <- sqrt((out$PSIL - dat$LWP.md)^2)/(abs(out$PSIL))
-  
-  resid.gs <- sqrt((out$GS - dat$Cond)^2)*10
-  resid.A <- sqrt((out$ALEAF - dat$Photo)^2)
-  resid.psi <- sqrt((out$PSIL - dat$LWP.md)^2)
+  resid.gs <- sqrt(((out$GS - dat$Cond)/max.Gs)^2)
+  resid.A <- sqrt(((out$ALEAF - dat$Photo)/max.A)^2)
+  resid.E <- sqrt(((out$ELEAF - dat$Trmmol)/max.E)^2)
+  resid.psi <- sqrt(((out$PSIL - dat$LWP.md)/max.psi)^2)
   
   
-  resid.sum <- sum(resid.gs,resid.A,resid.psi)
+  resid.sum <- sum(resid.gs,resid.A,resid.E,resid.psi)
   
   if (fit==1) return(resid.sum)
   if (fit==0) return(out)
@@ -98,7 +81,12 @@ tuzets.cost <- function(pars,dat,fit=1,g1=5,Vcmax=80,adjVcmax=0){
 #------------------------------------------------------------------------------------------------------------------
 #- set up model estimate for a selected species
 dat.all <- dat.all[complete.cases(dat.all),]
-dat.list <- split(dat.all,dat.all$Species)
+
+
+#- base model predictions on the mean across dates
+dat.m <- summaryBy(.~Species+Treat+Date,FUN=mean,keep.names=T,data=dat.all)
+
+dat.list <- split(dat.m,dat.m$Species)
 
 #- define lower and upper limits of parameter estimates
 # pars are psiv, SF,  and K
@@ -161,10 +149,10 @@ for (i in 1:length(dat.list)){
 
 #- params with and without Vcmax change
 do.call(rbind,DEfit.best)
-#[1,] -0.41602447 2.1745043 6.443134
-#[2,] -0.01191479 1.2121494 3.147091
-#[3,] -0.07180947 0.9570507 3.426615
-#[4,] -0.72772242 2.7658779 4.099408
+# [1,] -0.6571273 0.8781327 5.318193
+# [2,] -1.7899833 1.1339467 4.679995
+# [3,] -0.5157321 0.5559586 4.596770
+# [4,] -1.1086333 8.9338100 5.515464
 do.call(rbind,DEfit.best.nsl)
 #[1,] -2.671953 24.875104 7.132115
 #[2,] -2.574391  1.465136 5.349148
@@ -189,7 +177,8 @@ preddat <- do.call(rbind,pred.psileaf)
 
 
 #- overlay plots of data for gs vs. psileaf relationship along with model output
-dat.m <- summaryBy(Cond+Photo+LWP+LWP.md+TDR~Species+Treat+Date,FUN=c(mean,standard.error),data=dat.all)
+dat.m <- summaryBy(Cond+Photo+LWP.pd+LWP.md+TDR~Species+Treat+Date,FUN=c(mean,standard.error),
+                   data=subset(dat.all,Treat=="dry"))
 
 
 windows(25,14)
@@ -199,15 +188,25 @@ colors <- brewer.pal(5,"Accent")[c(1,2,3,5)]#brewer.pal(4,"Set1")
 #- plot Conductance
 plotBy(GS~PSILIN|Species,data=preddat,type="l",legend=F,lwd=3,ylim=c(0,0.6),xlim=c(-8,0),
        col = colors,axes=F,xlab="",ylab="")
+adderrorbars(x=dat.m$LWP.md.mean,y=dat.m$Cond.mean,SE=dat.m$Cond.standard.error,direction="updown")
+adderrorbars(x=dat.m$LWP.md.mean,y=dat.m$Cond.mean,SE=dat.m$LWP.md.standard.error,direction="leftright")
 plotBy(Cond.mean~LWP.md.mean|Species,dat=dat.m,col=colors,pch=16,add=T,legend=F,cex=1.5)
+plotBy(GS~PSILIN|Species,data=preddat,type="l",legend=F,lwd=4,ylim=c(0,0.6),xlim=c(-8,0),
+       col = colors,axes=F,xlab="",ylab="",add=T)
+
 legend("top",legend=c("Cacu","Eusi","Eute","Pira"),pch=16,col=colors,ncol=2,cex=1.2)
 magaxis(side=c(1,2,4),labels=c(1,1,0),frame.plot=T,las=1,cex.axis=1.2)
 title(xlab=expression(Psi[l]~(MPa)),ylab=expression(g[s]~(mol~m^-2~s^-1)),cex.lab=1.5)
 legend("topright",letters[1],bty="n",cex=1.1,inset=0.02)
+
 #- plot Photo
 plotBy(ALEAF~PSILIN|Species,data=preddat,type="l",legend=F,lwd=3,ylim=c(0,25),xlim=c(-8,0),
        col = colors,axes=F,xlab="",ylab="")
+adderrorbars(x=dat.m$LWP.md.mean,y=dat.m$Photo.mean,SE=dat.m$Photo.standard.error,direction="updown")
+adderrorbars(x=dat.m$LWP.md.mean,y=dat.m$Photo.mean,SE=dat.m$LWP.md.standard.error,direction="leftright")
 plotBy(Photo.mean~LWP.md.mean|Species,dat=dat.m,col=colors,pch=16,add=T,legend=F,cex=1.5)
+plotBy(ALEAF~PSILIN|Species,data=preddat,type="l",legend=F,lwd=4,ylim=c(0,25),xlim=c(-8,0),
+       col = colors,axes=F,xlab="",ylab="",add=T)
 #legend("top",legend=c("Cacu","Eusi","Eute","Pira"),fill=colors,ncol=2,cex=1.2)
 magaxis(side=c(1,2,4),labels=c(1,1,0),frame.plot=T,las=1,cex.axis=1.2)
 title(xlab=expression(Psi[l]~(MPa)),ylab=expression(A[sat]~(mu*mol~m^-2~s^-1)),cex.lab=1.5)
@@ -216,3 +215,16 @@ legend("topright",letters[2],bty="n",cex=1.1,inset=0.02)
 #------------------------------------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------------------------------------
 
+
+
+
+
+
+#------------------------------------------------------------------------------------------------------------------
+#------------------------------------------------------------------------------------------------------------------
+#- write out the parameters for table 2
+params1 <- data.frame(Species = c("cacu","eusi","eute","pira"),do.call(rbind,DEfit.best))
+names(params1)[2:4] <- c("psiv","SF","K")
+write.csv(params1,"Output/table2.csv",row.names=F)
+#------------------------------------------------------------------------------------------------------------------
+#------------------------------------------------------------------------------------------------------------------
