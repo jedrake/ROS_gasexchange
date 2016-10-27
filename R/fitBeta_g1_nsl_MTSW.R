@@ -150,4 +150,3 @@ NSL_TDR_beta.TSW <- list(fit.spNSL.TSW,newdatNSL.TSW)
 #---------------------------------------------------------------------------------------------------------- 
 #---------------------------------------------------------------------------------------------------------- 
 
-plotBetasG1NSL.TSW(output=T,g1data=g1values,NSLdata=NSLpars,g1list=g1_TDR_beta.TSW,NSLlist=NSL_TDR_beta.TSW)

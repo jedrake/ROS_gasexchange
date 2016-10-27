@@ -68,6 +68,10 @@ plotBetasG1NSL(output=T,g1data=g1values,NSLdata=NSLpars,g1list=g1_TDR_beta,NSLli
 
 source("R/fitBeta_g1_nsl_LWP.R")
 plotBetasG1NSL_LWP(output=T,g1data=g1values2,NSLdata=NSLpars2,g1list=g1_TDR_beta2,NSLlist=NSL_TDR_beta2)
+
+#- fit based on transpirable soil water
+source("R/fitBeta_g1_nsl_MTSW.R")
+plotBetasG1NSL.TSW(output=T,g1data=g1values,NSLdata=NSLpars,g1list=g1_TDR_beta.TSW,NSLlist=NSL_TDR_beta.TSW)
 #-------------------------------------------------------------------------------------------------------
 
 
