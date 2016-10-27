@@ -1060,3 +1060,87 @@ plotGX_theta <- function(output=F,colors= brewer.pal(4,"Set1")){
 }
 #---------------------------------------------------------------------------------------------------------------------
 
+
+
+
+
+
+
+#---------------------------------------------------------------------------------------------------------------------
+#- plot the dependence of g1 and non-stomatal limitation relative to TSW.
+#---------------------------------------------------------------------------------------------------------------------
+plotBetasG1NSL.TSW <- function(output=F,g1data,NSLdata,g1list,NSLlist){
+  #- list for g1 data
+  dat.l <- split(g1data,g1data$Species)
+  
+  #- fit NSL
+  NSLdata$TSW <- (NSLdata$TDR)/(max(NSLdata$TDR)-min(NSLdata$TDR)) # normalize TDR data to estimate the transpirable soil water
+  dat.l2 <- split(NSLdata,NSLdata$Species)
+  
+  #- plot normalized g1 and non-stomatal limitation as a function of TSW
+  windows(16,16)
+  par(mfrow=c(4,2),mar=c(0,0.25,0,0.25),xpd=FALSE,oma=c(4,5,1,5),cex=1.6,cex.axis=0.9,cex.lab=0.9)
+  labs <- c("Cacu","Eusi","Eute","Pira")
+  count <- 0
+  for (i in 1:length(dat.l)){
+    newdat <- newdat2 <- data.frame()
+    dat.temp <- dat.l[[i]]
+    dat.temp$g1norm <- dat.temp$g1/max(dat.temp$g1)
+    dat.temp$TSW <- (dat.temp$TDR)/(max(dat.temp$TDR)-min(dat.temp$TDR))
+    
+    dat.temp$Species <- factor(dat.temp$Species)
+    #------------------------------------------------------------------------
+    #-- plot g1 vs. TSW
+    count <- count+1
+    
+    plot(g1norm~TSW,data=subset(dat.temp,Treat=="wet"),pch=21,col="black",bg=grey(0.1),axes=F,ylim=c(0,1.18),xlim=c(0,1.05))
+    points(g1norm~TSW,data=subset(dat.temp,Treat=="dry"),pch=21,col="black",bg=grey(0.8))
+    magaxis(side=c(1:4),labels=c(0,1,0,0),las=1,tcl=0.3,ratio=0.25,majorn=3,cex.axis=0.8)
+    if(i==4)  magaxis(side=c(1:4),labels=c(1,1,0,0),las=1,tcl=0.3,ratio=0.25,majorn=3,cex.axis=0.8)
+    mtext(labs[i],side=2,xpd=T,cex=1.3,line=1.75)
+    if(i==1) legend("bottomright",xpd=NA,legend=c("Wet","Dry"),pch=21,pt.bg=c("black","grey"),ncol=2,cex=0.75)
+    if(i==1) title(main="Stomatal",cex.main=0.75,line=0.5,xpd=NA)
+    legend("topleft",letters[count],cex=1,inset=-0.1,bty="n")
+    
+    
+    # plot model and SE from bootstrapping
+    rm(newdat)
+    newdat <- g1list[[2]][[i]]
+    lines(wpred~Xval,data=newdat,xpd=F)
+    par(xpd=F)
+    polygon(x = c(newdat$Xval, rev(newdat$Xval)), y = c(newdat$lower, rev(newdat$upper)),
+            col = alpha("grey",0.5),border=NA)
+    
+    
+    #------------------------------------------------------------------------
+    #-- repeat, but for NSL
+    
+    dat.temp2 <- dat.l2[[i]]
+    dat.temp2$Species <- factor(dat.temp2$Species)
+    count <- count+1
+    
+    plot(NSL~TSW,data=subset(dat.temp2,Treat=="wet"),pch=21,col="black",bg=grey(0.1),axes=F,ylim=c(0,1.18),xlim=c(0,1))
+    points(NSL~TSW,data=subset(dat.temp2,Treat=="dry"),pch=21,col="black",bg=grey(0.8))
+    magaxis(side=c(1:4),labels=c(0,0,0,1),las=1,tcl=0.3,ratio=0.25,majorn=3,cex.axis=0.8)
+    if(i==4)  magaxis(side=c(1:4),labels=c(1,0,0,0),las=1,tcl=0.3,ratio=0.25,majorn=3,cex.axis=0.8)
+    if(i==1) title(main="Non-stomatal",cex.main=0.75,line=0.5,xpd=NA)
+    
+    legend("topleft",letters[count],cex=1,inset=-0.1,bty="n")
+    
+    newdat2 <- NSLlist[[2]][[i]]
+    lines(wpred~Xval,data=subset(newdat2,wpred<=1))
+    polygon(x = c(newdat2$Xval, rev(newdat2$Xval)), y = c(newdat2$lower, rev(newdat2$upper)), 
+            col = alpha("grey",0.5),border=NA)
+    lines(x=c(max(subset(newdat2,wpred<=1)$Xval),1),y=c(1,1))
+    
+    
+  }
+  mtext(expression(Normalized~g[1]),side=2,outer=T,cex=2,las=0,line=3)
+  mtext(expression(A/A[e]),side=4,outer=T,cex=2,las=0,line=2.5)
+  mtext(expression(TSW~(proportion)),side=1,outer=T,cex=1.5,line=2)
+  
+  if(output==T) dev.copy2pdf(file="Output/Figure4_Beta_g1andNSL_TSW.pdf")
+  
+}
+#---------------------------------------------------------------------------------------------------------------------
+
