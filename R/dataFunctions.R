@@ -182,25 +182,71 @@ returnVcmaxa <- function(){
   
   #- get apparent Vcmax for each observation
   ros3$Vcmax_a <- returnVcmax(A=ros3$Photo,Ci=ros3$Ci,Tleaf=ros3$Tleaf)
-  #ros3 <- subset(ros3,Vcmax_a>5 & Vcmax_a<600)
   
-  #- get the "maximum" Vcmax as the 50th percentile of the apparent Vcmax of the well-watered treatments
-  ros3.list <- split(ros3,ros3$Species)
-  Species <- c()
-  Vcmax_max <- c()
-  for(i in 1:length(ros3.list)){
-    dat <- subset(ros3.list[[i]],Treat=="wet" & TDR > 0.15 & TDR < 0.25 & Ci > 100)
-    dat <- ros3.list[[i]]
-    Species[i] <- as.character(dat$Species[1])
-    Vcmax_max[i] <- unname(quantile(dat$Vcmax_a,probs=0.5))
-    #Vcmax_max[i] <- max(dat$Vcmax_a)
+  #-----------------------------------------------------
+  #- fit the temperature dependence of apparent Vcmax. 
+  fx_Vcmax <- function(Tleaf,k25,Ea){
+    Tleafk <- Tleaf+273.15
+    R <- 8.314
+    value <- k25*exp( (Ea*(Tleafk-298.15))/(298.15*R*Tleafk) )
+    return(value)
   }
-  df2 <- data.frame(Species=Species,Vcmax_max=Vcmax_max)
-  #df2$Vcmax_max <- max(df2$Vcmax_max)
+  nlsfit_cacu <- nls(Vcmax_a ~ fx_Vcmax(Tleaf, k25, Ea),
+                data=subset(ros3,Treat=="wet" & TDR > 0.15 & Ci > 100 & Species=="cacu"),
+                start=list(k25=75, Ea=200000))
+  nlsfit_eusi <- nls(Vcmax_a ~ fx_Vcmax(Tleaf, k25, Ea),
+                     data=subset(ros3,Treat=="wet" & TDR > 0.15 & Ci > 100 & Species=="eusi"),
+                     start=list(k25=75, Ea=200000))
+  nlsfit_eute <- nls(Vcmax_a ~ fx_Vcmax(Tleaf, k25, Ea),
+                     data=subset(ros3,Treat=="wet" & TDR > 0.15 & Ci > 100 & Species=="eute"),
+                     start=list(k25=75, Ea=200000))
+  nlsfit_pira <- nls(Vcmax_a ~ fx_Vcmax(Tleaf, k25, Ea),
+                     data=subset(ros3,Treat=="wet" & TDR > 0.15 & Ci > 100 & Species=="pira"),
+                     start=list(k25=75, Ea=200000))
   
-  ros4 <- merge(ros3,df2,by=c("Species"))
+  #-----------------------------------------------------
+  
+  
+  # #- get the "maximum" Vcmax as the 50th percentile of the apparent Vcmax of the well-watered treatments
+  # ros3.list <- split(ros3,ros3$Species)
+  # Species <- c()
+  # Vcmax_max <- c()
+  # for(i in 1:length(ros3.list)){
+  #   dat <- subset(ros3.list[[i]],Treat=="wet" & TDR > 0.15 & TDR < 0.25 & Ci > 100)
+  #   dat <- ros3.list[[i]]
+  #   Species[i] <- as.character(dat$Species[1])
+  #   Vcmax_max[i] <- unname(quantile(dat$Vcmax_a,probs=0.5))
+  #   #Vcmax_max[i] <- max(dat$Vcmax_a)
+  # }
+  # df2 <- data.frame(Species=Species,Vcmax_max=Vcmax_max)
+  # #df2$Vcmax_max <- max(df2$Vcmax_max)
+  # 
+  #ros4 <- merge(ros3,df2,by=c("Species"))
+  ros4 <- ros3
+  
+  #-------------------------------------
+  #- get the expected maximum Vcmax_a for a well-watered plant, given the actual Tleaf
+  ros4$Vcmax_a_wet <- NA
+  
+  #- cacu
+  cacus <- which(ros4$Species=="cacu")
+  ros4$Vcmax_a_wet[cacus] <-  coef(nlsfit_cacu)[1]*exp( (coef(nlsfit_cacu)[2]*((ros4$Tleaf[cacus]+273.15)-298.15))/(298.15*8.314*(ros4$Tleaf[cacus]+273.15)) )
+  
+  #- eusi
+  eusis <- which(ros4$Species=="eusi")
+  ros4$Vcmax_a_wet[eusis] <-  coef(nlsfit_eusi)[1]*exp( (coef(nlsfit_eusi)[2]*((ros4$Tleaf[eusis]+273.15)-298.15))/(298.15*8.314*(ros4$Tleaf[eusis]+273.15)) )
+  
+  #- eute
+  eutes <- which(ros4$Species=="eute")
+  ros4$Vcmax_a_wet[eutes] <-  coef(nlsfit_eute)[1]*exp( (coef(nlsfit_eute)[2]*((ros4$Tleaf[eutes]+273.15)-298.15))/(298.15*8.314*(ros4$Tleaf[eutes]+273.15)) )
+  
+  #- pira
+  piras <- which(ros4$Species=="pira")
+  ros4$Vcmax_a_wet[piras] <-  coef(nlsfit_pira)[1]*exp( (coef(nlsfit_pira)[2]*((ros4$Tleaf[piras]+273.15)-298.15))/(298.15*8.314*(ros4$Tleaf[piras]+273.15)) )
+  #-------------------------------------
+  
   ros4$Photo_a <- Photosyn(VPD=ros4$VpdL,Ca=ros4$CO2S,PPFD=ros4$PARi,Tleaf=ros4$Tleaf,Ci=ros4$Ci,
-                           Vcmax=ros4$Vcmax_max,Jmax=1.6*ros4$Vcmax_max,Tcorrect=T)$ALEAF
+                           Vcmax=ros4$Vcmax_a_wet,Jmax=1.6*ros4$Vcmax_a_wet,Tcorrect=T)$ALEAF
   ros4$NSL <- with(ros4,Photo/Photo_a)
   
   #- remove a really troublesome eute point and a cacu point
@@ -212,8 +258,8 @@ returnVcmaxa <- function(){
   #ros4[975,] <- NA
   
   #- NA fill a few very crazy points
-  ros4[which(ros4$NSL < -3),"NSL"] <- NA
-  ros4[which(ros4$NSL > 5),"NSL"] <- NA
+  ros4[which(ros4$NSL < -1.5),"NSL"] <- NA
+  ros4[which(ros4$NSL > 1.5),"NSL"] <- NA
   
   ros5 <- ros4[complete.cases(ros4),]
   
