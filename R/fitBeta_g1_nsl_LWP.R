@@ -5,9 +5,14 @@
 #---------------------------------------------------------------------------------------------------------- 
 
 
-#- get the leaf water potential data, average by date to combine with g1 and NSL
-lwp <- return.gx.vwc.lwp()
-lwp.m <- summaryBy(LWP.pd+LWP.md~Species+Treat+gxDate,data=lwp,FUN=mean,keep.names=T,na.rm=T)
+#- get the leaf water potential data, average by date to combine with g1 and NSL. Remove the
+#  data from gxDate's 2012-10-04 and 2012-10-31, as these LWP data are not merged correctly.
+lwp1 <- return.gx.vwc.lwp()
+lwp <- subset(lwp1,!(gxDate %in% as.Date(c("2012-10-04","2012-10-31"))))
+
+lwp.m <- summaryBy(LWP.pd+LWP.md+Cond+TDR~Species+Treat+gxDate,data=lwp,FUN=mean,keep.names=T,na.rm=T)
+
+
 
 #- get the g1 fits
 g1values <- returng1()
@@ -26,7 +31,7 @@ NSLpars2 <- merge(NSLpars,lwp.m,by.x=c("Species","Treat","gxDate"),by.y=c("Speci
 
 dat <- g1values2
 type="g1"
-startlist = list(Xlow = 1, Xhigh=7, q = 2)
+startlist = list(Xlow = 1, Xhigh=7, q = 4)
 #- split into list of species
 dat.l <- split(dat,dat$Species)
 
@@ -43,7 +48,7 @@ for (i in 1:length(dat.l)){
   if (type=="g1") dat.temp$Yval <- dat.temp$g1/max(dat.temp$g1)
   if (type=="NSL") dat.temp$Yval <- dat.temp$NSL
   fit.sp[[i]] <- nls(Yval ~ ((LWPpos-Xlow)/(Xhigh-Xlow))^q,start=startlist,data=dat.temp,algorithm="port",
-                     lower=c(1,6,1.5),upper=c(5,11,6))
+                     lower=c(1,6,1.5),upper=c(5,11,10))
   
   
   # get predicted values and 95% confidence intervals by bootstrapping
