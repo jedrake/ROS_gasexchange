@@ -426,6 +426,9 @@ return.gx.vwc <- function(){
   gx5 <- merge(gx4,vwc.treat.avg,by=c("Date","Species","Treat"))
   gx5$TDR[which(is.na(gx5$TDR))] <- gx5$TDR.mean[which(is.na(gx5$TDR))]
   
+  #- Remove the point for pot 174 on 2013-04-03
+  #gx5[which(gx5$Pot==174 & as.Date(gx5$Date) == as.Date("2013-04-03")),c("Photo","Cond")] <- NA
+  
   return(gx5)
 }
 #-----------------------------------------------------------------------------------------

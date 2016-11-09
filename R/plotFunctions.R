@@ -400,7 +400,7 @@ plotLWP <- function(fillcol="lightgrey",size=1.75,output=F,labsize=1.8){
 #- plot the dependence of g1 and non-stomatal limitation relative to VWC.
 #   The fitting of NSL might need some work...
 #---------------------------------------------------------------------------------------------------------------------
-plotBetasG1NSL <- function(output=F,g1data,NSLdata,g1list,NSLlist){
+plotBetasG1NSL <- function(output=F,g1data,NSLdata,g1list,NSLlist,xlims=c(0,0.33)){
   #- list for g1 data
   dat.l <- split(g1data,g1data$Species)
   
@@ -422,7 +422,7 @@ plotBetasG1NSL <- function(output=F,g1data,NSLdata,g1list,NSLlist){
     #-- plot g1 vs. TDR
     count <- count+1
     
-    plot(g1norm~TDR,data=subset(dat.temp,Treat=="wet"),pch=21,col="black",bg=grey(0.1),axes=F,ylim=c(0,1.18),xlim=c(0,0.4))
+    plot(g1norm~TDR,data=subset(dat.temp,Treat=="wet"),pch=21,col="black",bg=grey(0.1),axes=F,ylim=c(0,1.18),xlim=xlims)
     points(g1norm~TDR,data=subset(dat.temp,Treat=="dry"),pch=21,col="black",bg=grey(0.8))
     magaxis(side=c(1:4),labels=c(0,1,0,0),las=1,tcl=0.3,ratio=0.25,majorn=3,cex.axis=0.8)
     if(i==4)  magaxis(side=c(1:4),labels=c(1,1,0,0),las=1,tcl=0.3,ratio=0.25,majorn=3,cex.axis=0.8)
@@ -448,7 +448,7 @@ plotBetasG1NSL <- function(output=F,g1data,NSLdata,g1list,NSLlist){
     dat.temp2$Species <- factor(dat.temp2$Species)
     count <- count+1
     
-    plot(NSL~TDR,data=subset(dat.temp2,Treat=="wet"),pch=21,col="black",bg=grey(0.1),axes=F,ylim=c(0,1.18),xlim=c(0,0.4))
+    plot(NSL~TDR,data=subset(dat.temp2,Treat=="wet"),pch=21,col="black",bg=grey(0.1),axes=F,ylim=c(0,1.18),xlim=xlims)
     points(NSL~TDR,data=subset(dat.temp2,Treat=="dry"),pch=21,col="black",bg=grey(0.8))
     magaxis(side=c(1:4),labels=c(0,0,0,1),las=1,tcl=0.3,ratio=0.25,majorn=3,cex.axis=0.8)
     if(i==4)  magaxis(side=c(1:4),labels=c(1,0,0,0),las=1,tcl=0.3,ratio=0.25,majorn=3,cex.axis=0.8)
@@ -897,14 +897,15 @@ modelAsatVWC <- function(output=F,fit.spg1,fit.spNSL){
 #------------------------------------------------------------------------------------------------------------------
 #- A new function that plots A, gs, WUE, Ci/Ca, and LWP-PD an LWP-MD as a function of volumetric water content
 #------------------------------------------------------------------------------------------------------------------
-plotGX_theta <- function(output=F,colors= brewer.pal(4,"Set1")){
+plotGX_theta <- function(output=F,xlims = c(0,0.33),colors= brewer.pal(4,"Set1")){
   #- get the gas exchange and handheld TDR data
   ros <- return.gx.vwc()
   
   
   #- get the lwp data and process a bit
   #lwp <- read.lwp()
-  lwp <- return.gx.vwc.lwp()
+  lwp1 <- return.gx.vwc.lwp()
+  lwp <- subset(lwp1,!(gxDate %in% as.Date(c("2012-10-04","2012-10-31"))))
   
   # names(lwp)[3] <- "LWPdate"
   # lwp.pd <- subset(lwp,Type=="PD" & is.na(LWP)==FALSE)
@@ -915,8 +916,12 @@ plotGX_theta <- function(output=F,colors= brewer.pal(4,"Set1")){
   # names(lwp.md)[2] <- "LWP.md"
   # lwp2 <- merge(lwp.pd,lwp.md,by=c("Pot","LWPdate","Treat","Species"),all=FALSE)
   # lwp2$diff <- with(lwp2,abs(LWP.md)-abs(LWP))
-  # 
-  lwp.trt<- summaryBy(LWP.pd+LWP.md+diff+TDR~LWPdate+Species+Treat,data=lwp,FUN=c(mean,standard.error), na.rm=TRUE)
+  
+  #- log-transform LWP number
+  lwp$LWP.pd.trans <- -log(-1*lwp$LWP.pd)
+  lwp$LWP.md.trans <- -log(-1*lwp$LWP.md)
+  
+  lwp.trt<- summaryBy(LWP.pd+LWP.md+LWP.pd.trans+LWP.pd.trans+diff+TDR~LWPdate+Species+Treat,data=lwp,FUN=c(mean,standard.error), na.rm=TRUE)
   lwp.trt$TDR <- lwp.trt$TDR.mean
   lwp.trt.list <- split(lwp.trt,lwp.trt$Species)
   #------------------------------------------------------------------------------------------------------------------
@@ -937,10 +942,13 @@ plotGX_theta <- function(output=F,colors= brewer.pal(4,"Set1")){
   par(mfrow=c(2,3),oma=c(8,7,2,5),mar=c(0.25,6.5,0.25,0.5))
   symbols <- c(16,17,18,15)
   colors <- colors
+  
+  
+  
   #- plot Photo
   for(i in 1:4){
     toplot <- ITE.trt.list[[i]]
-    if(i ==1) plot.new();plot.window(xlim=c(0,0.35),ylim=c(0,25));abline(h=0)
+    if(i ==1) plot.new();plot.window(xlim=xlims,ylim=c(0,25));abline(h=0)
     
     
     #- smoothplot
@@ -959,7 +967,7 @@ plotGX_theta <- function(output=F,colors= brewer.pal(4,"Set1")){
   #- plot WUE
   for(i in 1:4){
     toplot <- ITE.trt.list[[i]]
-    if(i ==1) plot.new();plot.window(xlim=c(0,0.35),ylim=c(-30,250));abline(h=0)
+    if(i ==1) plot.new();plot.window(xlim=xlims,ylim=c(-30,250));abline(h=0)
     
     #- smoothplot
     smoothplot(TDR, WUE.mean, polycolor=alpha(colors[i],0.3),linecols=colors[i],
@@ -979,7 +987,7 @@ plotGX_theta <- function(output=F,colors= brewer.pal(4,"Set1")){
   #- plot pre-dawn LWP
   for(i in 1:4){
     toplot <- lwp.trt.list[[i]]
-    if(i ==1) plot.new();plot.window(xlim=c(0,0.35),ylim=c(-10,0));abline(h=0)
+    if(i ==1) plot.new();plot.window(xlim=xlims,ylim=c(-10,0));abline(h=0)
     
     #- smoothplot
     smoothplot(TDR, LWP.pd.mean, polycolor=alpha(colors[i],0.3),linecols=colors[i],
@@ -998,7 +1006,7 @@ plotGX_theta <- function(output=F,colors= brewer.pal(4,"Set1")){
   #- plot Cond
   for(i in 1:4){
     toplot <- ITE.trt.list[[i]]
-    if(i ==1) plot.new();plot.window(xlim=c(0,0.35),ylim=c(0,0.6));abline(h=0)
+    if(i ==1) plot.new();plot.window(xlim=xlims,ylim=c(0,0.6));abline(h=0)
     
     #- smoothplot
     smoothplot(TDR, Cond.mean, polycolor=alpha(colors[i],0.3),linecols=colors[i],
@@ -1018,7 +1026,7 @@ plotGX_theta <- function(output=F,colors= brewer.pal(4,"Set1")){
   #- plot Ci/Ca
   for(i in 1:4){
     toplot <- ITE.trt.list[[i]]
-    if(i ==1) plot.new();plot.window(xlim=c(0,0.35),ylim=c(0,1.5));abline(h=0)
+    if(i ==1) plot.new();plot.window(xlim=xlims,ylim=c(0,1.5));abline(h=0)
     
     #- smoothplot
     smoothplot(TDR, Ci.Ca.mean, polycolor=alpha(colors[i],0.3),linecols=colors[i],
@@ -1038,7 +1046,7 @@ plotGX_theta <- function(output=F,colors= brewer.pal(4,"Set1")){
   #- plot mid-day LWP
   for(i in 1:4){
     toplot <- lwp.trt.list[[i]]
-    if(i ==1) plot.new();plot.window(xlim=c(0,0.35),ylim=c(-10,0));abline(h=0)
+    if(i ==1) plot.new();plot.window(xlim=xlims,ylim=c(-10,0));abline(h=0)
     
     #- smoothplot
     smoothplot(TDR, LWP.md.mean, polycolor=alpha(colors[i],0.3),linecols=colors[i],
@@ -1059,6 +1067,9 @@ plotGX_theta <- function(output=F,colors= brewer.pal(4,"Set1")){
   if(output==T) dev.copy2pdf(file="Output/Figure3_gx_vs_VWC.pdf")
 }
 #---------------------------------------------------------------------------------------------------------------------
+
+
+
 
 
 

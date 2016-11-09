@@ -31,7 +31,7 @@ plotVWC(ptsize=1.8,output=T,type="1panel") # can plot type="1panel" or "4panel"
 
 #-------------------------------------------------------------------------------------------------------  
 #- Plot photosynthetic variables relative to soil water content (Figure 2)
-plotGX_theta(output=T,colors= brewer.pal(5,"Accent")[c(1,2,3,5)])#c("yellow3","blue","forestgreen","red"))
+plotGX_theta(output=T,xlims=c(0,0.33),colors= brewer.pal(5,"Accent")[c(1,2,3,5)])#c("yellow3","blue","forestgreen","red"))
 
 #- make a big 16-panel plot of photosynthetic variables over time (Figure S2).
 plotGX(output=T)

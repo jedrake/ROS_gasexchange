@@ -152,7 +152,7 @@ plot(dat.all3$Photo~dat.all3$P_theta_s,xlim=xlims,ylim=ylims,axes=F,xlab="",ylab
 predline(lm(Photo~P_theta_s,data=dat.all3),fittype="confidence",col=fitcol,xpd=F)
 magaxis(side=c(1,2,4),labels=c(0,1,0),frame.plot=T,las=1,tcl=0.3)
 title(ylab=expression(beta[s]),xpd=NA,cex.lab=textsize)
-legend("bottomright",letters[2],bty="n",cex=1.2)
+legend("bottomright",letters[1],bty="n",cex=1.2)
 r2val <-round(summary(lm(Photo~P_theta_s,data=dat.all3))$r.squared,2)
 legend("topleft",legend= bquote(r^2 == .(r2val)),bty="n")
 
@@ -160,7 +160,7 @@ legend("topleft",legend= bquote(r^2 == .(r2val)),bty="n")
 plot(dat.all3$Photo~dat.all3$P_lwp_s,xlim=xlims,ylim=ylims,axes=F,xlab="",ylab="");abline(0,1)
 predline(lm(Photo~P_lwp_s,data=dat.all3),fittype="confidence",col=fitcol,xpd=T)
 magaxis(side=c(1,2,4),labels=c(0,0,1),frame.plot=T,las=1,tcl=0.3)
-legend("bottomright",letters[6],bty="n",cex=1.2)
+legend("bottomright",letters[4],bty="n",cex=1.2)
 r2val <-round(summary(lm(Photo~P_lwp_s,data=dat.all3))$r.squared,2)
 legend("topleft",legend= bquote(r^2 == .(r2val)),bty="n")
 
@@ -169,14 +169,14 @@ plot(dat.all3$Photo~dat.all3$P_theta_ns,xlim=xlims,ylim=ylims,axes=F,xlab="",yla
 predline(lm(Photo~P_theta_ns,data=dat.all3),fittype="confidence",col=fitcol,xpd=T)
 magaxis(side=c(1,2,4),labels=c(0,1,0),frame.plot=T,las=1,tcl=0.3)
 title(ylab=expression(beta[ns]),xpd=NA,cex.lab=textsize)
-legend("bottomright",letters[3],bty="n",cex=1.2)
+legend("bottomright",letters[2],bty="n",cex=1.2)
 r2val <-round(summary(lm(Photo~P_theta_ns,data=dat.all3))$r.squared,2)
 legend("topleft",legend= bquote(r^2 == .(r2val)),bty="n")
 
 plot(dat.all3$Photo~dat.all3$P_lwp_ns,xlim=xlims,ylim=ylims,axes=F,xlab="",ylab="");abline(0,1)
 predline(lm(Photo~P_lwp_ns,data=dat.all3),fittype="confidence",col=fitcol,xpd=T)
 magaxis(side=c(1,2,4),labels=c(0,0,1),frame.plot=T,las=1,tcl=0.3)
-legend("bottomright",letters[7],bty="n",cex=1.2)
+legend("bottomright",letters[5],bty="n",cex=1.2)
 r2val <-round(summary(lm(Photo~P_lwp_ns,data=dat.all3))$r.squared,2)
 legend("topleft",legend= bquote(r^2 == .(r2val)),bty="n")
 
@@ -185,14 +185,14 @@ plot(dat.all3$Photo~dat.all3$P_theta_sns,xlim=xlims,ylim=ylims,axes=F,xlab="",yl
 predline(lm(Photo~P_theta_sns,data=dat.all3),fittype="confidence",col=fitcol,xpd=T)
 magaxis(side=c(1,2,4),labels=c(1,1,0),frame.plot=T,las=1,tcl=0.3)
 title(ylab=expression(beta[s+ns]),xpd=NA,cex.lab=textsize)
-legend("bottomright",letters[4],bty="n",cex=1.2)
+legend("bottomright",letters[3],bty="n",cex=1.2)
 r2val <-round(summary(lm(Photo~P_theta_sns,data=dat.all3))$r.squared,2)
 legend("topleft",legend= bquote(r^2 == .(r2val)),bty="n")
 
 plot(dat.all3$Photo~dat.all3$P_lwp_sns,xlim=xlims,ylim=ylims,axes=F,xlab="",ylab="");abline(0,1)
 predline(lm(Photo~P_lwp_sns,data=dat.all3),fittype="confidence",col=fitcol,xpd=T)
 magaxis(side=c(1,2,4),labels=c(0,0,1),frame.plot=T,las=1,tcl=0.3)
-legend("bottomright",letters[8],bty="n",cex=1.2)
+legend("bottomright",letters[6],bty="n",cex=1.2)
 r2val <-round(summary(lm(Photo~P_lwp_sns,data=dat.all3))$r.squared,2)
 legend("topleft",legend= bquote(r^2 == .(r2val)),bty="n")
 
@@ -202,7 +202,7 @@ plot(dat.all3$Photo~dat.all3$P_tuzet_s ,xlim=xlims,ylim=ylims,axes=F,xlab="",yla
 predline(lm(Photo~P_tuzet_s,data=dat.all3),fittype="confidence",col=fitcol,xpd=T)
 magaxis(side=c(1,2,4),labels=c(0,1,1),frame.plot=T,las=1,tcl=0.3)
 title(ylab=expression(Tuzet[s]),xpd=NA,cex.lab=textsize)
-legend("bottomright",letters[9],bty="n",cex=1.2)
+legend("bottomright",letters[7],bty="n",cex=1.2)
 r2val <-round(summary(lm(Photo~P_tuzet_s,data=dat.all3))$r.squared,2)
 legend("topleft",legend= bquote(r^2 == .(r2val)),bty="n")
 
@@ -212,7 +212,7 @@ plot(dat.all3$Photo~dat.all3$P_tuzet_sns ,xlim=xlims,ylim=ylims,axes=F,xlab="",y
 predline(lm(Photo~P_tuzet_sns,data=dat.all3),fittype="confidence",col=fitcol,xpd=T)
 magaxis(side=c(1,2,4),labels=c(1,1,1),frame.plot=T,las=1,tcl=0.3)
 title(ylab=expression(Tuzet[s+ns]),xpd=NA,cex.lab=textsize)
-legend("bottomright",letters[10],bty="n",cex=1.2)
+legend("bottomright",letters[8],bty="n",cex=1.2)
 r2val <-round(summary(lm(Photo~P_tuzet_sns,data=dat.all3))$r.squared,2)
 legend("topleft",legend= bquote(r^2 == .(r2val)),bty="n")
 
@@ -223,9 +223,9 @@ title(ylab=expression("Observed"~A[sat]~(mu*mol~m^-2~s^-1)),outer=T,cex.lab=2,li
 null <- summary(agreement(x=dat.all3$Photo,y=dat.all3$P_null,error="constant",TDI_a=20,target="fixed"))
 beta_s_theta <- summary(agreement(x=dat.all3$Photo,y=dat.all3$P_theta_s,error="constant",TDI_a=20,target="fixed"))
 beta_s_lwp <- summary(agreement(x=dat.all3$Photo,y=dat.all3$P_lwp_s,error="constant",TDI_a=20,target="fixed"))
-beta_ns_theta <- summary(agreement(x=dat.all3$Photo,y=dat.all3$P_lwp_ns,error="constant",TDI_a=20,target="fixed"))
+beta_ns_theta <- summary(agreement(x=dat.all3$Photo,y=dat.all3$P_theta_ns,error="constant",TDI_a=20,target="fixed"))#### work from here
 beta_ns_lwp <- summary(agreement(x=dat.all3$Photo,y=dat.all3$P_lwp_ns,error="constant",TDI_a=20,target="fixed"))
-beta_sns_theta <- summary(agreement(x=dat.all3$Photo,y=dat.all3$P_lwp_sns,error="constant",TDI_a=20,target="fixed"))
+beta_sns_theta <- summary(agreement(x=dat.all3$Photo,y=dat.all3$P_theta_sns,error="constant",TDI_a=20,target="fixed"))
 beta_sns_lwp <- summary(agreement(x=dat.all3$Photo,y=dat.all3$P_lwp_sns,error="constant",TDI_a=20,target="fixed"))
 tuzet_s <- summary(agreement(x=dat.all3$Photo,y=dat.all3$P_tuzet_s,error="constant",TDI_a=20,target="fixed"))
 tuzet_sns <- summary(agreement(x=dat.all3$Photo,y=dat.all3$P_tuzet_sns,error="constant",TDI_a=20,target="fixed"))
@@ -285,7 +285,7 @@ plot(dat.all3$Cond~dat.all3$Gs_theta_s,xlim=xlims,ylim=ylims,axes=F,xlab="",ylab
 predline(lm(Cond~Gs_theta_s,data=dat.all3),fittype="confidence",col=fitcol,xpd=F)
 magaxis(side=c(1,2,4),labels=c(0,1,0),frame.plot=T,las=1,tcl=0.3)
 title(ylab=expression(beta[s]),xpd=NA,cex.lab=textsize)
-legend("bottomright",letters[2],bty="n",cex=1.2)
+legend("bottomright",letters[1],bty="n",cex=1.2)
 r2val <-round(summary(lm(Cond~Gs_theta_s,data=dat.all3))$r.squared,2)
 legend("topleft",legend= bquote(r^2 == .(r2val)),bty="n")
 
@@ -293,7 +293,7 @@ legend("topleft",legend= bquote(r^2 == .(r2val)),bty="n")
 plot(dat.all3$Cond~dat.all3$Gs_lwp_s,xlim=xlims,ylim=ylims,axes=F,xlab="",ylab="");abline(0,1)
 predline(lm(Cond~Gs_lwp_s,data=dat.all3),fittype="confidence",col=fitcol,xpd=T)
 magaxis(side=c(1,2,4),labels=c(0,0,1),frame.plot=T,las=1,tcl=0.3)
-legend("bottomright",letters[6],bty="n",cex=1.2)
+legend("bottomright",letters[4],bty="n",cex=1.2)
 r2val <-round(summary(lm(Cond~Gs_lwp_s,data=dat.all3))$r.squared,2)
 legend("topleft",legend= bquote(r^2 == .(r2val)),bty="n")
 
@@ -302,14 +302,14 @@ plot(dat.all3$Cond~dat.all3$Gs_theta_ns,xlim=xlims,ylim=ylims,axes=F,xlab="",yla
 predline(lm(Cond~Gs_theta_ns,data=dat.all3),fittype="confidence",col=fitcol,xpd=T)
 magaxis(side=c(1,2,4),labels=c(0,1,0),frame.plot=T,las=1,tcl=0.3)
 title(ylab=expression(beta[ns]),xpd=NA,cex.lab=textsize)
-legend("bottomright",letters[3],bty="n",cex=1.2)
+legend("bottomright",letters[2],bty="n",cex=1.2)
 r2val <-round(summary(lm(Cond~Gs_theta_ns,data=dat.all3))$r.squared,2)
 legend("topleft",legend= bquote(r^2 == .(r2val)),bty="n")
 
 plot(dat.all3$Cond~dat.all3$Gs_lwp_ns,xlim=xlims,ylim=ylims,axes=F,xlab="",ylab="");abline(0,1)
 predline(lm(Cond~Gs_lwp_ns,data=dat.all3),fittype="confidence",col=fitcol,xpd=T)
 magaxis(side=c(1,2,4),labels=c(0,0,1),frame.plot=T,las=1,tcl=0.3)
-legend("bottomright",letters[7],bty="n",cex=1.2)
+legend("bottomright",letters[5],bty="n",cex=1.2)
 r2val <-round(summary(lm(Cond~Gs_lwp_ns,data=dat.all3))$r.squared,2)
 legend("topleft",legend= bquote(r^2 == .(r2val)),bty="n")
 
@@ -318,14 +318,14 @@ plot(dat.all3$Cond~dat.all3$Gs_theta_sns,xlim=xlims,ylim=ylims,axes=F,xlab="",yl
 predline(lm(Cond~Gs_theta_sns,data=dat.all3),fittype="confidence",col=fitcol,xpd=T)
 magaxis(side=c(1,2,4),labels=c(1,1,0),frame.plot=T,las=1,tcl=0.3)
 title(ylab=expression(beta[s+ns]),xpd=NA,cex.lab=textsize)
-legend("bottomright",letters[4],bty="n",cex=1.2)
+legend("bottomright",letters[3],bty="n",cex=1.2)
 r2val <-round(summary(lm(Cond~Gs_theta_sns,data=dat.all3))$r.squared,2)
 legend("topleft",legend= bquote(r^2 == .(r2val)),bty="n")
 
 plot(dat.all3$Cond~dat.all3$Gs_lwp_sns,xlim=xlims,ylim=ylims,axes=F,xlab="",ylab="");abline(0,1)
 predline(lm(Cond~Gs_lwp_sns,data=dat.all3),fittype="confidence",col=fitcol,xpd=T)
 magaxis(side=c(1,2,4),labels=c(0,0,1),frame.plot=T,las=1,tcl=0.3)
-legend("bottomright",letters[8],bty="n",cex=1.2)
+legend("bottomright",letters[6],bty="n",cex=1.2)
 r2val <-round(summary(lm(Cond~Gs_lwp_sns,data=dat.all3))$r.squared,2)
 legend("topleft",legend= bquote(r^2 == .(r2val)),bty="n")
 
@@ -335,7 +335,7 @@ plot(dat.all3$Cond~dat.all3$Gs_tuzet_s ,xlim=xlims,ylim=ylims,axes=F,xlab="",yla
 predline(lm(Cond~Gs_tuzet_s,data=dat.all3),fittype="confidence",col=fitcol,xpd=T)
 magaxis(side=c(1,2,4),labels=c(0,1,1),frame.plot=T,las=1,tcl=0.3)
 title(ylab=expression(Tuzet[s]),xpd=NA,cex.lab=textsize)
-legend("bottomright",letters[9],bty="n",cex=1.2)
+legend("bottomright",letters[7],bty="n",cex=1.2)
 r2val <-round(summary(lm(Cond~Gs_tuzet_s,data=dat.all3))$r.squared,2)
 legend("topleft",legend= bquote(r^2 == .(r2val)),bty="n")
 
@@ -345,9 +345,39 @@ plot(dat.all3$Cond~dat.all3$Gs_tuzet_sns ,xlim=xlims,ylim=ylims,axes=F,xlab="",y
 predline(lm(Cond~Gs_tuzet_sns,data=dat.all3),fittype="confidence",col=fitcol,xpd=T)
 magaxis(side=c(1,2,4),labels=c(1,1,1),frame.plot=T,las=1,tcl=0.3)
 title(ylab=expression(Tuzet[s+ns]),xpd=NA,cex.lab=textsize)
-legend("bottomright",letters[10],bty="n",cex=1.2)
+legend("bottomright",letters[8],bty="n",cex=1.2)
 r2val <-round(summary(lm(Cond~Gs_tuzet_sns,data=dat.all3))$r.squared,2)
 legend("topleft",legend= bquote(r^2 == .(r2val)),bty="n")
 
 title(xlab=expression("Predicted"~g[s]~(mol~m^-2~s^-1)),outer=T,cex.lab=2)
 title(ylab=expression("Observed"~g[s]~(mol~m^-2~s^-1)),outer=T,cex.lab=2,line=5)
+
+
+
+
+#-- calculate concordance correlation coefficients
+dat.all4 <- subset(dat.all3,Cond>0 & Gs_theta_s > 0)
+
+beta_s_theta2 <- summary(agreement(x=dat.all4$Cond*1000,y=dat.all4$Gs_theta_s*1000,error="constant",TDI_a=20,target="fixed"))
+beta_s_lwp2 <- summary(agreement(x=dat.all4$Cond*1000,y=dat.all4$Gs_lwp_s*1000,error="constant",TDI_a=20,target="fixed"))
+beta_ns_theta2 <- summary(agreement(x=dat.all4$Cond*1000,y=dat.all4$Gs_theta_ns*1000,error="constant",TDI_a=20,target="fixed"))
+beta_ns_lwp2 <- summary(agreement(x=dat.all4$Cond*1000,y=dat.all4$Gs_lwp_ns*1000,error="constant",TDI_a=20,target="fixed"))
+beta_sns_theta2 <- summary(agreement(x=dat.all4$Cond*1000,y=dat.all4$Gs_theta_sns*1000,error="constant",TDI_a=20,target="fixed"))
+beta_sns_lwp2 <- summary(agreement(x=dat.all4$Cond*1000,y=dat.all4$Gs_lwp_sns*1000,error="constant",TDI_a=20,target="fixed"))
+tuzet_s2 <- summary(agreement(x=dat.all4$Cond*1000,y=dat.all4$Gs_tuzet_s*1000,error="constant",TDI_a=20,target="fixed"))
+tuzet_sns2 <- summary(agreement(x=dat.all4$Cond*1000,y=dat.all4$Gs_tuzet_sns*1000,error="constant",TDI_a=20,target="fixed"))
+
+
+#-- calculate the residual standard deviation
+summary(lm(Cond~Gs_theta_s,data=dat.all4))$sigma
+summary(lm(Cond~Gs_lwp_s,data=dat.all4))$sigma
+summary(lm(Cond~Gs_theta_ns,data=dat.all4))$sigma
+summary(lm(Cond~Gs_lwp_ns,data=dat.all4))$sigma
+summary(lm(Cond~Gs_theta_sns,data=dat.all4))$sigma
+summary(lm(Cond~Gs_lwp_sns,data=dat.all4))$sigma
+summary(lm(Cond~Gs_theta_sns,data=dat.all4))$sigma
+summary(lm(Cond~Gs_lwp_sns,data=dat.all4))$sigma
+summary(lm(Cond~Gs_tuzet_s,data=dat.all4))$sigma
+summary(lm(Cond~Gs_tuzet_sns,data=dat.all4))$sigma
+
+
