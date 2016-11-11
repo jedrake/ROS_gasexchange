@@ -84,7 +84,10 @@ writeBetaParams()
 
 
 #-------------------------------------------------------------------------------------------------------
-#- Fit and plot the Tuzet model
+#- Fit and plot the Tuzet model.
+
+#- NOTE I need to update the non-stomatal parameters that are hard-coded inside the wrapper function
+#   in this script!
 source("R/fitTuzets.R")
 #-------------------------------------------------------------------------------------------------------
 

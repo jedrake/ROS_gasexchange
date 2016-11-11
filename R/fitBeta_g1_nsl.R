@@ -19,7 +19,7 @@ NSLpars <- summaryBy(NSL+Photo+Cond+Ci+TDR~Species+gxDate+Treat,data=NSL,FUN=mea
 
 dat <- g1values
 type="g1"
-startlist = list(Xlow = 0.0, Xhigh=0.5, q = 0.6)
+startlist = list(Xlow = 0.0, Xhigh=0.3, q = 0.6)
 #- split into list of species
 dat.l <- split(dat,dat$Species)
 
@@ -73,7 +73,7 @@ g1_TDR_beta <- list(fit.spg1,newdatg1)
 
 dat <- NSLpars
 type="NSL"
-startlist= list(Xlow = 0.0, Xhigh=0.5, q = 0.3)
+startlist= list(Xlow = 0.0, Xhigh=0.3, q = 0.3)
 #- split into list of species
 dat.l <- split(dat,dat$Species)
 
@@ -82,7 +82,7 @@ fit.sp <- newdat <-  list()
 
 #- loop over each element of the list, fit data
 for (i in 1:length(dat.l)){
-  #dat.temp <- subset(dat.l[[i]],TDR<0.3)
+    #dat.temp <- subset(dat.l[[i]],TDR<0.3)
   dat.temp <- dat.l[[i]]
   if (i>1) dat.temp <- subset(dat.l[[i]],TDR<0.25)
   dat.temp$Species <- factor(dat.temp$Species)

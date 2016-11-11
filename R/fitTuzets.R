@@ -20,11 +20,18 @@ dat.all <- subset(dat.all2[,c("Species","Treat","Pot","Date","Photo","Cond","Trm
 
 
 
+
+#------------------------------------------------------------------------------------------------------------------
+#- set default parameter values
+g1 <- 5
+#------------------------------------------------------------------------------------------------------------------
+
+
 #------------------------------------------------------------------------------------------------------------------
 #- wrapper function to return the model-data mismatch for the Tuzets model
 #  If fit == 1, the function will return the residual. If fit == 0, the function will return
 #   a dataframe of predicted values based on the input parameters and environmental data.
-tuzets.cost <- function(pars,dat,fit=1,g1=5,Vcmax=80,adjVcmax=0,adjK=0,b=2,c=3){
+tuzets.cost <- function(pars,dat,fit=1,g1=5,Vcmax=80,Jmax=120,adjVcmax=0,adjK=0,b=2,c=3,g0=0.005){
   
   #- pull out the parameters from the pars vector
   psiv <- pars[1]
@@ -60,7 +67,7 @@ tuzets.cost <- function(pars,dat,fit=1,g1=5,Vcmax=80,adjVcmax=0,adjK=0,b=2,c=3){
   }
   
   #- model
-  out <- photosyn(SF=SF, PSIV=psiv, G0=0.005, VCMAX=Vcmax_a,G1=g1,K=Kactual,
+  out <- photosyn(SF=SF, PSIV=psiv, G0=g0, VCMAX=Vcmax_a,JMAX=Jmax,G1=g1,K=Kactual,
                  CS=dat$CO2S,WEIGHTEDSWP=dat$LWP.pd, VPD=dat$VpdL,PAR=dat$PARi,TLEAF=dat$Tleaf)
   
   
@@ -113,21 +120,30 @@ set.seed(1234)
 #------------------------------------------------------------------------------------------------------------------
 #- model with no change in photosynthetic capacity
 DEfit <- DEfit.best <- DEpred <- list()
+
+
 for (i in 1:length(dat.list)){
   tofit <- dat.list[[i]]
   
   #- fit the model, extract the best parameters, and rerun the model to get the predicted values  
-  DEfit[[i]] <- DEoptim(fn=tuzets.cost,lower=lower,upper=upper,dat=tofit,g1=5,Vcmax=80,adjVcmax=0,adjK=0,
-                   fit=1,DEoptim.control(NP = NPmax,itermax=maxiter)) #perhaps adjust reltol, NP=20, itermax = 100
+  #DEfit[[i]] <- DEoptim(fn=tuzets.cost,lower=lower,upper=upper,dat=tofit,g1=g1,Vcmax=80,adjVcmax=0,adjK=0,
+  #                 fit=1,DEoptim.control(NP = NPmax,itermax=maxiter)) #perhaps adjust reltol, NP=20, itermax = 100
   DEfit.best[[i]] <- unname(DEfit[[i]]$optim$bestmem)
-  DEpred[[i]] <- tuzets.cost(pars=DEfit.best[[i]],dat=tofit,fit=0,g1=5,Vcmax=80,adjVcmax=0)
+  DEpred[[i]] <- tuzets.cost(pars=DEfit.best[[i]],dat=tofit,fit=0,g1=g1,g0=0.005,Vcmax=80,Jmax=1.2*80,adjVcmax=0,adjK=0)
   DEpred[[i]]$Species <- tofit$Species[1]
   DEpred[[i]]$Date <- tofit$Date
   
 }
 
 
+##---- REMKO -- this code make the plots you asked about
 
+#- plot simulated Photo vs. conductance relative to observed
+plot(Photo~Cond,data=dat.m,pch=16,ylim=c(0,30))
+points(ALEAF~GS,data=do.call(rbind,DEpred))
+legend("topleft",legend=c("Data","Model"),pch=c(16,1))
+
+##---- 
 
 
 
@@ -178,7 +194,7 @@ for(i in 1:length(DEfit.best)){
   SF <- DEfit.best[[i]][2]
   Kmax <- DEfit.best[[i]][3]
   
-  pred.psileaf[[i]] <- photosyn(SF=SF, PSIV=psiv, G0=0.0005, VCMAX=80,G1=5,K=Kmax,
+  pred.psileaf[[i]] <- photosyn(SF=SF, PSIV=psiv, G0=0.0005, VCMAX=80,G1=g1,K=Kmax,
                   CS=400,WEIGHTEDSWP=psileaf, VPD=1.2,PAR=1800,TLEAF=25)
   pred.psileaf[[i]]$Species <- levels(dat.all$Species)[i]
 }
