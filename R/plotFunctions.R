@@ -617,9 +617,25 @@ plotd13C <- function(export=F){
 #- make publication-ready plot of soil moisture release curve
 #-------------------------------------------------------------------------------------------------------------------------------------
 plotMoistCurve <- function(output=F){
+  
+  
+  
+  #-----
+  #- get the soil data
   curve <- getMoistCurve()
   curve$pressure_MPa_neg <- -1*curve$pressure_MPa
-
+  #-----
+  
+  
+  
+  #-----
+  #- get the leaf water potential data
+  lwp1 <- return.gx.vwc.lwp()
+  lwp <- subset(lwp1,!(gxDate %in% as.Date(c("2012-10-04","2012-10-31"))))
+  lwp.mean <- summaryBy(LWP.pd+TDR.mean~gxDate+Species,data=subset(lwp,Treat=="dry"),FUN=c(mean,standard.error))
+  #-----
+  
+  
   
   #----
   #- predict soil matrix potential via Campbell 1974 and Cosby et al. 1984
@@ -645,29 +661,85 @@ plotMoistCurve <- function(output=F){
     cost <- ((dat-pred)^2)/abs(dat)
     return(sum(cost))
   }
-   
-  upper <- c(0.2,15,-0.01)
-  lower <- c(0.001,1,-10)
-  DEoutput <- DEoptim(Cosby_optim,lower=lower,upper=upper,VWC=curve$VWC,dat=curve$pressure_MPa_neg,
-                    DEoptim.control(NP=400,itermax=100,trace=F))
   
+  set.seed(1234)
+  upper <- c(0.2,15,-0.01)
+  lower <- c(0.1,1,-10)
+  
+  #--- fit and predict off of the soil data
+  DEoutput <- DEoptim(Cosby_optim,lower=lower,upper=upper,VWC=curve$VWC,dat=curve$pressure_MPa_neg,
+                    DEoptim.control(NP=400,itermax=200,trace=F))
   bestpars <- DEoutput$optim$bestmem
   names(bestpars) <- c("thetaSat","b","PsiE")
   
-  VWC <- seq(0,0.3,length=101)
+  VWC <- seq(0,0.3,length=1001)
   PsiSoil_best <- bestpars[3]*(VWC/bestpars[1])^(-1*bestpars[2])
+  #---
+  
+  
+  
+  #--- Try to fit Cosby in a log-transformed framework (See equation 10 in Duursma 2008)
+  thetasat <- 0.14
+  curve$Xval <- log10(curve$VWC/thetasat)
+  curve$Yval <- log10(curve$pressure_MPa)
+  Cosby_loglin <- lm(Yval~Xval,data=subset(curve,VWC<0.1))
+  plot(Yval~Xval,dat=curve)
+  abline(Cosby_loglin)
+  b <- coef(Cosby_loglin)[[2]]
+  PsiE <- -10^coef(Cosby_loglin)[[1]]
+  PsiSoil_loglin <- PsiE*(VWC/thetasat)^(b)
+  
+  
+  
+  #--- fit the van Genuchten model via the package "HydroMe"
+  vn.ns=nlsLM(VWC~SSvgm(actual_pressure,thr,ths,alp,nscal,mscal),data=curve,trace=T,
+              control=nls.lm.control(maxiter=300,options(warn=1,trace=T)))
+  Psi <- seq(from=0,to=1000,length.out=1001)
+  newdata <- data.frame(actual_pressure=Psi)
+  newdata$pred <- predict(vn.ns,newdata=newdata)
+  newdata$psi <- newdata$actual_pressure/-10
+  #---
+  
+  
+  #---
+  #- fit and predict off of the LWP data
+  dat2 <- subset(lwp.m,Species != "Pira")
+  set.seed(1234)
+  upper2 <- c(0.3,15,-0.01)
+  lower2 <- c(0.001,0.1,-10)
+  
+  DEoutput2 <- DEoptim(Cosby_optim,lower=lower2,upper=upper2,VWC=dat2$TDR,dat=dat2$LWP.pd,
+                      DEoptim.control(NP=400,itermax=200,trace=T))
+  bestpars2 <- DEoutput2$optim$bestmem
+  names(bestpars2) <- c("thetaSat","b","PsiE")
+  PsiSoil_best2 <- bestpars2[3]*(VWC/bestpars2[1])^(-1*bestpars2[2])
+  #---
+  
+  
   #- plot
   windows(12,12);par(cex.lab=1.5,cex.axis=1.5,mar=c(5,5,1,1))
-  plot(pressure_MPa_neg~VWC,data=curve,axes=F,pch=16,cex=1.5,ylim=c(-5,0),xlim=c(0,0.2),
-       ylab=expression(Soil~matrix~potential~(MPa)),xlab=expression(Volumetric~water~content~(theta~";"~m^3~m^-3)))
+  plot(pressure_MPa_neg~VWC,data=curve,axes=F,pch=1,cex=2,ylim=c(-10,0),xlim=c(0,0.2),
+       ylab=expression(Pre-dawn~leaf~or~soil~water~potential~(Psi~";"~MPa)),xlab=expression(Volumetric~water~content~(theta~";"~m^3~m^-3)))
+  plotBy(LWP.pd.mean~TDR.mean.mean|Species,data=lwp.mean,legend=F,add=T,pch=16,cex=2,
+         panel.first=adderrorbars(x=lwp.mean$TDR.mean.mean,y=lwp.mean$LWP.pd.mean,
+                                  SE=lwp.mean$LWP.pd.standard.error,direction="updown"))
+  
   magaxis(c(1:4),labels=c(1,1,0,0),las=1)
+  
+  #lines(PsiSoil_loglin~VWC,lty=1) # overlay fit of log-linearized soil data
   lines(PsiSoil_best~VWC,lty=1)
-  lines(PsiSoil~VWC,lty=2)
+  #lines(PsiSoil_best2~VWC,lty=2) #overlay fit of the pre-dawn data, excluding Pira?
+  lines(psi~pred,data=newdata,lty=2)
+  abline(h=0,lty=3)
   
-  legend("bottomright",lty=c(1,2),col="black",legend=c("Fit by DEoptim","Loamy sand, Duursma (2008)"),
-         cex=1.5)
+  #lines(PsiSoil~VWC,lty=2)
   
-  if(output==T) dev.copy2pdf(file="Output/FigureS2_moistureReleaseCurve.pdf")
+  legend(x=0.125,y=-7,lty=c(1,2),col="black",legend=c("Cosby","van Genutchen"),bty="n",cex=1.2)
+  legend(x=0.137,y=-7.8,pch=c(1,16,16,16,16),col=c("black","black","red","green3","blue")
+         ,legend=c("Soil measurement","Cacu","Eusi","Eute","Pira"),bty="n",cex=1.2)
+  
+  
+  if(output==T) dev.copy2pdf(file="Output/FigureS5_LWP_moistureReleaseCurve.pdf")
   
   return(bestpars)
 }

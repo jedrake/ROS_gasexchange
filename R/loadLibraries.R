@@ -40,6 +40,7 @@ Library(mgcv)
 Library(RColorBrewer)
 Library(readxl)
 Library(Agreement)
+Library(HydroMe)
 
 source("R/dataFunctions.R")
 source("R/plotFunctions.R")
