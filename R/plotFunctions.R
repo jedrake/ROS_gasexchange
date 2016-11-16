@@ -521,7 +521,7 @@ plotBetasG1NSL_LWP <- function(output=F,g1data,NSLdata,g1list,NSLlist){
     # plot model and SE from bootstrapping
     rm(newdat)
     newdat <- g1list[[2]][[i]]
-    newdat$LWP <- newdat$LWPpos-11
+    #newdat$LWP <- newdat$LWPpos-11
     lines(wpred~LWP,data=newdat)
     polygon(x = c(newdat$LWP, rev(newdat$LWP)), y = c(newdat$lower, rev(newdat$upper)),
             col = alpha("grey",0.5), border = NA,xpd=F)
@@ -543,8 +543,11 @@ plotBetasG1NSL_LWP <- function(output=F,g1data,NSLdata,g1list,NSLlist){
     if(i==1) title(main="Non-stomatal",cex.main=0.75,line=0.5,xpd=NA)
     
     newdat2 <- NSLlist[[2]][[i]]
-    newdat2$LWP <- newdat2$LWPpos-11
+    #newdat2$LWP <- newdat2$LWPpos-11
     
+    if (count %in% c(7,8)){
+      newdat2 <- subset(newdat2,LWP> -3)
+    }
     lines(wpred~LWP,data=newdat2)
     polygon(x = c(newdat2$LWP, rev(newdat2$LWP)), y = c(newdat2$lower, rev(newdat2$upper)), 
             col = alpha("grey",0.5), border = NA, xpd=F)
