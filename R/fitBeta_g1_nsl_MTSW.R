@@ -23,7 +23,7 @@ NSLpars <- summaryBy(NSL+Photo+Cond+Ci+TDR~Species+gxDate+Treat,data=NSL,FUN=mea
 # fit g1 first
 
 dat <- g1values
-dat$TSW <- (dat$TDR)/(max(dat$TDR)-min(dat$TDR)) # normalize TDR data to estimate the transpirable soil water
+dat$TSW <- (dat$TDR-0)/(0.38-0) # normalize TDR data to estimate the transpirable soil water
 type="g1"
 startlist = list(Xlow = 0.0, Xhigh=0.5, q = 0.4)
 #- split into list of species
@@ -96,7 +96,7 @@ g1_TDR_beta.TSW <- list(fit.spg1.TSW,newdatg1.TSW)
 # fit NSL next 
 
 dat <- NSLpars
-dat$TSW <- (dat$TDR)/(max(dat$TDR)-min(dat$TDR)) # normalize TDR data to estimate the transpirable soil water
+dat$TSW <- (dat$TDR-0)/(0.38-0) # normalize TDR data to estimate the transpirable soil water
 
 type="NSL"
 startlist= list(Xlow = 0.001, Xhigh=0.4, q = 1)

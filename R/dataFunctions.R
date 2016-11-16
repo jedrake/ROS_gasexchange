@@ -813,6 +813,57 @@ writeBetaParams <- function(){
 
 
 
+#---------------------------------------------------------------------------------------------------------------------
+#- Function to write-out a CSV file of the table of parameter values for Table S2
+#---------------------------------------------------------------------------------------------------------------------
+writeBetaParams.mtsw <- function(){
+  #- extract summary tables of beta models for g1 and VWC
+  summaries <- lapply(c(g1_TDR_beta.TSW[[1]]),summary)
+  df1 <- data.frame(summaries[[1]]$coefficients[,1:2])
+  df2 <- data.frame(summaries[[2]]$coefficients[,1:2])
+  df3 <- data.frame(summaries[[3]]$coefficients[,1:2])
+  df4 <- data.frame(summaries[[4]]$coefficients[,1:2])
+
+  
+  #- extract vectors of parameters and se's
+  vals1 <- paste(sprintf("%.2f",round(df1$Estimate,2))," (",sprintf("%.2f",round(df1$Std..Error,2)),")",sep="")
+  vals2 <- paste(sprintf("%.2f",round(df2$Estimate,2))," (",sprintf("%.2f",round(df2$Std..Error,2)),")",sep="")
+  vals3 <- paste(sprintf("%.2f",round(df3$Estimate,2))," (",sprintf("%.2f",round(df3$Std..Error,2)),")",sep="")
+  vals4 <- paste(sprintf("%.2f",round(df4$Estimate,2))," (",sprintf("%.2f",round(df4$Std..Error,2)),")",sep="")
+  g1table <- data.frame(rbind(vals1,vals2,vals3,vals4),
+                        row.names=c("Cacu","Eusi","Eute","Pira"))
+  names(g1table) <- c("Xo","Xh","q")
+  g1table$Xvar <- c(rep("MTSW",4))
+  g1table$Yvar <- "g1"
+  
+  #---
+  #- extract summary tables of beta models for NSL
+  summaries2 <- lapply(c(NSL_TDR_beta.TSW[[1]]),summary)
+  df1 <- data.frame(summaries2[[1]]$coefficients[,1:2])
+  df2 <- data.frame(summaries2[[2]]$coefficients[,1:2])
+  df3 <- data.frame(summaries2[[3]]$coefficients[,1:2])
+  df4 <- data.frame(summaries2[[4]]$coefficients[,1:2])
+  
+  #- extract vectors of parameters and se's
+  vals1 <- paste(sprintf("%.2f",round(df1$Estimate,2))," (",sprintf("%.2f",round(df1$Std..Error,2)),")",sep="")
+  vals2 <- paste(sprintf("%.2f",round(df2$Estimate,2))," (",sprintf("%.2f",round(df2$Std..Error,2)),")",sep="")
+  vals3 <- paste(sprintf("%.2f",round(df3$Estimate,2))," (",sprintf("%.2f",round(df3$Std..Error,2)),")",sep="")
+  vals4 <- paste(sprintf("%.2f",round(df4$Estimate,2))," (",sprintf("%.2f",round(df4$Std..Error,2)),")",sep="")
+  NSLtable <- data.frame(rbind(vals1,vals2,vals3,vals4),
+                         row.names=c("Cacu","Eusi","Eute","Pira"))
+  names(NSLtable) <- c("Xo","Xh","q")
+  NSLtable$Xvar <- c(rep("MTSW",4))
+  NSLtable$Yvar <- "A/Ae"
+  
+  table <- rbind(g1table,NSLtable)[,c(4:5,1:3)]
+  write.csv(table,"Output/tableS2.csv",row.names=T)
+}
+#-------------------------------------------------------------------------------------------------------
+
+
+
+
+
 
 
 #------------------------------------------------------------------------------------------------------
