@@ -160,8 +160,8 @@ returnVcmaxa <- function(){
   ros2 <- return.gx.vwc()
   
   #- remove gx data in ros2 where Ci < 5 or Ci > 800
-  #ros3 <- subset(ros2,Ci>5 & Ci<1000)
-  ros3 <- ros2
+  ros3 <- subset(ros2,Ci>5 & Ci<1000)
+  #ros3 <- ros2
   
   #- define function to return Vcmax based on a single point A:Ci curve as in Zhou et al. 2013 Tree Phys.
   returnVcmax <- function(A,Ci,Tleaf){
@@ -260,6 +260,8 @@ returnVcmaxa <- function(){
   #- NA fill a few very crazy points
   ros4[which(ros4$NSL < -1.5),"NSL"] <- NA
   ros4[which(ros4$NSL > 1.5),"NSL"] <- NA
+  
+  subset(ros4,gxDate==as.Date("2013-04-04") & Species=="pira" & Treat=="dry")
   
   ros5 <- ros4[complete.cases(ros4),]
   
