@@ -20,10 +20,52 @@ dat.all <- subset(dat.all2[,c("Species","Treat","Pot","Date","Photo","Cond","Trm
 
 
 
+# 
+# #------------------------------------------------------------------------------------------------------------------
+# #- fit weibull to the dependence of K on psi-md
+# dat.all$weibullY <-with(dat.all,Trmmol/(LWP.pd-LWP.md)) 
+# 
+# #- fix a few outliers
+# dat.weibull <- subset(dat.all,weibullY > 0 & weibullY < 15)
+# dat.weibull[which(dat.weibull$LWP.pd < -6 & dat.weibull$weibullY >5),"weibullY"] <- NA
+# dat.weibull[which(dat.weibull$LWP.md < -1.5 & dat.weibull$weibullY >10 & dat.weibull$Species=="eute"),"weibullY"] <- NA
+# dat.weibull[which(dat.weibull$LWP.md == -0.4 & dat.weibull$Species=="eusi"),"weibullY"] <- NA
+# 
+# 
+# #- fit nls model to estimate the parameters of the weibull
+# Kfn <- function(LWP.pd,Kmax,b,c)Kmax*exp(-((-1*LWP.pd/b)^c))
+# dat.weibull.l <- split(dat.weibull,dat.weibull$Species)
+# nlsfit <- w.params <- list()
+# for (i in 1:length(dat.weibull.l)){
+#   tofit <- dat.weibull.l[[i]][complete.cases(dat.weibull.l[[i]]),]
+#   #plot(weibullY~LWP.md,data=tofit)
+#   nlsfit[[i]] <- nls(weibullY ~ Kfn(LWP.pd,Kmax,b,c),algorithm="port",
+#                 data=tofit,lower=c(0,0.02,0.02),upper=c(35,12,12),
+#                 start=list(Kmax=15, b=1.2,c=1.2))
+#   w.params[[i]] <- coef(nlsfit[[i]])
+# }
+# w.params.df <- data.frame(do.call(rbind,w.params))
+# w.params.df$Species <- levels(dat.weibull$Species)
+# 
+# #- plot, overlay predictions
+# plotBy(weibullY~LWP.pd|Species,dat=dat.weibull,ylab="Trmmol/(LWP.pd-lwp.md)")
+# xval <- seq(from=-10,to=-0.2,length.out=101)
+# lines(w.params.df[1,"Kmax"]*exp(-((-1*xval/w.params.df[1,"b"])^w.params.df[1,"c"]))~xval,col="black")
+# lines(w.params.df[2,"Kmax"]*exp(-((-1*xval/w.params.df[2,"b"])^w.params.df[2,"c"]))~xval,col="red")
+# lines(w.params.df[3,"Kmax"]*exp(-((-1*xval/w.params.df[3,"b"])^w.params.df[3,"c"]))~xval,col="green3")
+# lines(w.params.df[4,"Kmax"]*exp(-((-1*xval/w.params.df[4,"b"])^w.params.df[4,"c"]))~xval,col="blue")
+
+#------------------------------------------------------------------------------------------------------------------
+
+
 
 #------------------------------------------------------------------------------------------------------------------
 #- set default parameter values
 g1 <- 15
+
+#- set fit flag. If fit=="means", the code will fit to the date-means of the data. This is much quicker!
+#                If fit=="obs", the code will fit to all of the individual observations. This is slow.
+fit = "obs"
 #------------------------------------------------------------------------------------------------------------------
 
 
@@ -74,10 +116,17 @@ tuzets.cost <- function(pars,dat,fit=1,g1=15,Vcmax=80,Jmax=120,adjVcmax=0,adjK=0
   
   
   #- calculate the data-model mismatch. Attempt to weight each equally by dividing by the maximum value
-  max.Gs <- max(c(out$GS,dat$Cond))
-  max.A <- max(c(out$ALEAF,dat$Photo))
-  max.E <- max(c(out$ELEAF,dat$Trmmol))
-  max.psi <- min(c(dat$LWP.md))
+  #max.Gs <- max(c(out$GS,dat$Cond))
+  #max.A <- max(c(out$ALEAF,dat$Photo))
+  #max.E <- max(c(out$ELEAF,dat$Trmmol))
+  #ax.psi <- min(c(dat$LWP.md))
+  
+  #- Belinda suggested to weight by the standard deviation, rather than the maximum
+  max.Gs <- sd(dat$Cond)
+  max.A <- sd(dat$Photo)
+  max.E <- sd(dat$Trmmol)
+  max.psi <- sd(dat$LWP.md)
+  
   
   resid.gs <- ((out$GS - dat$Cond)/max.Gs)^2
   resid.A <- ((out$ALEAF - dat$Photo)/max.A)^2
@@ -100,13 +149,23 @@ tuzets.cost <- function(pars,dat,fit=1,g1=15,Vcmax=80,Jmax=120,adjVcmax=0,adjK=0
 #------------------------------------------------------------------------------------------------------------------
 #- set up model estimate for a selected species
 dat.all <- dat.all[complete.cases(dat.all),]
-
-
-#- base model predictions on the mean across dates
 dat.m <- summaryBy(.~Species+Treat+Date,FUN=mean,keep.names=T,data=dat.all)
 
-dat.list <- split(dat.m,dat.m$Species)
+#- fit based on date-means
+if (fit == "means"){
+  dat.list <- split(dat.m,dat.m$Species)
+}
 
+#- or, fit to the original observations
+if (fit == "obs"){
+  dat.list <- split(dat.all,dat.all$Species)
+}
+#------------------------------------------------------------------------------------------------------------------
+
+
+
+
+#------------------------------------------------------------------------------------------------------------------
 #- define lower and upper limits of parameter estimates
 # pars are psiv, SF, K, b, and c
 lower <- c(-4,1,5,1,0.5) # changed minimum Kmax from 2 to 5
@@ -117,6 +176,10 @@ maxiter <- 30
 
 #- set seed for repeatability
 set.seed(1234)
+#------------------------------------------------------------------------------------------------------------------
+
+
+
 
 #------------------------------------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------------------------------------
@@ -168,41 +231,41 @@ plot(do.call(rbind,DEpred)$GS~dat.m$Cond);abline(0,1)
 #------------------------------------------------------------------------------------------------------------------
 #- this time, model with a change in Vcmax with decreasing TDR
 
-DEfit.nsl <- DEfit.best.nsl <- DEpred.nsl <- list()
-for (i in 1:length(dat.list)){
-  tofit <- dat.list[[i]]
-
-  #- fit the model, extract the best parameters, and rerun the model to get the predicted values
-  DEfit.nsl[[i]] <- DEoptim(fn=tuzets.cost,lower=lower,upper=upper,dat=tofit,g1=g1,Vcmax=80,Jmax=1.2*80,adjVcmax=1,adjK=1,
-                        fit=1,DEoptim.control(NP = NPmax,itermax=maxiter)) #perhaps adjust reltol, NP=20, itermax = 100
-  DEfit.best.nsl[[i]] <- unname(DEfit.nsl[[i]]$optim$bestmem)
-  DEpred.nsl[[i]] <- tuzets.cost(pars=DEfit.best.nsl[[i]],dat=tofit,fit=0,g1=5,Vcmax=80,Jmax=1.2*80,adjVcmax=1,adjK=1)
-  DEpred.nsl[[i]]$Species <- tofit$Species[1]
-  DEpred.nsl[[i]]$Date <- tofit$Date
-
-}
-
-
-#------------------------------------------------------------
-#- plot simulated Photo vs. conductance relative to observed
-plot(Photo~Cond,data=dat.m,pch=16,ylim=c(0,30))
-points(ALEAF~GS,data=do.call(rbind,DEpred.nsl))
-legend("topleft",legend=c("Data","Model"),pch=c(16,1))
-
-plot(Cond~TDR,data=dat.m,pch=16,ylim=c(0,0.6))
-points(do.call(rbind,DEpred.nsl)$GS~dat.m$TDR)
-legend("topleft",legend=c("Data","Model"),pch=c(16,1))
-
-
-plot(Photo~LWP.md,data=dat.m,pch=16,ylim=c(0,30))
-points(ALEAF~PSIL,data=do.call(rbind,DEpred.nsl))
-legend("topleft",legend=c("Data","Model"),pch=c(16,1))
-
-plot(do.call(rbind,DEpred.nsl)$PSILIN~dat.m$LWP.md)
-abline(0,1)
-
-plot(do.call(rbind,DEpred.nsl)$ALEAF~dat.m$Photo)
-abline(0,1)
+# DEfit.nsl <- DEfit.best.nsl <- DEpred.nsl <- list()
+# for (i in 1:length(dat.list)){
+#   tofit <- dat.list[[i]]
+# 
+#   #- fit the model, extract the best parameters, and rerun the model to get the predicted values
+#   DEfit.nsl[[i]] <- DEoptim(fn=tuzets.cost,lower=lower,upper=upper,dat=tofit,g1=g1,Vcmax=80,Jmax=1.2*80,adjVcmax=1,adjK=1,
+#                         fit=1,DEoptim.control(NP = NPmax,itermax=maxiter)) #perhaps adjust reltol, NP=20, itermax = 100
+#   DEfit.best.nsl[[i]] <- unname(DEfit.nsl[[i]]$optim$bestmem)
+#   DEpred.nsl[[i]] <- tuzets.cost(pars=DEfit.best.nsl[[i]],dat=tofit,fit=0,g1=5,Vcmax=80,Jmax=1.2*80,adjVcmax=1,adjK=1)
+#   DEpred.nsl[[i]]$Species <- tofit$Species[1]
+#   DEpred.nsl[[i]]$Date <- tofit$Date
+# 
+# }
+# 
+# 
+# #------------------------------------------------------------
+# #- plot simulated Photo vs. conductance relative to observed
+# plot(Photo~Cond,data=dat.m,pch=16,ylim=c(0,30))
+# points(ALEAF~GS,data=do.call(rbind,DEpred.nsl))
+# legend("topleft",legend=c("Data","Model"),pch=c(16,1))
+# 
+# plot(Cond~TDR,data=dat.m,pch=16,ylim=c(0,0.6))
+# points(do.call(rbind,DEpred.nsl)$GS~dat.m$TDR)
+# legend("topleft",legend=c("Data","Model"),pch=c(16,1))
+# 
+# 
+# plot(Photo~LWP.md,data=dat.m,pch=16,ylim=c(0,30))
+# points(ALEAF~PSIL,data=do.call(rbind,DEpred.nsl))
+# legend("topleft",legend=c("Data","Model"),pch=c(16,1))
+# 
+# plot(do.call(rbind,DEpred.nsl)$PSILIN~dat.m$LWP.md)
+# abline(0,1)
+# 
+# plot(do.call(rbind,DEpred.nsl)$ALEAF~dat.m$Photo)
+# abline(0,1)
 #------------------------------------------------------------
 
 
@@ -212,12 +275,20 @@ abline(0,1)
 
 #- params with and without Vcmax change
 do.call(rbind,DEfit.best)
-#[,1]     [,2]      [,3]     [,4]     [,5]
-#[1,] -0.2125533 2.542462  8.141746 9.682280 1.967474
-#[2,] -0.3292742 3.016838 10.165586 6.975230 8.415723
-#[3,] -0.6344223 1.022497  2.067016 4.835100 8.317857
-#[4,] -0.9193939 7.643572  6.098798 2.296245 1.403473
-do.call(rbind,DEfit.best.nsl)
+#[,1]     [,2]     [,3]     [,4]      [,5]
+#[1,] -0.7205135 1.588071 8.232675 1.731382 0.7231252
+#[2,] -1.1782349 2.501997 8.343412 2.119356 0.7382050
+#[3,] -0.5745037 1.040735 5.511463 4.358329 5.4250558
+#[4,] -1.0215724 9.650558 9.609421 1.209209 1.4094424
+
+#- these parameters reflect fits to the original raw data, on 16 Nov 2016
+# [,1]     [,2]     [,3]     [,4]      [,5]
+# [1,] -0.6083716 1.766754 8.109068 2.303754 0.9281433
+# [2,] -1.3032193 2.879621 5.749458 5.685605 1.0945223
+# [3,] -1.0602023 1.570674 5.203427 5.895768 1.8627471
+# [4,] -1.0651498 6.275188 7.895306 1.706681 2.2118174
+
+#do.call(rbind,DEfit.best.nsl)
 #[1,] -2.671953 24.875104 7.132115
 #[2,] -2.574391  1.465136 5.349148
 #[3,] -3.033131 24.788989 6.328085
