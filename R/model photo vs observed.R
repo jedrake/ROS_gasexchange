@@ -1,5 +1,5 @@
 #------------------------------------------------------------------------------------------------------------------
-#- Script to make a big figure of predicted vs. observed photosynthetic rates for the six model frameworks
+#- Script to make a big figure of predicted vs. observed photosynthetic rates for all of the model frameworks
 #------------------------------------------------------------------------------------------------------------------
 
 
@@ -7,7 +7,8 @@
 
 #------------------------------------------------------------------------------------------------------------------
 #- get the gas exchange, VWC, and LWP data
-dat.all2 <- return.gx.vwc.lwp()
+dat.all <- return.gx.vwc.lwp()
+dat.all2 <- subset(dat.all,!(gxDate %in% as.Date(c("2012-10-04","2012-10-31"))))
 
 #- subset to just the variables I want, to make things a little easier
 dat.all <- dat.all2[,c("Species","Treat","Pot","Date","Photo","Cond","VpdL","Tleaf","CO2S","PARi","LWP.pd","LWP.md","TDR")]
@@ -114,10 +115,11 @@ dat.all3[,c("P_lwp_sns","Gs_lwp_sns")] <- Photosyn(VPD=dat.all3$VpdL,Ca=dat.all3
 
 
 #- Tuzet alone
-dat.all3[,c("P_tuzet_s","Gs_tuzet_s")] <- photosyn(SF=dat.all3$Sf, PSIV=dat.all3$psiv, G0=0.005, VCMAX=80,G1=5,K=dat.all3$K,
+dat.all3[,c("P_tuzet_s","Gs_tuzet_s")] <- photosyn(SF=dat.all3$Sf, PSIV=dat.all3$psiv, G0=0.005, VCMAX=80,JMAX=128,G1=15,
+                                                   K=dat.all3$K*exp(-((-1*dat.all3$LWP.pd/dat.all3$b)^dat.all3$c)),
                 CS=dat.all3$CO2S,WEIGHTEDSWP=dat.all3$LWP.pd, VPD=dat.all3$VpdL,PAR=dat.all3$PARi,TLEAF=dat.all3$Tleaf)[,c("ALEAF","GS")]
-dat.all3[,c("P_tuzet_sns","Gs_tuzet_sns")] <- photosyn(SF=dat.all3$Sf, PSIV=dat.all3$psiv, G0=0.005,G1=5,K=dat.all3$K,
-                                 VCMAX=(79*dat.all3$Beta_lwp_ns+1),JMAX=(1.6*79*dat.all3$Beta_lwp_ns+1),
+dat.all3[,c("P_tuzet_sns","Gs_tuzet_sns")] <- photosyn(SF=dat.all3$Sf, PSIV=dat.all3$psiv, G0=0.005,G1=15,K=dat.all3$K,
+                                 VCMAX=(79*dat.all3$Beta_lwp_ns+1),JMAX=(128*dat.all3$Beta_lwp_ns+1),
                                CS=dat.all3$CO2S,WEIGHTEDSWP=dat.all3$LWP.pd, VPD=dat.all3$VpdL,PAR=dat.all3$PARi,TLEAF=dat.all3$Tleaf)[,c("ALEAF","GS")]
 
 
@@ -264,8 +266,8 @@ par(mfrow=c(5,2),oma=c(6,9,4,3),mar=c(0,0,0,0),xpd=F)
 colors <- brewer.pal(4,"Set1")
 fitcol=alpha("darkgrey",0.8)
 textsize <- 1.7
-xlims <- c(-0.03,0.6)
-ylims <- c(-0.03,0.6)
+xlims <- c(-0.03,0.55)
+ylims <- c(-0.03,0.57)
 
 # #- plot null model (twice)
 # plot(dat.all3$Photo~dat.all3$Gs_null,xlim=xlims,ylim=ylims,axes=F,xlab="",ylab="");abline(0,1)
@@ -316,7 +318,8 @@ legend("topleft",legend= bquote(r^2 == .(r2val)),bty="n")
 #- plot B models with both
 plot(dat.all3$Cond~dat.all3$Gs_theta_sns,xlim=xlims,ylim=ylims,axes=F,xlab="",ylab="");abline(0,1)
 predline(lm(Cond~Gs_theta_sns,data=dat.all3),fittype="confidence",col=fitcol,xpd=T)
-magaxis(side=c(1,2,4),labels=c(1,1,0),frame.plot=T,las=1,tcl=0.3)
+magaxis(side=c(1,2,4),labels=c(0,1,0),frame.plot=T,las=1,tcl=0.3)
+axis(side=1,las=1,tcl=0.3,at=c(0,0.1,0.2,0.3,0.4))
 title(ylab=expression(beta[s+ns]),xpd=NA,cex.lab=textsize)
 legend("bottomright",letters[3],bty="n",cex=1.2)
 r2val <-round(summary(lm(Cond~Gs_theta_sns,data=dat.all3))$r.squared,2)
