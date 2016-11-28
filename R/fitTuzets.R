@@ -3,7 +3,12 @@
 #- This script is an attempt to fit the Tuzets model to the ROS data
 #------------------------------------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------------------------------------
-source("R/loadLibraries.R")
+
+
+
+
+
+
 
 
 
@@ -23,7 +28,7 @@ dat.all <- subset(dat.all2[,c("Species","Treat","Pot","Date","Photo","Cond","Trm
 # 
 # #------------------------------------------------------------------------------------------------------------------
 # #- fit weibull to the dependence of K on psi-md
-# dat.all$weibullY <-with(dat.all,Trmmol/(LWP.pd-LWP.md)) 
+# dat.all$weibullY <-with(dat.all,Trmmol/(LWP.pd-LWP.md))
 # 
 # #- fix a few outliers
 # dat.weibull <- subset(dat.all,weibullY > 0 & weibullY < 15)
@@ -48,7 +53,8 @@ dat.all <- subset(dat.all2[,c("Species","Treat","Pot","Date","Photo","Cond","Trm
 # w.params.df$Species <- levels(dat.weibull$Species)
 # 
 # #- plot, overlay predictions
-# plotBy(weibullY~LWP.pd|Species,dat=dat.weibull,ylab="Trmmol/(LWP.pd-lwp.md)")
+# dat.weibull$diffP <- with(dat.weibull,LWP.pd-LWP.md)
+# plotBy(weibullY~diffP|Species,dat=dat.weibull,ylab="Trmmol/(LWP.pd-lwp.md)",xlab="LWP.pd-LWP.md")
 # xval <- seq(from=-10,to=-0.2,length.out=101)
 # lines(w.params.df[1,"Kmax"]*exp(-((-1*xval/w.params.df[1,"b"])^w.params.df[1,"c"]))~xval,col="black")
 # lines(w.params.df[2,"Kmax"]*exp(-((-1*xval/w.params.df[2,"b"])^w.params.df[2,"c"]))~xval,col="red")
@@ -121,7 +127,7 @@ tuzets.cost <- function(pars,dat,fit=1,g1=15,Vcmax=80,Jmax=120,adjVcmax=0,adjK=0
   #max.E <- max(c(out$ELEAF,dat$Trmmol))
   #ax.psi <- min(c(dat$LWP.md))
   
-  #- Belinda suggested to weight by the standard deviation, rather than the maximum
+  #- Belinda suggested to weight by the standard deviation, rather than the maximum. It doesn't really matter.
   max.Gs <- sd(dat$Cond)
   max.A <- sd(dat$Photo)
   max.E <- sd(dat$Trmmol)
@@ -209,7 +215,6 @@ points(ALEAF~GS,data=do.call(rbind,DEpred))
 legend("topleft",legend=c("Data","Model"),pch=c(16,1))
 
 plot(Cond~TDR,data=dat.m,pch=16,ylim=c(0,0.6))
-points(do.call(rbind,DEpred)$GS~dat.m$TDR)
 legend("topleft",legend=c("Data","Model"),pch=c(16,1))
 
 
@@ -275,18 +280,13 @@ plot(do.call(rbind,DEpred)$GS~dat.m$Cond);abline(0,1)
 
 #- params with and without Vcmax change
 do.call(rbind,DEfit.best)
-#[,1]     [,2]     [,3]     [,4]      [,5]
-#[1,] -0.7205135 1.588071 8.232675 1.731382 0.7231252
-#[2,] -1.1782349 2.501997 8.343412 2.119356 0.7382050
-#[3,] -0.5745037 1.040735 5.511463 4.358329 5.4250558
-#[4,] -1.0215724 9.650558 9.609421 1.209209 1.4094424
 
 #- these parameters reflect fits to the original raw data, on 16 Nov 2016
-# [,1]     [,2]     [,3]     [,4]      [,5]
-# [1,] -0.6083716 1.766754 8.109068 2.303754 0.9281433
-# [2,] -1.3032193 2.879621 5.749458 5.685605 1.0945223
-# [3,] -1.0602023 1.570674 5.203427 5.895768 1.8627471
-# [4,] -1.0651498 6.275188 7.895306 1.706681 2.2118174
+#[,1]      [,2]     [,3]     [,4]      [,5]
+#[1,] -0.5196160  1.683261 8.447778 2.138830 0.9636841
+#[2,] -1.3292208  2.936315 5.972704 5.822028 0.8249170
+#[3,] -0.9525003  1.486780 5.375039 5.928552 1.5075884
+#[4,] -1.0615180 10.082649 7.761226 1.807628 2.5739230
 
 #do.call(rbind,DEfit.best.nsl)
 #[1,] -2.671953 24.875104 7.132115
@@ -360,9 +360,9 @@ legend("topright",letters[2],bty="n",cex=1.1,inset=0.02)
 
 #------------------------------------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------------------------------------
-#- write out the parameters for table 2
+#- write out the parameters for table 3
 params1 <- data.frame(Species = c("cacu","eusi","eute","pira"),do.call(rbind,DEfit.best))
 names(params1)[2:6] <- c("psiv","Sf","K","b","c")
-write.csv(params1,"Output/table2.csv",row.names=F)
+write.csv(params1,"Output/table3.csv",row.names=F)
 #------------------------------------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------------------------------------
