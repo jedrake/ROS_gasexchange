@@ -815,7 +815,7 @@ writeBetaParams <- function(){
 #-----------------------------------------------------------------------------------------------------------
 #- Function to write-out a CSV file of the table of parameter values of the exponential model
 #---------------------------------------------------------------------------------------------------------------------
-writeBetaParams <- function(){
+writeExpParams <- function(){
   #- extract summary tables of beta models for g1 and VWC
   summaries <- lapply(c(g1_TDR_beta2[[1]],NSL_TDR_beta2[[1]]),summary)
   df1 <- data.frame(summaries[[1]]$coefficients[,1:2])
