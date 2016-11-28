@@ -737,7 +737,7 @@ plotMoistCurve <- function(output=F){
   
   #lines(PsiSoil~VWC,lty=2)
   
-  legend(x=0.125,y=-7,lty=c(1,2),col="black",legend=c("Cosby","van Genutchen"),bty="n",cex=1.2)
+  legend(x=0.125,y=-7,lty=c(1,2),col="black",legend=c("Cosby","van Genuchten"),bty="n",cex=1.2)
   legend(x=0.137,y=-7.8,pch=c(1,16,16,16,16),col=c("black","black","red","green3","blue")
          ,legend=c("Soil measurement","Cacu","Eusi","Eute","Pira"),bty="n",cex=1.2)
   
@@ -864,7 +864,7 @@ plotd13C_gx <- function(output=F,ptsize=1.8){
   magaxis(side=c(2,4),labels=c(1,0),frame.plot=T,las=1)
   text(x=c(1.25,3.7,6.1,8.5),y=17.5,xpd=T,labels=c("Cacu","Eusi","Eute","Pira"),cex=1.5)
   title(ylab=expression(Delta~"*"~10^3),cex.lab=1.5,line=1.8)
-  legend("topright",xpd=NA,legend=c("Wet","Dry"),fill=c("darkgrey","white"),bty="n",ncol=1,cex=1.5)
+  legend("topright",xpd=NA,legend=c("Dry","Wet"),fill=c("darkgrey","white"),bty="n",ncol=1,cex=1.5)
   legend("topleft","b",bty="n",cex=1.5)
   title(xlab="Species",cex.lab=2,line=3.5)
   if(output==T) dev.copy2pdf(file="Output/Figure6_d13C_WUE.pdf")
