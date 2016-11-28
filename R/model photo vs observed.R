@@ -18,36 +18,66 @@ dat.all <- dat.all[complete.cases(dat.all),]
 
 
 #------------------------------------------------------------------------------------------------------------------
+#- read in parameters, process them.
+
+#------
 #- read in the parameter values from table1.csv
 params1 <- read.csv("Output/table1.csv")
-params1$Species <- factor(rep(c("cacu","eusi","eute","pira"),4))
-params1$Yvar <- factor(c(rep("s",8),rep("ns",8)))
-params1$Xvar <- factor(c(rep("theta",4),rep("lwp",4),rep("theta",4),rep("lwp",4)))
+params1$Species <- factor(rep(c("cacu","eusi","eute","pira"),2))
+params1$Yvar <- factor(c(rep("s",4),rep("ns",4)))
+params1$Xvar <- factor(c(rep("theta",8)))
 params1$Xo <- as.numeric(substr(params1$Xo,start=1,stop=4))
 params1$Xh <- as.numeric(substr(params1$Xh,start=1,stop=4))
 params1$q <- as.numeric(substr(params1$q,start=1,stop=4))
 
 #- get the low parameter
 params_Xo <- reshape2::dcast(params1,Species~Xvar+Yvar,value.var="Xo")
-names(params_Xo)[2:5] <- paste("Xl",names(params_Xo)[2:5],sep="_")
+names(params_Xo)[2:3] <- paste("Xl",names(params_Xo)[2:3],sep="_")
 
 #- get the high parameter
 params_Xh <- reshape2::dcast(params1,Species~Xvar+Yvar,value.var="Xh")
-names(params_Xh)[2:5] <- paste("Xh",names(params_Xh)[2:5],sep="_")
+names(params_Xh)[2:3] <- paste("Xh",names(params_Xh)[2:3],sep="_")
 
 #- get the q parameter
 params_q <- reshape2::dcast(params1,Species~Xvar+Yvar,value.var="q")
-names(params_q)[2:5] <- paste("q",names(params_q)[2:5],sep="_")
+names(params_q)[2:3] <- paste("q",names(params_q)[2:3],sep="_")
 
 params2 <- merge(params_Xo,params_Xh,by="Species")
 params3 <- merge(params2,params_q,by="Species")
+#------
+
+
+
+#------
+#- do the same, but for the exponential parameters in Table 2
+#- read in the parameter values from table1.csv
+eparams1 <- read.csv("Output/table2.csv")
+eparams1$Species <- factor(rep(c("cacu","eusi","eute","pira"),2))
+eparams1$Yvar <- factor(c(rep("s",4),rep("ns",4)))
+eparams1$Xvar <- factor(c(rep("lwp",8)))
+eparams1$a <- as.numeric(substr(eparams1$a,start=1,stop=4))
+eparams1$b <- as.numeric(substr(eparams1$b,start=1,stop=4))
+
+#- get the a parameter
+params_a <- reshape2::dcast(eparams1,Species~Xvar+Yvar,value.var="a")
+names(params_a)[2:3] <- paste("a",names(params_a)[2:3],sep="_")
+
+#- get the b parameter
+params_b <- reshape2::dcast(eparams1,Species~Xvar+Yvar,value.var="b")
+names(params_b)[2:3] <- paste("b",names(params_b)[2:3],sep="_")
+
+eparams2 <- merge(params_a,params_b,by="Species")
+params4 <- merge(params3,eparams2,by="Species")
+
+#------
+
 
 
 # read in the tuzet parameters
-params.tz <- read.csv("Output/table2.csv")
+params.tz <- read.csv("Output/table3.csv")
 
 #- merge parameters together
-params <- merge(params3,params.tz,by="Species")
+params <- merge(params4,params.tz,by="Species")
 #------------------------------------------------------------------------------------------------------------------
 
 
@@ -58,24 +88,27 @@ dat.all3 <- merge(dat.all,params,by="Species")
 #- calculate the beta terms
 dat.all3$Beta_theta_s <- with(dat.all3, ((TDR-Xl_theta_s)/(Xh_theta_s-Xl_theta_s))^q_theta_s)
 dat.all3$Beta_theta_ns <- with(dat.all3, ((TDR-Xl_theta_ns)/(Xh_theta_ns-Xl_theta_ns))^q_theta_ns)
-dat.all3$Beta_lwp_s <- with(dat.all3, ((LWP.pd-Xl_lwp_s)/(Xh_lwp_s-Xl_lwp_s))^q_lwp_s)
-dat.all3$Beta_lwp_ns <- with(dat.all3, ((LWP.pd-Xl_lwp_ns)/(Xh_lwp_ns-Xl_lwp_ns))^q_lwp_ns)
+#dat.all3$Beta_lwp_s <- with(dat.all3, ((LWP.pd-Xl_lwp_s)/(Xh_lwp_s-Xl_lwp_s))^q_lwp_s)
+#dat.all3$Beta_lwp_ns <- with(dat.all3, ((LWP.pd-Xl_lwp_ns)/(Xh_lwp_ns-Xl_lwp_ns))^q_lwp_ns)
+dat.all3$Beta_lwp_s <- with(dat.all3, a_lwp_s*exp(b_lwp_s*LWP.pd)/a_lwp_s)
+dat.all3$Beta_lwp_ns <- with(dat.all3, a_lwp_ns*exp(b_lwp_ns*LWP.pd)/a_lwp_ns)
+
 
 #- convert Beta values >1 to 1
 dat.all3$Beta_theta_s[which(dat.all3$Beta_theta_s >1)] <- 1
 dat.all3$Beta_theta_ns[which(dat.all3$Beta_theta_ns >1)] <- 1
-dat.all3$Beta_lwp_s[which(dat.all3$Beta_lwp_s >1)] <- 1
-dat.all3$Beta_lwp_ns[which(dat.all3$Beta_lwp_ns >1)] <- 1
+#dat.all3$Beta_lwp_s[which(dat.all3$Beta_lwp_s >1)] <- 1
+#dat.all3$Beta_lwp_ns[which(dat.all3$Beta_lwp_ns >1)] <- 1
 
 
 
 #- convert values lower than Xl with zero
 dat.all3$Beta_theta_s[which(dat.all3$TDR < dat.all3$Xl_theta_s)] <- 0
 dat.all3$Beta_theta_ns[which(dat.all3$TDR < dat.all3$Xl_theta_ns)] <- 0
-dat.all3$Beta_lwp_s[which(dat.all3$LWP < dat.all3$Xl_lwp_s )] <- 0
-dat.all3$Beta_lwp_ns[which(dat.all3$LWP < dat.all3$Xl_lwp_ns )] <- 0
+#dat.all3$Beta_lwp_s[which(dat.all3$LWP < dat.all3$Xl_lwp_s )] <- 0
+#dat.all3$Beta_lwp_ns[which(dat.all3$LWP < dat.all3$Xl_lwp_ns )] <- 0
 
-dat.all3 <- dat.all3[complete.cases(dat.all3),] # remove 10 points with missing data
+#dat.all3 <- dat.all3[complete.cases(dat.all3),] # remove 10 points with missing data
 #- convert a very few NA's to zero
 #dat.all3$Beta_lwp_ns[which(is.na(dat.all3$Beta_lwp_ns))]  <- 0
 #------------------------------------------------------------------------------------------------------------------
@@ -222,7 +255,7 @@ title(xlab=expression("Predicted"~A[sat]~(mu*mol~m^-2~s^-1)),outer=T,cex.lab=2)
 title(ylab=expression("Observed"~A[sat]~(mu*mol~m^-2~s^-1)),outer=T,cex.lab=2,line=5)
 
 #-- calculate concordance correlation coefficients
-null <- summary(agreement(x=dat.all3$Photo,y=dat.all3$P_null,error="constant",TDI_a=20,target="fixed"))
+#null <- summary(agreement(x=dat.all3$Photo,y=dat.all3$P_null,error="constant",TDI_a=20,target="fixed"))
 beta_s_theta <- summary(agreement(x=dat.all3$Photo,y=dat.all3$P_theta_s,error="constant",TDI_a=20,target="fixed"))
 beta_s_lwp <- summary(agreement(x=dat.all3$Photo,y=dat.all3$P_lwp_s,error="constant",TDI_a=20,target="fixed"))
 beta_ns_theta <- summary(agreement(x=dat.all3$Photo,y=dat.all3$P_theta_ns,error="constant",TDI_a=20,target="fixed"))#### work from here
