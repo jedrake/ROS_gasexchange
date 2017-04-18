@@ -9,7 +9,7 @@
 
 
 #------------------------------------------------------------------------------------------------------------------
-#- load the libraries and scripts that do all of the actual work.
+#- load libraries and custom functions that do all of the data processing and plotting
 source("R/loadLibraries.R")
 #------------------------------------------------------------------------------------------------------------------
 
@@ -65,13 +65,15 @@ plotLWP(fillcol="lightgrey",size=1.75,output=T,labsize=1.8)
 #    Keep it as a script!
 source("R/fitBeta_g1_nsl.R")
 plotBetasG1NSL(output=T,g1data=g1values,NSLdata=NSLpars,g1list=g1_TDR_beta,NSLlist=NSL_TDR_beta)
+writeBetaParams()
 
 source("R/fitBeta_g1_nsl_LWP.R")
 plotBetasG1NSL_LWP(output=T,g1data=g1values2,NSLdata=NSLpars2,g1list=g1_TDR_beta2,NSLlist=NSL_TDR_beta2)
+writeExpParams()
 
 #- fit based on transpirable soil water
 source("R/fitBeta_g1_nsl_MTSW.R")
-plotBetasG1NSL.TSW(output=T,g1data=g1values,NSLdata=NSLpars,g1list=g1_TDR_beta.TSW,NSLlist=NSL_TDR_beta.TSW)
+#plotBetasG1NSL.TSW(output=T,g1data=g1values,NSLdata=NSLpars,g1list=g1_TDR_beta.TSW,NSLlist=NSL_TDR_beta.TSW)
 #-------------------------------------------------------------------------------------------------------
 
 
@@ -79,7 +81,7 @@ plotBetasG1NSL.TSW(output=T,g1data=g1values,NSLdata=NSLpars,g1list=g1_TDR_beta.T
 #-------------------------------------------------------------------------------------------------------
 #- make a table of the beta parameters and standard errors. This table is written out as a csv in "Output".
 #  After some manual manipulation, this becomes Table 1.
-writeBetaParams()
+writeBetaParams.mtsw()
 #-------------------------------------------------------------------------------------------------------
 
 

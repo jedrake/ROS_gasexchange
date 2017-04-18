@@ -982,6 +982,7 @@ plotGX_theta <- function(output=F,xlims = c(0,0.33),colors= brewer.pal(4,"Set1")
   lwp1 <- return.gx.vwc.lwp()
   lwp <- subset(lwp1,!(gxDate %in% as.Date(c("2012-10-04","2012-10-31"))))
   
+  
   # names(lwp)[3] <- "LWPdate"
   # lwp.pd <- subset(lwp,Type=="PD" & is.na(LWP)==FALSE)
   # lwp.pd$LWP <- -1*lwp.pd$LWP
@@ -1010,6 +1011,16 @@ plotGX_theta <- function(output=F,xlims = c(0,0.33),colors= brewer.pal(4,"Set1")
   ITE.trt <- summaryBy(Photo+Cond+ITE+WUE+TDR+Ci.Ca~gxDate+Species+Treat,data=ros,FUN=c(mean,standard.error), na.rm=TRUE)
   ITE.trt$TDR <- ITE.trt$TDR.mean
   ITE.trt.list <- split(ITE.trt,ITE.trt$Species)
+  
+  
+  
+  #----- extract average and sd's for text of results
+  #- wet soils
+  summaryBy(Photo.mean+Cond.mean+WUE.mean+Ci.Ca.mean~1,data=subset(ITE.trt,TDR.mean>0.25 & TDR.mean<0.35),FUN=c(mean,sd))
+  summaryBy(LWP.pd.mean+LWP.md.mean~1,data=subset(lwp.trt,TDR.mean>0.25 & TDR.mean<0.35),FUN=c(mean,sd))
+  #- dry soils
+  summaryBy(Photo.mean+Cond.mean+WUE.mean+Ci.Ca.mean~1,data=subset(ITE.trt, TDR.mean<0.03),FUN=c(mean,sd))
+  summaryBy(LWP.pd.mean+LWP.md.mean~Species,data=subset(lwp.trt,TDR.mean<0.03),FUN=c(mean,sd))
   
   
   
