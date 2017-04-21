@@ -385,6 +385,10 @@ return.gx.vwc <- function(){
   closestDate <- function(searchDate, dateList){
     dist2date <- abs(as.Date(dateList) - as.Date(searchDate))
     closest <- which(min(dist2date)==dist2date)
+    
+    if (length(closest) > 1){
+      closest <- closest[1]
+    }
     return(dateList[closest])
   }
   
