@@ -49,7 +49,7 @@ for (i in 1:length(dat.l)){
   dat.temp$LWP <- dat.temp$LWP.pd
   
   #- fit the model
-  if (type=="g1") dat.temp$Yval <- dat.temp$g1#/max(dat.temp$g1)
+  if (type=="g1") dat.temp$Yval <- dat.temp$g1/max(dat.temp$g1)
   if (type=="NSL") dat.temp$Yval <- dat.temp$NSL
   fit.sp[[i]] <- nls(Yval ~ ((LWPpos-Xlow)/(Xhigh-Xlow))^q,start=startlist,data=dat.temp,algorithm="port",
                      lower=c(1,6,1.5),upper=c(5,11,10))
@@ -59,7 +59,7 @@ for (i in 1:length(dat.l)){
   fit.sp.exp[[i]] <- nls(Yval ~ I(a * exp(b * (LWP))), data = dat.temp, start = list(a = 1, b = 0), trace = F)
   #plot(Yval~LWP.pd,data=dat.temp)
   #s = seq(from=-8,to=0,length.out=101)
-  #lines(s, predict(fit.sp.exp[[i]], list(LWP.pd = s)), col = "red")
+  #lines(s, predict(fit.sp.exp[[i]], list(LWP= s)), col = "red")
   #-----
   
   
@@ -70,7 +70,7 @@ for (i in 1:length(dat.l)){
   newdat[[i]]$wpred <- predict(fit.sp.exp[[i]],newdat[[i]],level=0,se.fit=T)
   
   
-  rm(b)
+  if(i>1)rm(b)
   b <- bootCase(fit.sp.exp[[i]],B=300)
   for(j in 1:nrow(newdat[[i]])){
     rm(b02)
@@ -117,8 +117,8 @@ for (i in 1:length(dat.l)){
   dat.temp$LWP <- dat.temp$LWP.pd
   
   #- fit the model
-  if (type=="g1") dat.temp$Yval <- dat.temp$g1#/max(dat.temp$g1)
-  if (type=="NSL") dat.temp$Yval <- dat.temp$Vcmax_a
+  if (type=="g1") dat.temp$Yval <- dat.temp$g1/max(dat.temp$g1)
+  if (type=="NSL") dat.temp$Yval <- dat.temp$Vcmax_a / max(dat.temp$Vcmax_a)
   #if (i <= 3) startlist = list(Xlow = 1, Xhigh=7, q = 3)
   
   #if(i <= 3)fit.sp[[i]] <- nls(Yval ~ ((LWPpos-Xlow)/(Xhigh-Xlow))^q,start=startlist,data=dat.temp,algorithm="port",trace=F,
@@ -144,7 +144,7 @@ for (i in 1:length(dat.l)){
   if (type=="NSL") newdat[[i]] <- expand.grid(Species=levels(dat.temp$Species), LWP=seq(from=-10,to=0,length.out=101),lower=NA,upper=NA)
   newdat[[i]]$wpred <- predict(fit.sp.exp[[i]],newdat[[i]],level=0,se.fit=T)
   
-  rm(b)
+  if(i>1)rm(b)
   b <- bootCase(fit.sp.exp[[i]],B=300)
   for(j in 1:nrow(newdat[[i]])){
     rm(b02)

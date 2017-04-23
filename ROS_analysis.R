@@ -33,7 +33,7 @@ plotVWC(ptsize=1.8,output=T,type="1panel") # can plot type="1panel" or "4panel"
 #- Plot photosynthetic variables relative to soil water content (Figure 2)
 plotGX_theta(output=T,xlims=c(0,0.33),colors= brewer.pal(5,"Accent")[c(1,2,3,5)])#c("yellow3","blue","forestgreen","red"))
 
-#- make a big 16-panel plot of photosynthetic variables over time (Figure S2).
+#- make a big 16-panel plot of photosynthetic variables over time (Figure S1).
 plotGX(output=T)
 #-------------------------------------------------------------------------------------------------------
 
@@ -45,13 +45,13 @@ plotd13C_gx(output=T)
 
 
 #-------------------------------------------------------------------------------------------------------
-#- plot the soil moisture release curve (Figure S1).
+#- plot the soil moisture release curve.
 pars <- plotMoistCurve(output=T)
 #-------------------------------------------------------------------------------------------------------
 
 
 #-------------------------------------------------------------------------------------------------------
-#- plot the leaf water potential data over time (Figure S3).
+#- plot the leaf water potential data over time (Figure S2).
 plotLWP(fillcol="lightgrey",size=1.75,output=T,labsize=1.8)
 #-------------------------------------------------------------------------------------------------------
 

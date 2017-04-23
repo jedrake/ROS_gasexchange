@@ -44,7 +44,7 @@ for (i in 1:length(dat.l)){
   newdat[[i]]$wpred <- predict(fit.sp[[i]],newdat[[i]],level=0,se.fit=T)
   
   
-  rm(b)
+  if(i>1) rm(b)
   b <- bootCase(fit.sp[[i]],B=300)
   for(j in 1:nrow(newdat[[i]])){
     rm(b02)
@@ -100,7 +100,7 @@ for (i in 1:length(dat.l)){
   newdat[[i]]$wpred <- predict(fit.sp[[i]],newdat[[i]],level=0,se.fit=T)
   
   
-  rm(b)
+  if(i>1)rm(b)
   b <- bootCase(fit.sp[[i]],B=300)
   for(j in 1:nrow(newdat[[i]])){
     rm(b02)

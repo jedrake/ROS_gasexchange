@@ -26,9 +26,9 @@ params1 <- read.csv("Output/table1.csv")
 params1$Species <- factor(rep(c("cacu","eusi","eute","pira"),2))
 params1$Yvar <- factor(c(rep("s",4),rep("ns",4)))
 params1$Xvar <- factor(c(rep("theta",8)))
-params1$Xo <- as.numeric(substr(params1$Xo,start=1,stop=4))
-params1$Xh <- as.numeric(substr(params1$Xh,start=1,stop=4))
-params1$q <- as.numeric(substr(params1$q,start=1,stop=4))
+params1$Xo <- as.numeric(substr(params1$Xo,start=1,stop=6))
+params1$Xh <- as.numeric(substr(params1$Xh,start=1,stop=6))
+params1$q <- as.numeric(substr(params1$q,start=1,stop=6))
 
 #- get the low parameter
 params_Xo <- reshape2::dcast(params1,Species~Xvar+Yvar,value.var="Xo")
@@ -55,8 +55,8 @@ eparams1 <- read.csv("Output/table2.csv")
 eparams1$Species <- factor(rep(c("cacu","eusi","eute","pira"),2))
 eparams1$Yvar <- factor(c(rep("s",4),rep("ns",4)))
 eparams1$Xvar <- factor(c(rep("lwp",8)))
-eparams1$a <- as.numeric(substr(eparams1$a,start=1,stop=4))
-eparams1$b <- as.numeric(substr(eparams1$b,start=1,stop=4))
+eparams1$a <- as.numeric(substr(eparams1$a,start=1,stop=6))
+eparams1$b <- as.numeric(substr(eparams1$b,start=1,stop=6))
 
 #- get the a parameter
 params_a <- reshape2::dcast(eparams1,Species~Xvar+Yvar,value.var="a")
@@ -125,34 +125,37 @@ dat.all3$Beta_theta_ns[which(dat.all3$TDR < dat.all3$Xl_theta_ns)] <- 0
 
 #- subset to dry data only?
 dat.all3 <- subset(dat.all3,Treat=="dry")
+g1value <- 5
+Vcmax_value <- 85
+Jmax_multi <- 1.6
 
 #- Null (no change in physiology with drought)
 dat.all3$P_null <- Photosyn(VPD=dat.all3$VpdL,Ca=dat.all3$CO2S,PPFD=dat.all3$PARi,Tleaf=dat.all3$Tleaf,
-                            g1=5,Vcmax=80,Jmax=1.6*80)$ALEAF
+                            g1=g1value,Vcmax=Vcmax_value,Jmax=Jmax_multi*Vcmax_value)$ALEAF
 
 #- Beta model based on theta
 dat.all3[,c("P_theta_s","Gs_theta_s")] <- Photosyn(VPD=dat.all3$VpdL,Ca=dat.all3$CO2S,PPFD=dat.all3$PARi,Tleaf=dat.all3$Tleaf,
-                              g1=5*dat.all3$Beta_theta_s,Vcmax=80,Jmax=1.6*80)[,c("ALEAF","GS")]
+                              g1=g1value*dat.all3$Beta_theta_s,Vcmax=Vcmax_value,Jmax=Jmax_multi*Vcmax_value)[,c("ALEAF","GS")]
 dat.all3[,c("P_theta_ns","Gs_theta_ns")] <- Photosyn(VPD=dat.all3$VpdL,Ca=dat.all3$CO2S,PPFD=dat.all3$PARi,Tleaf=dat.all3$Tleaf,
-                              g1=5,Vcmax=(79*dat.all3$Beta_theta_ns+1),Jmax=(1.6*79*dat.all3$Beta_theta_ns+1))[,c("ALEAF","GS")]
+                              g1=g1value,Vcmax=((Vcmax_value-1)*dat.all3$Beta_theta_ns+1),Jmax=(Jmax_multi*(Vcmax_value-1)*dat.all3$Beta_theta_ns+1))[,c("ALEAF","GS")]
 dat.all3[,c("P_theta_sns","Gs_theta_sns")] <- Photosyn(VPD=dat.all3$VpdL,Ca=dat.all3$CO2S,PPFD=dat.all3$PARi,Tleaf=dat.all3$Tleaf,
-                               g1=5*dat.all3$Beta_theta_s,Vcmax=(79*dat.all3$Beta_theta_ns+1),Jmax=(1.6*79*dat.all3$Beta_theta_ns+1))[,c("ALEAF","GS")]
+                               g1=g1value*dat.all3$Beta_theta_s,Vcmax=((Vcmax_value-1)*dat.all3$Beta_theta_ns+1),Jmax=(Jmax_multi*(Vcmax_value-1)*dat.all3$Beta_theta_ns+1))[,c("ALEAF","GS")]
 
 #- Beta models based on lwp
 dat.all3[,c("P_lwp_s","Gs_lwp_s")]<- Photosyn(VPD=dat.all3$VpdL,Ca=dat.all3$CO2S,PPFD=dat.all3$PARi,Tleaf=dat.all3$Tleaf,
-                              g1=5*dat.all3$Beta_lwp_s,Vcmax=80,Jmax=1.6*80)[,c("ALEAF","GS")]
+                              g1=g1value*dat.all3$Beta_lwp_s,Vcmax=Vcmax_value,Jmax=Jmax_multi*Vcmax_value)[,c("ALEAF","GS")]
 dat.all3[,c("P_lwp_ns","Gs_lwp_ns")] <- Photosyn(VPD=dat.all3$VpdL,Ca=dat.all3$CO2S,PPFD=dat.all3$PARi,Tleaf=dat.all3$Tleaf,
-                               g1=5,Vcmax=(79*dat.all3$Beta_lwp_ns+1),Jmax=(1.6*79*dat.all3$Beta_lwp_ns+1))[,c("ALEAF","GS")]
+                               g1=g1value,Vcmax=((Vcmax_value-1)*dat.all3$Beta_lwp_ns+1),Jmax=(Jmax_multi*(Vcmax_value-1)*dat.all3$Beta_lwp_ns+1))[,c("ALEAF","GS")]
 dat.all3[,c("P_lwp_sns","Gs_lwp_sns")] <- Photosyn(VPD=dat.all3$VpdL,Ca=dat.all3$CO2S,PPFD=dat.all3$PARi,Tleaf=dat.all3$Tleaf,
-                           g1=5*dat.all3$Beta_lwp_s,Vcmax=(79*dat.all3$Beta_lwp_ns+1),Jmax=(1.6*79*dat.all3$Beta_lwp_ns+1))[,c("ALEAF","GS")]
+                           g1=g1value*dat.all3$Beta_lwp_s,Vcmax=((Vcmax_value-1)*dat.all3$Beta_lwp_ns+1),Jmax=(Jmax_multi*(Vcmax_value-1)*dat.all3$Beta_lwp_ns+1))[,c("ALEAF","GS")]
 
 
 #- Tuzet alone
-dat.all3[,c("P_tuzet_s","Gs_tuzet_s")] <- photosyn(SF=dat.all3$Sf, PSIV=dat.all3$psiv, G0=0.005, VCMAX=80,JMAX=128,G1=15,
+dat.all3[,c("P_tuzet_s","Gs_tuzet_s")] <- photosyn(SF=dat.all3$Sf, PSIV=dat.all3$psiv, G0=0.005, VCMAX=Vcmax_value,JMAX=Jmax_multi*Vcmax_value,G1=15,
                                                    K=dat.all3$K*exp(-((-1*dat.all3$LWP.pd/dat.all3$b)^dat.all3$c)),
                 CS=dat.all3$CO2S,WEIGHTEDSWP=dat.all3$LWP.pd, VPD=dat.all3$VpdL,PAR=dat.all3$PARi,TLEAF=dat.all3$Tleaf)[,c("ALEAF","GS")]
 dat.all3[,c("P_tuzet_sns","Gs_tuzet_sns")] <- photosyn(SF=dat.all3$Sf, PSIV=dat.all3$psiv, G0=0.005,G1=15,K=dat.all3$K,
-                                 VCMAX=(79*dat.all3$Beta_lwp_ns+1),JMAX=(128*dat.all3$Beta_lwp_ns+1),
+                                 VCMAX=((Vcmax_value-1)*dat.all3$Beta_lwp_ns+1),JMAX=((Vcmax_value-1)*Jmax_multi*dat.all3$Beta_lwp_ns+1),
                                CS=dat.all3$CO2S,WEIGHTEDSWP=dat.all3$LWP.pd, VPD=dat.all3$VpdL,PAR=dat.all3$PARi,TLEAF=dat.all3$Tleaf)[,c("ALEAF","GS")]
 
 
@@ -166,8 +169,8 @@ par(mfrow=c(5,2),oma=c(6,9,4,3),mar=c(0,0,0,0),xpd=F)
 colors <- brewer.pal(4,"Set1")
 fitcol=alpha("darkgrey",0.8)
 textsize <- 1.7
-xlims <- c(-2,23)
-ylims <- c(-2,35)
+ylims <- c(-2,31)
+xlims <- c(-2,35)
 
 # #- plot null model (twice)
 # plot(dat.all3$Photo~dat.all3$P_null,xlim=xlims,ylim=ylims,axes=F,xlab="",ylab="");abline(0,1)
@@ -183,87 +186,87 @@ ylims <- c(-2,35)
 
 #- plot B models for stomatal limitation (theta and lwp)
 par(xpd=F)
-plot(dat.all3$Photo~dat.all3$P_theta_s,xlim=xlims,ylim=ylims,axes=F,xlab="",ylab="",xpd=F);abline(0,1)
-predline(lm(Photo~P_theta_s,data=dat.all3),fittype="confidence",col=fitcol,xpd=F)
+plot(dat.all3$Photo,dat.all3$P_theta_s,xlim=xlims,ylim=ylims,axes=F,xlab="",ylab="",xpd=F);abline(0,1)
+predline(lm(P_theta_s~Photo,data=dat.all3),fittype="confidence",col=fitcol,xpd=F)
 magaxis(side=c(1,2,4),labels=c(0,1,0),frame.plot=T,las=1,tcl=0.3)
 title(ylab=expression(beta[s]),xpd=NA,cex.lab=textsize)
 legend("bottomright",letters[1],bty="n",cex=1.2)
-r2val <-round(summary(lm(Photo~P_theta_s,data=dat.all3))$r.squared,2)
+r2val <-round(summary(lm(P_theta_s~Photo,data=dat.all3))$r.squared,2)
 legend("topleft",legend= bquote(r^2 == .(r2val)),bty="n")
 
 
-plot(dat.all3$Photo~dat.all3$P_lwp_s,xlim=xlims,ylim=ylims,axes=F,xlab="",ylab="");abline(0,1)
-predline(lm(Photo~P_lwp_s,data=dat.all3),fittype="confidence",col=fitcol,xpd=T)
+plot(dat.all3$Photo,dat.all3$P_lwp_s,xlim=xlims,ylim=ylims,axes=F,xlab="",ylab="");abline(0,1)
+predline(lm(P_lwp_s~Photo,data=dat.all3),fittype="confidence",col=fitcol,xpd=T)
 magaxis(side=c(1,2,4),labels=c(0,0,1),frame.plot=T,las=1,tcl=0.3)
 legend("bottomright",letters[4],bty="n",cex=1.2)
-r2val <-round(summary(lm(Photo~P_lwp_s,data=dat.all3))$r.squared,2)
+r2val <-round(summary(lm(P_lwp_s~Photo,data=dat.all3))$r.squared,2)
 legend("topleft",legend= bquote(r^2 == .(r2val)),bty="n")
 
 #- plot B models for non-stomatal limitation (theta and then lwp)
-plot(dat.all3$Photo~dat.all3$P_theta_ns,xlim=xlims,ylim=ylims,axes=F,xlab="",ylab="");abline(0,1)
-predline(lm(Photo~P_theta_ns,data=dat.all3),fittype="confidence",col=fitcol,xpd=T)
+plot(dat.all3$Photo,dat.all3$P_theta_ns,xlim=xlims,ylim=ylims,axes=F,xlab="",ylab="");abline(0,1)
+predline(lm(P_theta_ns~Photo,data=dat.all3),fittype="confidence",col=fitcol,xpd=T)
 magaxis(side=c(1,2,4),labels=c(0,1,0),frame.plot=T,las=1,tcl=0.3)
 title(ylab=expression(beta[ns]),xpd=NA,cex.lab=textsize)
 legend("bottomright",letters[2],bty="n",cex=1.2)
-r2val <-round(summary(lm(Photo~P_theta_ns,data=dat.all3))$r.squared,2)
+r2val <-round(summary(lm(P_theta_ns~Photo,data=dat.all3))$r.squared,2)
 legend("topleft",legend= bquote(r^2 == .(r2val)),bty="n")
 
-plot(dat.all3$Photo~dat.all3$P_lwp_ns,xlim=xlims,ylim=ylims,axes=F,xlab="",ylab="");abline(0,1)
-predline(lm(Photo~P_lwp_ns,data=dat.all3),fittype="confidence",col=fitcol,xpd=T)
+plot(dat.all3$Photo,dat.all3$P_lwp_ns,xlim=xlims,ylim=ylims,axes=F,xlab="",ylab="");abline(0,1)
+predline(lm(P_lwp_ns~Photo,data=dat.all3),fittype="confidence",col=fitcol,xpd=T)
 magaxis(side=c(1,2,4),labels=c(0,0,1),frame.plot=T,las=1,tcl=0.3)
 legend("bottomright",letters[5],bty="n",cex=1.2)
-r2val <-round(summary(lm(Photo~P_lwp_ns,data=dat.all3))$r.squared,2)
+r2val <-round(summary(lm(P_lwp_ns~Photo,data=dat.all3))$r.squared,2)
 legend("topleft",legend= bquote(r^2 == .(r2val)),bty="n")
 
 #- plot B models with both
-plot(dat.all3$Photo~dat.all3$P_theta_sns,xlim=xlims,ylim=ylims,axes=F,xlab="",ylab="");abline(0,1)
-predline(lm(Photo~P_theta_sns,data=dat.all3),fittype="confidence",col=fitcol,xpd=T)
+plot(dat.all3$Photo,dat.all3$P_theta_sns,xlim=xlims,ylim=ylims,axes=F,xlab="",ylab="");abline(0,1)
+predline(lm(P_theta_sns~Photo,data=dat.all3),fittype="confidence",col=fitcol,xpd=T)
 magaxis(side=c(1,2,4),labels=c(1,1,0),frame.plot=T,las=1,tcl=0.3)
 title(ylab=expression(beta[s+ns]),xpd=NA,cex.lab=textsize)
 legend("bottomright",letters[3],bty="n",cex=1.2)
-r2val <-round(summary(lm(Photo~P_theta_sns,data=dat.all3))$r.squared,2)
+r2val <-round(summary(lm(P_theta_sns~Photo,data=dat.all3))$r.squared,2)
 legend("topleft",legend= bquote(r^2 == .(r2val)),bty="n")
 
-plot(dat.all3$Photo~dat.all3$P_lwp_sns,xlim=xlims,ylim=ylims,axes=F,xlab="",ylab="");abline(0,1)
-predline(lm(Photo~P_lwp_sns,data=dat.all3),fittype="confidence",col=fitcol,xpd=T)
+plot(dat.all3$Photo,dat.all3$P_lwp_sns,xlim=xlims,ylim=ylims,axes=F,xlab="",ylab="");abline(0,1)
+predline(lm(P_lwp_sns~Photo,data=dat.all3),fittype="confidence",col=fitcol,xpd=T)
 magaxis(side=c(1,2,4),labels=c(0,0,1),frame.plot=T,las=1,tcl=0.3)
 legend("bottomright",letters[6],bty="n",cex=1.2)
-r2val <-round(summary(lm(Photo~P_lwp_sns,data=dat.all3))$r.squared,2)
+r2val <-round(summary(lm(P_lwp_sns~Photo,data=dat.all3))$r.squared,2)
 legend("topleft",legend= bquote(r^2 == .(r2val)),bty="n")
 
 #- plot Tuzet models (stomatal, and both). Note the two empty plots to fill space
-plot(Photo~P_theta_sns,data=dat.all3,type="n",axes=F,xlab="",ylab="")
-plot(dat.all3$Photo~dat.all3$P_tuzet_s ,xlim=xlims,ylim=ylims,axes=F,xlab="",ylab="");abline(0,1)
-predline(lm(Photo~P_tuzet_s,data=dat.all3),fittype="confidence",col=fitcol,xpd=T)
+plot(P_theta_sns~Photo,data=dat.all3,type="n",axes=F,xlab="",ylab="")
+plot(dat.all3$Photo,dat.all3$P_tuzet_s ,xlim=xlims,ylim=ylims,axes=F,xlab="",ylab="");abline(0,1)
+predline(lm(P_tuzet_s~Photo,data=dat.all3),fittype="confidence",col=fitcol,xpd=T)
 magaxis(side=c(1,2,4),labels=c(0,1,1),frame.plot=T,las=1,tcl=0.3)
 title(ylab=expression(Tuzet[s]),xpd=NA,cex.lab=textsize)
 legend("bottomright",letters[7],bty="n",cex=1.2)
-r2val <-round(summary(lm(Photo~P_tuzet_s,data=dat.all3))$r.squared,2)
+r2val <-round(summary(lm(P_tuzet_s~Photo,data=dat.all3))$r.squared,2)
 legend("topleft",legend= bquote(r^2 == .(r2val)),bty="n")
 
 
-plot(Photo~P_theta_sns,data=dat.all3,type="n",axes=F,xlab="",ylab="")
-plot(dat.all3$Photo~dat.all3$P_tuzet_sns ,xlim=xlims,ylim=ylims,axes=F,xlab="",ylab="");abline(0,1)
-predline(lm(Photo~P_tuzet_sns,data=dat.all3),fittype="confidence",col=fitcol,xpd=T)
+plot(P_theta_sns~Photo,data=dat.all3,type="n",axes=F,xlab="",ylab="")
+plot(dat.all3$Photo,dat.all3$P_tuzet_sns ,xlim=xlims,ylim=ylims,axes=F,xlab="",ylab="");abline(0,1)
+predline(lm(P_tuzet_sns~Photo,data=dat.all3),fittype="confidence",col=fitcol,xpd=T)
 magaxis(side=c(1,2,4),labels=c(1,1,1),frame.plot=T,las=1,tcl=0.3)
 title(ylab=expression(Tuzet[s+ns]),xpd=NA,cex.lab=textsize)
 legend("bottomright",letters[8],bty="n",cex=1.2)
-r2val <-round(summary(lm(Photo~P_tuzet_sns,data=dat.all3))$r.squared,2)
+r2val <-round(summary(lm(P_tuzet_sns~Photo,data=dat.all3))$r.squared,2)
 legend("topleft",legend= bquote(r^2 == .(r2val)),bty="n")
 
-title(xlab=expression("Predicted"~A[sat]~(mu*mol~m^-2~s^-1)),outer=T,cex.lab=2)
-title(ylab=expression("Observed"~A[sat]~(mu*mol~m^-2~s^-1)),outer=T,cex.lab=2,line=5)
+title(xlab=expression("Observed"~A[sat]~(mu*mol~m^-2~s^-1)),outer=T,cex.lab=2)
+title(ylab=expression("Predicted"~A[sat]~(mu*mol~m^-2~s^-1)),outer=T,cex.lab=2,line=5)
 
 #-- calculate concordance correlation coefficients
 #null <- summary(agreement(x=dat.all3$Photo,y=dat.all3$P_null,error="constant",TDI_a=20,target="fixed"))
-beta_s_theta <- summary(agreement(x=dat.all3$Photo,y=dat.all3$P_theta_s,error="constant",TDI_a=20,target="fixed"))
-beta_s_lwp <- summary(agreement(x=dat.all3$Photo,y=dat.all3$P_lwp_s,error="constant",TDI_a=20,target="fixed"))
-beta_ns_theta <- summary(agreement(x=dat.all3$Photo,y=dat.all3$P_theta_ns,error="constant",TDI_a=20,target="fixed"))#### work from here
-beta_ns_lwp <- summary(agreement(x=dat.all3$Photo,y=dat.all3$P_lwp_ns,error="constant",TDI_a=20,target="fixed"))
-beta_sns_theta <- summary(agreement(x=dat.all3$Photo,y=dat.all3$P_theta_sns,error="constant",TDI_a=20,target="fixed"))
-beta_sns_lwp <- summary(agreement(x=dat.all3$Photo,y=dat.all3$P_lwp_sns,error="constant",TDI_a=20,target="fixed"))
-tuzet_s <- summary(agreement(x=dat.all3$Photo,y=dat.all3$P_tuzet_s,error="constant",TDI_a=20,target="fixed"))
-tuzet_sns <- summary(agreement(x=dat.all3$Photo,y=dat.all3$P_tuzet_sns,error="constant",TDI_a=20,target="fixed"))
+beta_s_theta <- summary(agreement(y=dat.all3$Photo,x=dat.all3$P_theta_s,error="constant",TDI_a=20,target="fixed"))
+beta_s_lwp <- summary(agreement(y=dat.all3$Photo,x=dat.all3$P_lwp_s,error="constant",TDI_a=20,target="fixed"))
+beta_ns_theta <- summary(agreement(y=dat.all3$Photo,x=dat.all3$P_theta_ns,error="constant",TDI_a=20,target="fixed"))#### work from here
+beta_ns_lwp <- summary(agreement(y=dat.all3$Photo,x=dat.all3$P_lwp_ns,error="constant",TDI_a=20,target="fixed"))
+beta_sns_theta <- summary(agreement(y=dat.all3$Photo,x=dat.all3$P_theta_sns,error="constant",TDI_a=20,target="fixed"))
+beta_sns_lwp <- summary(agreement(y=dat.all3$Photo,x=dat.all3$P_lwp_sns,error="constant",TDI_a=20,target="fixed"))
+tuzet_s <- summary(agreement(y=dat.all3$Photo,x=dat.all3$P_tuzet_s,error="constant",TDI_a=20,target="fixed"))
+tuzet_sns <- summary(agreement(y=dat.all3$Photo,x=dat.all3$P_tuzet_sns,error="constant",TDI_a=20,target="fixed"))
 
 
 #-- calculate the residual standard deviation
@@ -299,8 +302,8 @@ par(mfrow=c(5,2),oma=c(6,9,4,3),mar=c(0,0,0,0),xpd=F)
 colors <- brewer.pal(4,"Set1")
 fitcol=alpha("darkgrey",0.8)
 textsize <- 1.7
-xlims <- c(-0.03,0.55)
-ylims <- c(-0.03,0.57)
+xlims <- c(-0.03,0.58)
+ylims <- c(-0.03,0.58)
 
 # #- plot null model (twice)
 # plot(dat.all3$Photo~dat.all3$Gs_null,xlim=xlims,ylim=ylims,axes=F,xlab="",ylab="");abline(0,1)
@@ -316,41 +319,41 @@ ylims <- c(-0.03,0.57)
 
 #- plot B models for stomatal limitation (theta and lwp)
 par(xpd=F)
-plot(dat.all3$Cond~dat.all3$Gs_theta_s,xlim=xlims,ylim=ylims,axes=F,xlab="",ylab="",xpd=F);abline(0,1)
-predline(lm(Cond~Gs_theta_s,data=dat.all3),fittype="confidence",col=fitcol,xpd=F)
+plot(dat.all3$Cond,dat.all3$Gs_theta_s,xlim=xlims,ylim=ylims,axes=F,xlab="",ylab="",xpd=F);abline(0,1)
+predline(lm(Gs_theta_s~Cond,data=dat.all3),fittype="confidence",col=fitcol,xpd=F)
 magaxis(side=c(1,2,4),labels=c(0,1,0),frame.plot=T,las=1,tcl=0.3)
 title(ylab=expression(beta[s]),xpd=NA,cex.lab=textsize)
 legend("bottomright",letters[1],bty="n",cex=1.2)
-r2val <-round(summary(lm(Cond~Gs_theta_s,data=dat.all3))$r.squared,2)
+r2val <-round(summary(lm(Gs_theta_s~Cond,data=dat.all3))$r.squared,2)
 legend("topleft",legend= bquote(r^2 == .(r2val)),bty="n")
 
 
-plot(dat.all3$Cond~dat.all3$Gs_lwp_s,xlim=xlims,ylim=ylims,axes=F,xlab="",ylab="");abline(0,1)
-predline(lm(Cond~Gs_lwp_s,data=dat.all3),fittype="confidence",col=fitcol,xpd=T)
+plot(dat.all3$Cond,dat.all3$Gs_lwp_s,xlim=xlims,ylim=ylims,axes=F,xlab="",ylab="");abline(0,1)
+predline(lm(Gs_lwp_s~Cond,data=dat.all3),fittype="confidence",col=fitcol,xpd=T)
 magaxis(side=c(1,2,4),labels=c(0,0,1),frame.plot=T,las=1,tcl=0.3)
 legend("bottomright",letters[4],bty="n",cex=1.2)
 r2val <-round(summary(lm(Cond~Gs_lwp_s,data=dat.all3))$r.squared,2)
 legend("topleft",legend= bquote(r^2 == .(r2val)),bty="n")
 
 #- plot B models for non-stomatal limitation (theta and then lwp)
-plot(dat.all3$Cond~dat.all3$Gs_theta_ns,xlim=xlims,ylim=ylims,axes=F,xlab="",ylab="");abline(0,1)
-predline(lm(Cond~Gs_theta_ns,data=dat.all3),fittype="confidence",col=fitcol,xpd=T)
+plot(dat.all3$Cond,dat.all3$Gs_theta_ns,xlim=xlims,ylim=ylims,axes=F,xlab="",ylab="");abline(0,1)
+predline(lm(Gs_theta_ns~Cond,data=dat.all3),fittype="confidence",col=fitcol,xpd=T)
 magaxis(side=c(1,2,4),labels=c(0,1,0),frame.plot=T,las=1,tcl=0.3)
 title(ylab=expression(beta[ns]),xpd=NA,cex.lab=textsize)
 legend("bottomright",letters[2],bty="n",cex=1.2)
 r2val <-round(summary(lm(Cond~Gs_theta_ns,data=dat.all3))$r.squared,2)
 legend("topleft",legend= bquote(r^2 == .(r2val)),bty="n")
 
-plot(dat.all3$Cond~dat.all3$Gs_lwp_ns,xlim=xlims,ylim=ylims,axes=F,xlab="",ylab="");abline(0,1)
-predline(lm(Cond~Gs_lwp_ns,data=dat.all3),fittype="confidence",col=fitcol,xpd=T)
+plot(dat.all3$Cond,dat.all3$Gs_lwp_ns,xlim=xlims,ylim=ylims,axes=F,xlab="",ylab="");abline(0,1)
+predline(lm(Gs_lwp_ns~Cond,data=dat.all3),fittype="confidence",col=fitcol,xpd=T)
 magaxis(side=c(1,2,4),labels=c(0,0,1),frame.plot=T,las=1,tcl=0.3)
 legend("bottomright",letters[5],bty="n",cex=1.2)
 r2val <-round(summary(lm(Cond~Gs_lwp_ns,data=dat.all3))$r.squared,2)
 legend("topleft",legend= bquote(r^2 == .(r2val)),bty="n")
 
 #- plot B models with both
-plot(dat.all3$Cond~dat.all3$Gs_theta_sns,xlim=xlims,ylim=ylims,axes=F,xlab="",ylab="");abline(0,1)
-predline(lm(Cond~Gs_theta_sns,data=dat.all3),fittype="confidence",col=fitcol,xpd=T)
+plot(dat.all3$Cond,dat.all3$Gs_theta_sns,xlim=xlims,ylim=ylims,axes=F,xlab="",ylab="");abline(0,1)
+predline(lm(Gs_theta_sns~Cond,data=dat.all3),fittype="confidence",col=fitcol,xpd=T)
 magaxis(side=c(1,2,4),labels=c(0,1,0),frame.plot=T,las=1,tcl=0.3)
 axis(side=1,las=1,tcl=0.3,at=c(0,0.1,0.2,0.3,0.4))
 title(ylab=expression(beta[s+ns]),xpd=NA,cex.lab=textsize)
@@ -358,17 +361,17 @@ legend("bottomright",letters[3],bty="n",cex=1.2)
 r2val <-round(summary(lm(Cond~Gs_theta_sns,data=dat.all3))$r.squared,2)
 legend("topleft",legend= bquote(r^2 == .(r2val)),bty="n")
 
-plot(dat.all3$Cond~dat.all3$Gs_lwp_sns,xlim=xlims,ylim=ylims,axes=F,xlab="",ylab="");abline(0,1)
-predline(lm(Cond~Gs_lwp_sns,data=dat.all3),fittype="confidence",col=fitcol,xpd=T)
+plot(dat.all3$Cond,dat.all3$Gs_lwp_sns,xlim=xlims,ylim=ylims,axes=F,xlab="",ylab="");abline(0,1)
+predline(lm(Gs_lwp_sns~Cond,data=dat.all3),fittype="confidence",col=fitcol,xpd=T)
 magaxis(side=c(1,2,4),labels=c(0,0,1),frame.plot=T,las=1,tcl=0.3)
 legend("bottomright",letters[6],bty="n",cex=1.2)
 r2val <-round(summary(lm(Cond~Gs_lwp_sns,data=dat.all3))$r.squared,2)
 legend("topleft",legend= bquote(r^2 == .(r2val)),bty="n")
 
 #- plot Tuzet models (stomatal, and both). Note the two empty plots to fill space
-plot(Cond~Gs_theta_sns,data=dat.all3,type="n",axes=F,xlab="",ylab="")
-plot(dat.all3$Cond~dat.all3$Gs_tuzet_s ,xlim=xlims,ylim=ylims,axes=F,xlab="",ylab="");abline(0,1)
-predline(lm(Cond~Gs_tuzet_s,data=dat.all3),fittype="confidence",col=fitcol,xpd=T)
+plot(Gs_theta_sns~Cond,data=dat.all3,type="n",axes=F,xlab="",ylab="")
+plot(dat.all3$Cond,dat.all3$Gs_tuzet_s ,xlim=xlims,ylim=ylims,axes=F,xlab="",ylab="");abline(0,1)
+predline(lm(Gs_tuzet_s~Cond,data=dat.all3),fittype="confidence",col=fitcol,xpd=T)
 magaxis(side=c(1,2,4),labels=c(0,1,1),frame.plot=T,las=1,tcl=0.3)
 title(ylab=expression(Tuzet[s]),xpd=NA,cex.lab=textsize)
 legend("bottomright",letters[7],bty="n",cex=1.2)
@@ -376,22 +379,22 @@ r2val <-round(summary(lm(Cond~Gs_tuzet_s,data=dat.all3))$r.squared,2)
 legend("topleft",legend= bquote(r^2 == .(r2val)),bty="n")
 
 
-plot(Cond~Gs_theta_sns,data=dat.all3,type="n",axes=F,xlab="",ylab="")
-plot(dat.all3$Cond~dat.all3$Gs_tuzet_sns ,xlim=xlims,ylim=ylims,axes=F,xlab="",ylab="");abline(0,1)
-predline(lm(Cond~Gs_tuzet_sns,data=dat.all3),fittype="confidence",col=fitcol,xpd=T)
+plot(Gs_theta_sns~Cond,data=dat.all3,type="n",axes=F,xlab="",ylab="")
+plot(dat.all3$Cond,dat.all3$Gs_tuzet_sns ,xlim=xlims,ylim=ylims,axes=F,xlab="",ylab="");abline(0,1)
+predline(lm(Gs_tuzet_sns~Cond,data=dat.all3),fittype="confidence",col=fitcol,xpd=T)
 magaxis(side=c(1,2,4),labels=c(1,1,1),frame.plot=T,las=1,tcl=0.3)
 title(ylab=expression(Tuzet[s+ns]),xpd=NA,cex.lab=textsize)
 legend("bottomright",letters[8],bty="n",cex=1.2)
 r2val <-round(summary(lm(Cond~Gs_tuzet_sns,data=dat.all3))$r.squared,2)
 legend("topleft",legend= bquote(r^2 == .(r2val)),bty="n")
 
-title(xlab=expression("Predicted"~g[s]~(mol~m^-2~s^-1)),outer=T,cex.lab=2)
-title(ylab=expression("Observed"~g[s]~(mol~m^-2~s^-1)),outer=T,cex.lab=2,line=5)
+title(xlab=expression("Observed"~g[s]~(mol~m^-2~s^-1)),outer=T,cex.lab=2)
+title(ylab=expression("Predicted"~g[s]~(mol~m^-2~s^-1)),outer=T,cex.lab=2,line=5)
 
 
 
 
-#-- calculate concordance correlation coefficients
+#-- calculate concordance correlation coefficients. Negative data screw up this code.
 dat.all4 <- subset(dat.all3,Cond>0 & Gs_theta_s > 0)
 
 beta_s_theta2 <- summary(agreement(x=dat.all4$Cond*1000,y=dat.all4$Gs_theta_s*1000,error="constant",TDI_a=20,target="fixed"))
