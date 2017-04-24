@@ -767,6 +767,20 @@ writeBetaParams <- function(){
   df7 <- data.frame(summaries[[7]]$coefficients[,1:2])
   df8 <- data.frame(summaries[[8]]$coefficients[,1:2])
   
+  
+  #- extract vectors of parameters and se's
+  vals1 <- paste(sprintf("%.4f",round(df1$Estimate,4))," (",sprintf("%.2f",round(df1$Std..Error,2)),")",sep="")
+  vals2 <- paste(sprintf("%.4f",round(df2$Estimate,4))," (",sprintf("%.2f",round(df2$Std..Error,2)),")",sep="")
+  vals3 <- paste(sprintf("%.4f",round(df3$Estimate,4))," (",sprintf("%.2f",round(df3$Std..Error,2)),")",sep="")
+  vals4 <- paste(sprintf("%.4f",round(df4$Estimate,4))," (",sprintf("%.2f",round(df4$Std..Error,2)),")",sep="")
+  vals5 <- paste(sprintf("%.4f",round(df5$Estimate,4))," (",sprintf("%.2f",round(df5$Std..Error,2)),")",sep="")
+  vals6 <- paste(sprintf("%.4f",round(df6$Estimate,4))," (",sprintf("%.2f",round(df6$Std..Error,2)),")",sep="")
+  vals7 <- paste(sprintf("%.4f",round(df7$Estimate,4))," (",sprintf("%.2f",round(df7$Std..Error,2)),")",sep="")
+  vals8 <- paste(sprintf("%.4f",round(df8$Estimate,4))," (",sprintf("%.2f",round(df8$Std..Error,2)),")",sep="")
+  g1table <- data.frame(rbind(vals1,vals2,vals3,vals4,vals5,vals6,vals7,vals8),
+                        row.names=c("Cacu","Eusi","Eute","Pira","Cacu2","Eusi2","Eute2","Pira2"))
+  names(g1table) <- c("a","b")
+  
   names(g1table) <- c("Xo","Xh","q")
   g1table$Xvar <- rep("VWC",8)
   g1table$Yvar <- c(rep("g1",4),rep("A/Ae",4))
@@ -1046,7 +1060,14 @@ getMoistCurve <- function(){
   # 
   
   curve <- read.csv("Data/ROS_MD_PM_SOIL-WATER-CURVE_L1.csv")
-  #plot(pressure_MPa~VWC,data=curve)
+  
+  #- an alternative bd, as per reviewer #2
+  bd <- 1.2
+  curve$VWC_alt <- curve$moisture*bd/100
+  
+  plot(pressure_MPa_neg~VWC,data=curve,xlim=c(0,0.2))
+  points(pressure_MPa_neg~VWC_alt,data=curve,col="red")
+  
   return(curve)
 }
 #---------------------------------------------------------------------------------------------------------------

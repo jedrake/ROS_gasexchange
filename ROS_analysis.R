@@ -73,7 +73,7 @@ writeExpParams()
 
 #- fit based on transpirable soil water
 source("R/fitBeta_g1_nsl_MTSW.R")
-#plotBetasG1NSL.TSW(output=T,g1data=g1values,NSLdata=NSLpars,g1list=g1_TDR_beta.TSW,NSLlist=NSL_TDR_beta.TSW)
+plotBetasG1NSL.TSW(output=T,g1data=g1values,NSLdata=NSLpars,g1list=g1_TDR_beta.TSW,NSLlist=NSL_TDR_beta.TSW)
 #-------------------------------------------------------------------------------------------------------
 
 
@@ -88,8 +88,7 @@ writeBetaParams.mtsw()
 #-------------------------------------------------------------------------------------------------------
 #- Fit and plot the Tuzet model.
 
-#- NOTE I need to update the non-stomatal parameters that are hard-coded inside the wrapper function
-#   in this script!
+#- note that this takes quite some time to run.
 source("R/fitTuzets.R")
 #-------------------------------------------------------------------------------------------------------
 

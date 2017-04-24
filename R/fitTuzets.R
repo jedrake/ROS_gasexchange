@@ -91,9 +91,9 @@ tuzets.cost <- function(pars,dat,fit=1,g1=15,Vcmax=80,Jmax=120,adjVcmax=0,adjK=0
   #- adjust Vcmax according to a beta function. 
   if (adjVcmax==1){
     df <- data.frame(species=c("cacu","eusi","eute","pira"),
-                     Xl = c(.01,.01,.01,.01),
-                     Xh = c(.28,.27,.28,.34),
-                     q = c(.5,.45,.33,.39))
+                     Xl = c(.007,.007,.007,.007),#Xl = c(.01,.01,.01,.01),
+                     Xh = c(.2847,.2761,.2771,.3436),#Xh = c(.28,.27,.28,.34),
+                     q = c(.4992,.4418,.3282,.3808))#q = c(.5,.45,.33,.39))
     whichline <- which(df$species==dat$Species[1])
     
     Vcmax_a <- Vcmax*((dat$TDR - df[whichline,"Xl"])/(df[whichline,"Xh"]-df[whichline,"Xl"]))^df[whichline,"q"]
@@ -108,6 +108,10 @@ tuzets.cost <- function(pars,dat,fit=1,g1=15,Vcmax=80,Jmax=120,adjVcmax=0,adjK=0
   #- Adjust K as in Sperry et al. 2015 New Phyt
   if (adjK==1){
     Kactual <- Kmax*exp(-((-1*dat$LWP.pd/b)^c))
+    
+    Kactual[which(Kactual < 0)] <- 0
+    Kactual[which(Kactual > Kmax)] <- Kmax
+    
   }
   
   #- or bypass K adjustment
@@ -139,6 +143,9 @@ tuzets.cost <- function(pars,dat,fit=1,g1=15,Vcmax=80,Jmax=120,adjVcmax=0,adjK=0
   resid.E <- ((out$ELEAF - dat$Trmmol)/max.E)^2
   resid.psi <- ((out$PSILIN - dat$LWP.md)/max.psi)^2
   
+  resid.gs[is.na(resid.gs)] <- 10
+  resid.A[is.na(resid.A)] <- 10
+  resid.E[is.na(resid.E)] <- 10
   resid.psi[is.na(resid.psi)] <- 10
   
   resid.sum <- sum(resid.gs,resid.A,resid.psi) # removed resid.E from the returned residual
@@ -176,7 +183,7 @@ if (fit == "obs"){
 # pars are psiv, SF, K, b, and c
 lower <- c(-4,1,5,1,0.5) # changed minimum Kmax from 2 to 5
 upper <- c(-0.1,25,10,6,6)
-NPmax <- 100
+NPmax <- 50
 maxiter <- 30
 
 
@@ -296,6 +303,7 @@ do.call(rbind,DEfit.best)
 
 psileaf <- seq(from=-8,to=-0.3,length.out=101)
 pred.psileaf <- list()
+
 for(i in 1:length(DEfit.best)){
   
   #- pull out the parameters from the pars vector
@@ -308,11 +316,15 @@ for(i in 1:length(DEfit.best)){
   pred.psileaf[[i]] <- photosyn(SF=SF, PSIV=psiv, G0=0.0005, VCMAX=80,G1=15,K=Kmax*exp(-((-1*psileaf/b)^c)),JMAX=120,
                   CS=400,WEIGHTEDSWP=psileaf, VPD=1,PAR=1800,TLEAF=25)
   pred.psileaf[[i]]$Species <- levels(dat.all$Species)[i]
+  pred.psileaf[[i]]$Kvalue <- Kmax*exp(-((-1*psileaf/b)^c))
   
 }
 preddat <- do.call(rbind,pred.psileaf)
 
-
+#- plot species difference in K
+windows()
+plotBy(Kvalue~PSILIN|Species,data=preddat,type="p",pch=16,col=c("forestgreen","red","blue","orange"),xlim=c(-10,0),
+       ylab="Predicted hydraulic conductivity",xlab="Leaf water potential (MPa)")
 
 #- overlay plots of data for gs vs. psileaf relationship along with model output
 dat.m <- summaryBy(Cond+Photo+LWP.pd+LWP.md+TDR~Species+Treat+Date,FUN=c(mean,standard.error),

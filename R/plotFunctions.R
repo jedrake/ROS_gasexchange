@@ -669,7 +669,8 @@ plotMoistCurve <- function(output=F){
   upper <- c(0.2,15,-0.01)
   lower <- c(0.1,1,-10)
   
-  #--- fit and predict off of the soil data
+  #------
+  #--- Fit Costby to the soil data, fit and predict off of the soil data
   DEoutput <- DEoptim(Cosby_optim,lower=lower,upper=upper,VWC=curve$VWC,dat=curve$pressure_MPa_neg,
                     DEoptim.control(NP=400,itermax=200,trace=F))
   bestpars <- DEoutput$optim$bestmem
@@ -677,6 +678,20 @@ plotMoistCurve <- function(output=F){
   
   VWC <- seq(0,0.3,length=1001)
   PsiSoil_best <- bestpars[3]*(VWC/bestpars[1])^(-1*bestpars[2])
+  #------
+  
+  
+  # #------
+  # #--- Fit Costby to the PLANT data, for comparison with the soil data
+  # DEoutput_plant <- DEoptim(Cosby_optim,lower=lower,upper=upper,VWC=lwp$TDR,dat=lwp$LWP.pd,
+  #                     DEoptim.control(NP=100,itermax=100,trace=F))
+  # bestpars_plant <- DEoutput_plant$optim$bestmem
+  # names(bestpars_plant) <- c("thetaSat","b","PsiE")
+  # 
+  # PsiPlant_best <- bestpars_plant[3]*(VWC/bestpars_plant[1])^(-1*bestpars_plant[2])
+  # #------
+  
+  
   #---
   
   
@@ -704,8 +719,17 @@ plotMoistCurve <- function(output=F){
   #---
   
   
+  
+  
+
+  
+  
+  
+  
   #---
   #- fit and predict off of the LWP data
+  lwp.m <- summaryBy(LWP.pd+TDR.mean~gxDate+Species,data=subset(lwp,Treat=="dry"),FUN=mean,keep.names=T)
+  
   dat2 <- subset(lwp.m,Species != "Pira")
   set.seed(1234)
   upper2 <- c(0.3,15,-0.01)
@@ -719,6 +743,18 @@ plotMoistCurve <- function(output=F){
   #---
   
   
+  
+  #--- fit the van Genuchten model to the plant datset! using "HydroMe"
+  dat2$actual_pressure <- dat2$LWP.pd *-10
+  vn.ns.plant=nlsLM(TDR.mean~SSvgm(actual_pressure,thr,ths,alp,nscal,mscal),data=dat2,trace=T,
+              control=nls.lm.control(maxiter=300,options(warn=1,trace=T)))
+  newdata_plant <- data.frame(actual_pressure=Psi)
+  newdata_plant$pred <- predict(vn.ns.plant,newdata=newdata_plant)
+  newdata_plant$psi <- newdata_plant$actual_pressure/-10
+  #---
+  
+  
+  
   #- plot
   windows(12,12);par(cex.lab=1.5,cex.axis=1.5,mar=c(5,5,1,1))
   plot(pressure_MPa_neg~VWC,data=curve,axes=F,pch=1,cex=2,ylim=c(-10,0),xlim=c(0,0.2),
@@ -727,22 +763,48 @@ plotMoistCurve <- function(output=F){
          panel.first=adderrorbars(x=lwp.mean$TDR.mean.mean,y=lwp.mean$LWP.pd.mean,
                                   SE=lwp.mean$LWP.pd.standard.error,direction="updown"))
   
+  #- add soil points, if we had screwed up the bulk density by a lot
+  #points(pressure_MPa_neg~VWC_alt,data=curve,axes=F,pch=16,cex=2,col="darkgrey")
+       
+  
+  
   magaxis(c(1:4),labels=c(1,1,0,0),las=1)
   
+  #-- add soil predictions
   #lines(PsiSoil_loglin~VWC,lty=1) # overlay fit of log-linearized soil data
-  lines(PsiSoil_best~VWC,lty=1)
+  lines(PsiSoil_best~VWC,lty=1,col="darkgrey")
   #lines(PsiSoil_best2~VWC,lty=2) #overlay fit of the pre-dawn data, excluding Pira?
-  lines(psi~pred,data=newdata,lty=2)
-  abline(h=0,lty=3)
+  lines(psi~pred,data=newdata,lty=2,col="darkgrey") # this is the van genutchen predictions
+  #abline(h=0,lty=3)
   
   #lines(PsiSoil~VWC,lty=2)
   
-  legend(x=0.125,y=-7,lty=c(1,2),col="black",legend=c("Cosby","van Genuchten"),bty="n",cex=1.2)
+  #-- add plant predictions
+  lines(PsiSoil_best2~VWC,lty=1,col="black",lwd=2) #overlay fit of the pre-dawn data, excluding Pira?
+  lines(psi~pred,data=newdata_plant,lty=2,col="black",lwd=2) # this is the van genutchen predictions
+  
+  
+  legend(x=0.12,y=-6.2,lty=c(1,1,2,2),col=c("darkgrey","black"),lwd=c(1,2),
+         legend=c("Cosby-Soil","Cosby-Plant","van Genuchten-Soil","van Genuchten-Plant"),bty="n",cex=1.2)
   legend(x=0.137,y=-7.8,pch=c(1,16,16,16,16),col=c("black","black","red","green3","blue")
          ,legend=c("Soil measurement","Cacu","Eusi","Eute","Pira"),bty="n",cex=1.2)
   
   
   if(output==T) dev.copy2pdf(file="Output/FigureS5_LWP_moistureReleaseCurve.pdf")
+  
+  
+  
+  #-- statistical analysis of leaf water potential's divergence from predicted by the soil model
+  
+  # the predicted lwp
+  lwp$swp <- bestpars[3]*(lwp$TDR/bestpars[1])^(-1*bestpars[2])
+  lwp$LWP.diff <- with(lwp,LWP.pd-swp)
+  
+  #- different from zero at TDR < 0.1?
+  summary(lm(LWP.diff~Species,data=subset(lwp,TDR<0.1 & LWP.diff <1000)))
+  
+  #- different from zero at TDR > 0.25?
+  summary(lm(LWP.diff~Species,data=subset(lwp,TDR>0.25 & LWP.diff <1000)))
   
   return(bestpars)
 }
